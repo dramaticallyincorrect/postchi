@@ -58,13 +58,13 @@ export function registerHttpLanguage(monaco: Monaco) {
                 [/[a-zA-Z_]\w*(?=\()/, 'function', '@functionCall'],
 
                 // Variable
-                [/<<[^>]+>>/, 'variable', '@pop'],
+                [/<<[\w]*>>\s*$/, 'variable', '@pop'],
 
                 // String (everything else until newline)
                 [/[^<(\n]+/, 'attribute.value', '@pop'],
 
                 // Less-than sign that's not part of variable
-                [/<(?!<)/, 'attribute.value', '@pop'],
+                // [/<(?!<)/, 'attribute.value', '@pop'],
 
                 // End of line - pop back to headers
                 [/$/, { token: '', next: '@pop' }],
@@ -105,19 +105,19 @@ export function registerHttpLanguage(monaco: Monaco) {
                 [/[a-zA-Z_]\w*(?=\()/, 'function', '@functionCall'],
 
                 // Variable
-                [/<<[^>]+>>/, 'variable'],
+                [/<<[\w]*>>(?![\w])+/, 'variable'],
 
                 // String content
                 [/[^<(),\n]+/, 'string'],
 
                 // Less-than sign that's not part of variable
-                [/<(?!<)/, 'string'],
+                // [/<(?!<)/, 'string'],
 
                 // Comma separator
                 [/,/, 'delimiter'],
 
                 // Closing parenthesis
-                [/\)/, 'delimiter.parenthesis', '@headers'],
+                [/\)/, 'delimiter.parenthesis'],
                 // End of line - pop back to headers
                 [/$/, { token: '', next: '@headers' }],
             ],
@@ -153,6 +153,7 @@ export function registerHttpLanguage(monaco: Monaco) {
             // --- General ---
             { token: 'comment', foreground: '#6A9955', fontStyle: 'italic' },
             { token: 'white', foreground: '#D4D4D4' },
+            { token: '', foreground: '#CE9178' },
         ],
         colors: {
             'editor.background': '#1e1e1e',

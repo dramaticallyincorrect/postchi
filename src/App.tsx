@@ -10,8 +10,12 @@ Authorization = Bearer <<AUTH_TOKEN>>
 Content-Type = application/json
 Content-Type = something
 Content-Type = <<variable>>
+Content-Type = <<>>
+Content-Type = <<sdf>>sdfsd
+Content-Type = <<sdf>> sdfsd
+Content-Type = <<sdf>>  
 // comment
-user-agent = basic(param1, param2, <<variable>> , <<partial)
+user-agent = basic(param1, param2, <<variable>> , <<variable, <<nope>>sdfs, <<>>)
 
 @body
 {
