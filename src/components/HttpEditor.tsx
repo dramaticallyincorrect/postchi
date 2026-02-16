@@ -1,35 +1,34 @@
 // src/components/HttpEditor.tsx
-import { registerHttpLanguage } from '@/lib/http-language';
-import Editor, { OnMount } from '@monaco-editor/react';
+import { customHttp, httpTheme } from '@/lib/code-mirror-http';
+import { json } from '@codemirror/lang-json';
+import { syntaxHighlighting } from '@codemirror/language';
+import CodeMirror from '@uiw/react-codemirror';
+import { androidstudio } from '@uiw/codemirror-theme-androidstudio';
 
-interface HttpEditorProps {
-  value: string;
-  onChange: (value: string | undefined) => void;
+export function HttpEditor() {
+  const defaultValue =
+    `POST /api/v1/data
+Content-Type: application/json // this is a comment
+user-agent: postchi/1.0.0 // <<useragent>>
+Authorization: basic(param1, param2, <<token>>)
+
+@body
+{
+  "name": "John",
+  "age": 30,
+  "location": {
+    "city": "New York",
+    "country": "USA"
+  }
 }
-
-export function HttpEditor({ value, onChange }: HttpEditorProps) {
-  const handleEditorDidMount: OnMount = (editor, monaco) => {
-    registerHttpLanguage(monaco);
-    editor.trigger('anyString', 'editor.action.inspectTokens', null);
-    editor.setPosition({ lineNumber: 1000, column: 1 });
-  };
+`;
 
   return (
-    <Editor
-      height="100%"
-      defaultLanguage="customHttp"
-      defaultValue={value}
-      onChange={onChange}
-      onMount={handleEditorDidMount}
-      options={{
-        minimap: { enabled: false },
-        fontSize: 14,
-        lineNumbers: 'on',
-        scrollBeyondLastLine: false,
-        automaticLayout: true,
-        tabSize: 2,
-        wordWrap: 'on',
-      }}
+    <CodeMirror
+      value={defaultValue}
+      height='900px'
+      theme={[httpTheme]}
+      extensions={[customHttp(),]}
     />
   );
 }

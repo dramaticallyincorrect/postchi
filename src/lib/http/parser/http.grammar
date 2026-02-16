@@ -1,0 +1,53 @@
+@top Request { RequestLine "\n" Header* (BodyStart "\n" Body?)? }
+
+@skip {
+  Comment
+}
+
+RequestLine { Method Path }
+
+Path { 
+    (identifier | Variable)+
+}
+
+Header { Key ":" expression "\n"? }
+
+Body {
+    identifier*
+    // "{" fixes the indentation
+}
+
+Key {
+    identifier (" " identifier)*
+}
+
+Value {
+    identifier (" " identifier)*
+}
+
+expression {
+    Function | Value | Variable
+}
+
+Function {
+    FunctionName "(" argumentList* ")"
+}
+
+FunctionName {
+    identifier
+}
+
+argumentList {
+    expression ("," expression)*
+}
+
+
+@tokens {
+
+  Comment { "//" ![\n]* }
+
+  Method { "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" }
+  Variable { "<<" ![>]+ ">>" }
+  identifier { $[/]? $[a-zA-Z0-9-.{}"]+ $[/@]* $[a-zA-Z0-9-.{}"]* $[/@]? }
+  BodyStart { "@body" }
+}
