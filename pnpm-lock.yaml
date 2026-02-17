@@ -11,6 +11,9 @@ importers:
       '@base-ui/react':
         specifier: ^1.2.0
         version: 1.2.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@codemirror/autocomplete':
+        specifier: ^6.20.0
+        version: 6.20.0
       '@codemirror/lang-json':
         specifier: ^6.0.2
         version: 6.0.2

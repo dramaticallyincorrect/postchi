@@ -4,6 +4,7 @@ import { json } from '@codemirror/lang-json';
 import { syntaxHighlighting } from '@codemirror/language';
 import CodeMirror from '@uiw/react-codemirror';
 import { androidstudio } from '@uiw/codemirror-theme-androidstudio';
+import { autocompletion } from "@codemirror/autocomplete"
 
 export function HttpEditor() {
   const defaultValue =
@@ -26,9 +27,10 @@ Authorization: basic(param1, param2, <<token>>)
   return (
     <CodeMirror
       value={defaultValue}
-      height='900px'
+      height='100%'
       theme={[httpTheme]}
-      extensions={[customHttp(),]}
+      className='height: 100% outline-none'
+      extensions={[customHttp(), autocompletion()]}
     />
   );
 }

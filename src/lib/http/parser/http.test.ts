@@ -1,7 +1,6 @@
 import { test } from 'vitest'
 import { parser } from "./parser.js"
 import { testTree } from "@lezer/generator/test"
-import { printTree } from "../../lezer-test-utils.js"
 
 test('request line', () => {
   const defaultValue = `
@@ -105,7 +104,7 @@ test('header with function as values', () => {
 
 })
 
-test('request line and body', () => {
+test('json body', () => {
   const defaultValue = `
   POST /api/v1/data
   @body 
@@ -119,9 +118,40 @@ test('request line and body', () => {
                 RequestLine(
                   Method,
                   Path),
-                BodyStart, Body)`
+                BodyStart, Body(JsonBody))`
 
-  printTree(tree,defaultValue)
+  testTree(tree, spec)
+
+})
+
+test('form body', () => {
+  const defaultValue = `
+  POST /api/v1/data
+  @body 
+  username = john_doe`;
+  const tree = parser.parse(defaultValue)
+  let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path),
+                BodyStart, Body(FormBody(Key, Value)))`
+
+  testTree(tree, spec)
+
+})
+
+test('text body', () => {
+  const defaultValue = `
+  POST /api/v1/data
+  @body 
+  this is a text body`;
+  const tree = parser.parse(defaultValue)
+  let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path),
+                BodyStart, Body(TextBody))`
+
   testTree(tree, spec)
 
 })

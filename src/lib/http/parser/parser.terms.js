@@ -12,4 +12,7 @@ export const
   FunctionName = 10,
   Value = 11,
   BodyStart = 12,
-  Body = 13
+  Body = 13,
+  JsonBody = 14,
+  FormBody = 15,
+  TextBody = 16

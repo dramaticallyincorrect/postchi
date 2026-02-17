@@ -13,9 +13,22 @@ Path {
 Header { Key ":" expression "\n"? }
 
 Body {
-    identifier*
+    JsonBody | FormBody | TextBody
     // "{" fixes the indentation
 }
+
+JsonBody {
+    ("{" | "[") (identifier | "{" | "}" | "[" | "]")* ("}" | "]")
+}
+
+FormBody {
+    (Key "=" expression "\n")+
+}
+
+TextBody {
+    identifier (" " identifier)*
+}
+
 
 Key {
     identifier (" " identifier)*
@@ -48,6 +61,7 @@ argumentList {
 
   Method { "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" }
   Variable { "<<" ![>]+ ">>" }
-  identifier { $[/]? $[a-zA-Z0-9-.{}"]+ $[/@]* $[a-zA-Z0-9-.{}"]* $[/@]? }
+  identifier { $[/]? $[a-zA-Z0-9-."_]+ $[/@]* $[a-zA-Z0-9-."_]* $[/@]? }
   BodyStart { "@body" }
+
 }

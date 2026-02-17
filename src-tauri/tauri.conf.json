@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "postchi",
-        "width": 800,
-        "height": 600
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay",
+        "trafficLightPosition": { "x": 14, "y": 24 }
       }
     ],
     "security": {

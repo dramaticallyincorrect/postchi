@@ -7,6 +7,7 @@
 
 :root {
   --background: oklch(1 0 0);
+  --background-secondary: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -41,7 +42,8 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: lch(2.74% 0 296.81);
+  --background-secondary: #191A1C;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -99,6 +101,7 @@
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
+  --color-background-secondary: var(--background-secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
@@ -130,13 +133,53 @@
   }
 }
 
+html body {
+  height: 100dvh;
+  height: 100%;
+  overflow: hidden;
+}
+
+:root {
+  --background: var(--background);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f0f0f;
+  }
+}
+
+.root {
+  height: 100%;
+}
+
+.cm-theme {
+  height: 100%;
+}
+
+.cm-gutters {
+  border-radius: 8px;
+}
+
+.cm-editor {
+  border-radius: 8px;
+  outline: none;
+}
+
 .variableName {
   color: #fab387;
   background: rgba(250, 179, 135, 0.2);
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: 4px;
 }
 
 .cm-activeLine {
   background: transparent !important;
+}
+
+.titlebar {
+  height: 30px;
+  background: var(--background);
+  display: grid;
+  grid-template-columns: auto max-content;
 }

@@ -1,4 +1,9 @@
-function printTree(tree, value) {
+import { Tree } from "@lezer/common"
+
+export default function printTree(tree: Tree, value: string) {
+  if (tree.children.length === 0) {
+    console.log("No tree")
+  }
   const cursor = tree.cursor()
   let depth = 0
 
@@ -20,5 +25,3 @@ function printTree(tree, value) {
     }
   }
 }
-
-export { printTree };
