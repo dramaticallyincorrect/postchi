@@ -1,3 +1,4 @@
+import { PanelLeftIcon } from 'lucide-react';
 import { FileTree } from './components/FileTree';
 import { HttpEditor } from './components/HttpEditor';
 import { Button } from './components/ui/button';
@@ -12,8 +13,9 @@ export function App() {
     return <div className='flex-col h-screen w-screen flex'>
         <div className="titlebar bg-primary mt-1.5">
             <div data-tauri-drag-region>
-                <Button variant="ghost" className='ms-20'>Project</Button>
-                <span className='text-muted-foreground'>&gt;</span>
+                <PanelLeftIcon className='ms-22 me-1 size-4 inline' />
+                <Button variant="ghost">Project</Button>
+                <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <Button variant="ghost">Production</Button>
             </div>
         </div>

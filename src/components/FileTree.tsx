@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, FileIcon, FolderIcon } from "lucide-react"
+import { ChevronRightIcon, CodeIcon, FileCodeIcon, FileIcon, FolderIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 type FileTreeItem = { name: string } | { name: string; items: FileTreeItem[] }
@@ -155,7 +155,7 @@ export function FileTree() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="group hover:bg-accent hover:text-accent-foreground w-full justify-start transition-none data-[state=open]:bg-transparent"
+                            className="group text-soft-muted hover:text-soft-muted data-[state=open]:text-soft-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                         >
                             <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                             <FolderIcon />
@@ -175,16 +175,16 @@ export function FileTree() {
                 key={fileItem.name}
                 variant="ghost"
                 size="sm"
-                className="text-foreground w-full justify-start gap-2"
+                className="text-soft-muted hover:text-soft-muted w-full justify-start gap-2"
             >
-                <FileIcon />
+                <FileCodeIcon />
                 <span>{fileItem.name}</span>
             </Button>
         )
     }
 
     return (
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full ">
             {fileTree.map((item) => renderItem(item))}
         </ScrollArea>
     )
