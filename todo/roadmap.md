@@ -7,11 +7,16 @@
     4. response
 2. http
     1. ~~setup code mirror~~
-    2. syntax highlighting
+    2. ~~syntax highlighting~~
         1. ~~recognize json, form and text~~
-    3. auto complete
-    4. send request
-    5. show response
+    3. ~~auto complete~~
+    4. ~~errors~~
 3. environments
-4. scripts
-5. actions
+   1. editor
+      1. syntax highlighting
+      2. error
+      3. auto complete
+4. file tree
+   1. use file system
+   2. opne files in editor
+ı

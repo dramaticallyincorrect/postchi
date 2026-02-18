@@ -15,7 +15,7 @@ export default function completeHttp(context: CompletionContext): CompletionResu
         }
     } else if (nodeBefore.name == "Header" || nodeBefore.name == "Value") {
         return {
-            from: context.pos,
+            from: from,
             options: functionCompletions
         }
     }

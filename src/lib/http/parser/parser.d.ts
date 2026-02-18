@@ -1,3 +1,3 @@
-import { Extension } from "@uiw/react-codemirror";
+import {LRParser} from "@lezer/lr"
 
 export const parser: LRParser;

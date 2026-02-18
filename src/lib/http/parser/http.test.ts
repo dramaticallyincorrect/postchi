@@ -1,6 +1,7 @@
 import { test } from 'vitest'
 import { parser } from "./parser.js"
 import { testTree } from "@lezer/generator/test"
+import printTree from '@/lib/lezer-test-utils.js';
 
 test('request line', () => {
   const defaultValue = `
@@ -11,6 +12,19 @@ test('request line', () => {
                   Method,
                   Path))`
 
+  testTree(tree, spec)
+
+})
+
+test('relative at root', () => {
+  const defaultValue = `
+  POST /
+  `;
+  const tree = parser.parse(defaultValue)
+  let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path))`
   testTree(tree, spec)
 
 })
@@ -40,6 +54,36 @@ a`;
                   Path(Variable,Variable,Variable)),
                 Header(Key, Value),
                 Header(Key))`
+  testTree(tree, spec)
+
+})
+
+
+test('header no key', () => {
+  const defaultValue = `
+POST /
+: value/df`;
+  const tree = parser.parse(defaultValue)
+  let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path),
+                Header(Value))`
+  testTree(tree, spec)
+
+})
+
+
+test('header only empty space for key are ignored', () => {
+  const defaultValue = `
+POST /
+  : value/df`;
+  const tree = parser.parse(defaultValue)
+  let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path),
+                Header(Value))`
   testTree(tree, spec)
 
 })

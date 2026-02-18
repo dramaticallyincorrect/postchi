@@ -5,6 +5,7 @@ import { syntaxHighlighting } from '@codemirror/language';
 import CodeMirror from '@uiw/react-codemirror';
 import { androidstudio } from '@uiw/codemirror-theme-androidstudio';
 import { autocompletion } from "@codemirror/autocomplete"
+import { lintGutter } from '@codemirror/lint';
 
 export function HttpEditor() {
   const defaultValue =
@@ -30,7 +31,7 @@ Authorization: basic(param1, param2, <<token>>)
       height='100%'
       theme={[httpTheme]}
       className='height: 100% outline-none'
-      extensions={[customHttp(), autocompletion()]}
+      extensions={[lintGutter(),customHttp(), autocompletion()]}
     />
   );
 }

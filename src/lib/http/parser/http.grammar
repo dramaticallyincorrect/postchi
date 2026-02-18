@@ -7,14 +7,13 @@
 RequestLine { Method Path }
 
 Path { 
-    (identifier | Variable)+
+    slash? (identifier | Variable)+
 }
 
-Header { Key ":" expression "\n"? }
+Header { Key? colon expression "\n"? }
 
 Body {
     JsonBody | FormBody | TextBody
-    // "{" fixes the indentation
 }
 
 JsonBody {
@@ -35,7 +34,7 @@ Key {
 }
 
 Value {
-    identifier (" " identifier)*
+    slash? identifier (" " identifier)*
 }
 
 expression {
@@ -43,7 +42,7 @@ expression {
 }
 
 Function {
-    FunctionName "(" argumentList* ")"
+    FunctionName "(" argumentList? ")"
 }
 
 FunctionName {
@@ -61,7 +60,11 @@ argumentList {
 
   Method { "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" }
   Variable { "<<" ![>]+ ">>" }
-  identifier { $[/]? $[a-zA-Z0-9-."_]+ $[/@]* $[a-zA-Z0-9-."_]* $[/@]? }
+  identifier { $[a-zA-Z0-9-."_]+ $[/@]* $[a-zA-Z0-9-."_]* $[/@]? }
   BodyStart { "@body" }
+  slash { "/" }
+  colon { ":" }
+
+  @precedence {Comment slash}
 
 }

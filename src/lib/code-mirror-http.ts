@@ -12,6 +12,7 @@ import { parser } from "./http/parser/parser";
 import { EditorView } from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json"
 import completeHttp from "./http/autocomplete/http-autocomplete";
+import { httpLinter } from "./http/linter/http-linter";
 
 const httpTheme = EditorView.theme({
     "&": {
@@ -78,7 +79,7 @@ export function customHttp() {
     const httpAutoComplete = customHttpLanguage.data.of({
         autocomplete: completeHttp
     })
-    return new LanguageSupport(customHttpLanguage, [syntaxHighlighting(myHighlightStyle), json(), httpAutoComplete]);
+    return new LanguageSupport(customHttpLanguage, [syntaxHighlighting(myHighlightStyle), json(), httpAutoComplete, httpLinter]);
 }
 
 export { httpTheme };
