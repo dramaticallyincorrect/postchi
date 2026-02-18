@@ -1,13 +1,11 @@
 // src/components/HttpEditor.tsx
-import { customHttp, httpTheme } from '@/lib/code-mirror-http';
-import { json } from '@codemirror/lang-json';
-import { syntaxHighlighting } from '@codemirror/language';
+import { customHttp } from '@/lib/code-mirror-http';
 import CodeMirror from '@uiw/react-codemirror';
-import { androidstudio } from '@uiw/codemirror-theme-androidstudio';
 import { autocompletion } from "@codemirror/autocomplete"
 import { lintGutter } from '@codemirror/lint';
+import { buildCMTheme } from '@/lib/theme/http-theme';
 
-export function HttpEditor() {
+export function HttpEditor({ theme }: { theme: PostchiTheme }) {
   const defaultValue =
     `POST /api/v1/data
 Content-Type: application/json // this is a comment
@@ -29,9 +27,9 @@ Authorization: basic(param1, param2, <<token>>)
     <CodeMirror
       value={defaultValue}
       height='100%'
-      theme={[httpTheme]}
+      theme={buildCMTheme(theme)}
       className='height: 100% outline-none'
-      extensions={[lintGutter(),customHttp(), autocompletion()]}
+      extensions={[lintGutter(), customHttp(), autocompletion()]}
     />
   );
 }

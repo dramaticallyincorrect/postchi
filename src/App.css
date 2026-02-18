@@ -160,13 +160,13 @@ html body {
   height: 100%;
 }
 
-.cm-gutters {
-  border-radius: 8px;
+.cm-scroller {
+ border-radius: var(--radius-xl);
 }
 
 .cm-editor {
-  border-radius: 8px;
   outline: none;
+  border-radius: var(--radius-xl);
 }
 
 .variableName {
@@ -185,4 +185,39 @@ html body {
   background: var(--background);
   display: grid;
   grid-template-columns: auto max-content;
+}
+
+@layer base {
+  .theme-rose {
+    --background: hsl(340 20% 97%);
+    --foreground: hsl(340 30% 12%);
+
+    --card: hsl(340 20% 100%);
+    --card-foreground: hsl(340 30% 12%);
+
+    --popover: hsl(340 20% 100%);
+    --popover-foreground: hsl(340 30% 12%);
+
+    --primary: hsl(346 77% 50%);
+    --primary-foreground: hsl(0 0% 100%);
+
+    --secondary: hsl(340 25% 88%);
+    --secondary-foreground: hsl(340 30% 15%);
+
+    --muted: hsl(340 15% 91%);
+    --muted-foreground: hsl(340 15% 40%);
+    /* darkened for contrast */
+
+    --accent: hsl(340 25% 88%);
+    --accent-foreground: hsl(340 30% 15%);
+
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(0 0% 100%);
+
+    --border: hsl(340 15% 82%);
+    --input: hsl(340 15% 82%);
+    --ring: hsl(346 77% 50%);
+
+    --radius: 0.75rem;
+  }
 }

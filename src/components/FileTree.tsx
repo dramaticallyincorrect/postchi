@@ -4,10 +4,11 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, CodeIcon, FileCodeIcon, FileIcon, FolderIcon } from "lucide-react"
+import { ChevronRightIcon, FileCodeIcon, FolderIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
 
-type FileTreeItem = { name: string } | { name: string; items: FileTreeItem[] }
+type FileTreeItem = { name: string, isSelected?: boolean } | { name: string; items: FileTreeItem[] }
 
 export function FileTree() {
     const fileTree: FileTreeItem[] = [
@@ -133,7 +134,7 @@ export function FileTree() {
         {
             name: "public",
             items: [
-                { name: "favicon.ico" },
+                { name: "favicon.ico", isSelected: true },
                 { name: "logo.svg" },
                 { name: "images" },
             ],
@@ -155,7 +156,7 @@ export function FileTree() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="group text-soft-muted hover:text-soft-muted data-[state=open]:text-soft-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                            className="group text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent w-full justify-start transition-none data-[state=open]:text-sidebar-foreground data-[state=open]:bg-transparent"
                         >
                             <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                             <FolderIcon />
@@ -170,12 +171,18 @@ export function FileTree() {
                 </Collapsible>
             )
         }
+
         return (
             <Button
                 key={fileItem.name}
                 variant="ghost"
                 size="sm"
-                className="text-soft-muted hover:text-soft-muted w-full justify-start gap-2"
+                className={cn(
+                    "w-full justify-start gap-2 transition-none",
+                    fileItem.isSelected
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                )}
             >
                 <FileCodeIcon />
                 <span>{fileItem.name}</span>
@@ -184,7 +191,7 @@ export function FileTree() {
     }
 
     return (
-        <ScrollArea className="h-full ">
+        <ScrollArea className="h-full">
             {fileTree.map((item) => renderItem(item))}
         </ScrollArea>
     )
