@@ -1,7 +1,8 @@
 import { syntaxTree } from "@codemirror/language"
 import { linter, Diagnostic } from "@codemirror/lint"
-import { SyntaxNodeRef, Tree } from "@lezer/common";
+import { Tree } from "@lezer/common";
 import { Text } from "@codemirror/state";
+import { isNodeEmpty, sliceInput } from "@/lib/utils/doc";
 
 export const httpLinter = linter(view => {
     return computeHttpDiagnostics(syntaxTree(view.state), view.state.doc)
@@ -41,18 +42,6 @@ export function computeHttpDiagnostics(tree: Tree, doc: string | Text): Diagnost
 
 
     return diagnostics
-}
-
-function isNodeEmpty(node: SyntaxNodeRef, input: string | Text) {
-    return node.to === node.from || sliceInput(input, node.from, node.to).trim().length === 0
-}
-
-function sliceInput(doc: string | Text, from: number, to: number) {
-    if (typeof doc === "string") {
-        return doc.slice(from, to)
-    } else {
-        return doc.sliceString(from, to)
-    }
 }
 
 

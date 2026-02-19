@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "parsers": "lezer-generator src/lib/http/parser/http.grammar -o src/lib/http/parser/parser.js",
+    "parsers": "lezer-generator src/lib/http/parser/http.grammar -o src/lib/http/parser/parser.js; lezer-generator src/lib/environments/parser/environments.grammar -o src/lib/environments/parser/parser.js",
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "pnpm run parsers && vitest"

@@ -13,9 +13,8 @@
     4. ~~errors~~
 3. environments
    1. editor
-      1. syntax highlighting
-      2. error
-      3. auto complete
+      1. ~~syntax highlighting~~
+      2. ~~error~~
 4. file tree
    1. use file system
    2. opne files in editor

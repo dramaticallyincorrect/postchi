@@ -1,9 +1,9 @@
 // src/components/HttpEditor.tsx
-import { customHttp } from '@/lib/code-mirror-http';
 import CodeMirror from '@uiw/react-codemirror';
 import { autocompletion } from "@codemirror/autocomplete"
 import { lintGutter } from '@codemirror/lint';
-import { buildCMTheme } from '@/lib/theme/http-theme';
+import { buildCMTheme } from '@/lib/theme/theme-builder';
+import { EnvironmentsLanguage, environmentSyntaxHighlighting } from '@/lib/environments/environments-language';
 
 export function HttpEditor({ theme }: { theme: PostchiTheme }) {
   const defaultValue =
@@ -23,13 +23,25 @@ Authorization: basic(param1, param2, <<token>>)
 }
 `;
 
+const environments =
+    `
+# production
+api_url=https://api.example.com // this is a comment
+auth_url = https://api.auth.example.com
+
+# development
+
+api_url=http://localhost:3000
+
+`.trim();
+
   return (
     <CodeMirror
-      value={defaultValue}
+      value={environments}
       height='100%'
-      theme={buildCMTheme(theme)}
+      theme={buildCMTheme(environmentSyntaxHighlighting(theme))}
       className='height: 100% outline-none'
-      extensions={[lintGutter(), customHttp(), autocompletion()]}
+      extensions={[lintGutter(), EnvironmentsLanguage(), autocompletion()]}
     />
   );
 }

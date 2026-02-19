@@ -63,4 +63,14 @@ type ThemeTokens = {
     separator: string;
     squareBracket: string;
     brace: string;
+    environment: EnvironmentStyles;
 };
+
+type EnvironmentStyles = {
+        environmentName: string,
+        key: string,
+        operator: string,
+        value: string,
+        url: string,
+        comment: string,
+    }

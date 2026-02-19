@@ -39,7 +39,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-ring': '#4a7fd4',
     },
     // internal rendering only
-    tokens: { comment: '#2d4a7a', keyword: '#4a7fd4', attrName: '#7eb8f7', attrValue: '#a8d4ff', url: '#e8f4ff', varName: '#f7c948', varNameBg: '#1e1800', annotation: '#4a7fd4', string: '#64c8a0', number: '#f7c948', bool: '#c084fc', propName: '#7eb8f7', null: '#c084fc', separator: '#2d4a7a', squareBracket: '#3a6aad', brace: '#3a6aad' }
+    tokens: {
+      comment: '#2d4a7a', keyword: '#4a7fd4', attrName: '#7eb8f7', attrValue: '#a8d4ff', url: '#e8f4ff', varName: '#f7c948', varNameBg: '#1e1800', annotation: '#4a7fd4', string: '#64c8a0', number: '#f7c948', bool: '#c084fc', propName: '#7eb8f7', null: '#c084fc', separator: '#2d4a7a', squareBracket: '#3a6aad', brace: '#3a6aad',
+      environment: {
+        environmentName: '#4a7fd4',
+        key: '#7eb8f7',
+        operator: '#2d4a7a',
+        value: '#a8d4ff',
+        url: '#64c8a0',
+        comment: '#2d4a7a',
+      }
+    }
   },
   {
     id: 'ember',
@@ -80,7 +90,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#28200f',
       '--sidebar-ring': '#e8a838',
     },
-    tokens: { comment: '#4a3820', keyword: '#e8a838', attrName: '#d4854a', attrValue: '#f0c070', url: '#f5dca0', varName: '#60d8a0', varNameBg: '#0a1e14', annotation: '#e8a838', string: '#80c87a', number: '#e8a838', bool: '#d46060', propName: '#d4854a', null: '#d46060', separator: '#4a3820', squareBracket: '#8a6830', brace: '#8a6830' }
+    tokens: {
+      comment: '#4a3820', keyword: '#e8a838', attrName: '#d4854a', attrValue: '#f0c070', url: '#f5dca0', varName: '#60d8a0', varNameBg: '#0a1e14', annotation: '#e8a838', string: '#80c87a', number: '#e8a838', bool: '#d46060', propName: '#d4854a', null: '#d46060', separator: '#4a3820', squareBracket: '#8a6830', brace: '#8a6830',
+      environment: {
+        environmentName: '#e8a838',
+        key: '#d4854a',
+        operator: '#4a3820',
+        value: '#f0c070',
+        url: '#80c87a',
+        comment: '#4a3820',
+      }
+    }
   },
   {
     id: 'chalk',
@@ -121,7 +141,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#dddbd4',
       '--sidebar-ring': '#2a5caa',
     },
-    tokens: { comment: '#b0aa98', keyword: '#2a5caa', attrName: '#555555', attrValue: '#444444', url: '#111111', varName: '#b05a10', varNameBg: '#fdf0e0', annotation: '#2a5caa', string: '#2a7a3a', number: '#a0430a', bool: '#7030a0', propName: '#1a4a8a', null: '#7030a0', separator: '#bbbbbb', squareBracket: '#888888', brace: '#888888' }
+    tokens: {
+      comment: '#b0aa98', keyword: '#2a5caa', attrName: '#555555', attrValue: '#444444', url: '#111111', varName: '#b05a10', varNameBg: '#fdf0e0', annotation: '#2a5caa', string: '#2a7a3a', number: '#a0430a', bool: '#7030a0', propName: '#1a4a8a', null: '#7030a0', separator: '#bbbbbb', squareBracket: '#888888', brace: '#888888',
+      environment: {
+        environmentName: '#2a5caa',
+        key: '#444444',
+        operator: '#bbbbbb',
+        value: '#555555',
+        url: '#2a7a3a',
+        comment: '#b0aa98',
+      }
+    }
   },
   {
     id: 'neon',
@@ -162,7 +192,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#16142a',
       '--sidebar-ring': '#b060ff',
     },
-    tokens: { comment: '#2a2650', keyword: '#b060ff', attrName: '#50d0ff', attrValue: '#c0e8ff', url: '#ffffff', varName: '#00ffc8', varNameBg: '#001a12', annotation: '#b060ff', string: '#00ffc8', number: '#ffcc00', bool: '#ff5090', propName: '#50d0ff', null: '#ff5090', separator: '#2a2650', squareBracket: '#5040a0', brace: '#5040a0' }
+    tokens: {
+      comment: '#2a2650', keyword: '#b060ff', attrName: '#50d0ff', attrValue: '#c0e8ff', url: '#ffffff', varName: '#00ffc8', varNameBg: '#001a12', annotation: '#b060ff', string: '#00ffc8', number: '#ffcc00', bool: '#ff5090', propName: '#50d0ff', null: '#ff5090', separator: '#2a2650', squareBracket: '#5040a0', brace: '#5040a0',
+      environment: {
+        environmentName: '#b060ff',
+        key: '#50d0ff',
+        operator: '#2a2650',
+        value: '#c0e8ff',
+        url: '#00ffc8',
+        comment: '#2a2650',
+      }
+    }
   },
   {
     id: 'forest',
@@ -203,7 +243,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#12221a',
       '--sidebar-ring': '#4caf78',
     },
-    tokens: { comment: '#1e3a28', keyword: '#4caf78', attrName: '#82c9a0', attrValue: '#b8e0c8', url: '#e0f5eb', varName: '#f0c060', varNameBg: '#1a1400', annotation: '#4caf78', string: '#a8d878', number: '#f0c060', bool: '#78c8d8', propName: '#82c9a0', null: '#78c8d8', separator: '#1e3a28', squareBracket: '#2a6040', brace: '#2a6040' }
+    tokens: {
+      comment: '#1e3a28', keyword: '#4caf78', attrName: '#82c9a0', attrValue: '#b8e0c8', url: '#e0f5eb', varName: '#f0c060', varNameBg: '#1a1400', annotation: '#4caf78', string: '#a8d878', number: '#f0c060', bool: '#78c8d8', propName: '#82c9a0', null: '#78c8d8', separator: '#1e3a28', squareBracket: '#2a6040', brace: '#2a6040',
+      environment: {
+        environmentName: '#4caf78',
+        key: '#82c9a0',
+        operator: '#1e3a28',
+        value: '#b8e0c8',
+        url: '#a8d878',
+        comment: '#1e3a28',
+      }
+    }
   },
   {
     id: 'arctic',
@@ -244,7 +294,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#ccdaee',
       '--sidebar-ring': '#2268c4',
     },
-    tokens: { comment: '#9ab4d4', keyword: '#2268c4', attrName: '#0a4a8a', attrValue: '#1a3a6a', url: '#060f1f', varName: '#c05800', varNameBg: '#fff4e0', annotation: '#2268c4', string: '#0a7a50', number: '#c05800', bool: '#7820b0', propName: '#0a4a8a', null: '#7820b0', separator: '#9ab4d4', squareBracket: '#6090c0', brace: '#6090c0' }
+    tokens: {
+      comment: '#9ab4d4', keyword: '#2268c4', attrName: '#0a4a8a', attrValue: '#1a3a6a', url: '#060f1f', varName: '#c05800', varNameBg: '#fff4e0', annotation: '#2268c4', string: '#0a7a50', number: '#c05800', bool: '#7820b0', propName: '#0a4a8a', null: '#7820b0', separator: '#9ab4d4', squareBracket: '#6090c0', brace: '#6090c0',
+      environment: {
+        environmentName: '#2268c4',
+        key: '#0a4a8a',
+        operator: '#9ab4d4',
+        value: '#1a3a6a',
+        url: '#0a7a50',
+        comment: '#9ab4d4',
+      }
+    }
   },
   {
     id: 'dusk',
@@ -285,7 +345,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#1e1430',
       '--sidebar-ring': '#c878e8',
     },
-    tokens: { comment: '#301840', keyword: '#c878e8', attrName: '#e89ad8', attrValue: '#f0c8f0', url: '#fdf0ff', varName: '#78e8c8', varNameBg: '#001a14', annotation: '#c878e8', string: '#78d8b0', number: '#f0a860', bool: '#f07898', propName: '#e89ad8', null: '#f07898', separator: '#301840', squareBracket: '#703890', brace: '#703890' }
+    tokens: {
+      comment: '#301840', keyword: '#c878e8', attrName: '#e89ad8', attrValue: '#f0c8f0', url: '#fdf0ff', varName: '#78e8c8', varNameBg: '#001a14', annotation: '#c878e8', string: '#78d8b0', number: '#f0a860', bool: '#f07898', propName: '#e89ad8', null: '#f07898', separator: '#301840', squareBracket: '#703890', brace: '#703890',
+      environment: {
+        environmentName: '#c878e8',
+        key: '#e89ad8',
+        operator: '#301840',
+        value: '#f0c8f0',
+        url: '#78d8b0',
+        comment: '#301840',
+      }
+    }
   },
   {
     id: 'mocha',
@@ -326,7 +396,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#e0d4c4',
       '--sidebar-ring': '#7a4a2a',
     },
-    tokens: { comment: '#c0a888', keyword: '#7a4a2a', attrName: '#5a3828', attrValue: '#3a2818', url: '#1a1008', varName: '#2a6848', varNameBg: '#e8f5ee', annotation: '#7a4a2a', string: '#2a6848', number: '#b04820', bool: '#6848a8', propName: '#5a3828', null: '#6848a8', separator: '#c0a888', squareBracket: '#9a7860', brace: '#9a7860' }
+    tokens: {
+      comment: '#c0a888', keyword: '#7a4a2a', attrName: '#5a3828', attrValue: '#3a2818', url: '#1a1008', varName: '#2a6848', varNameBg: '#e8f5ee', annotation: '#7a4a2a', string: '#2a6848', number: '#b04820', bool: '#6848a8', propName: '#5a3828', null: '#6848a8', separator: '#c0a888', squareBracket: '#9a7860', brace: '#9a7860',
+      environment: {
+        environmentName: '#7a4a2a',
+        key: '#5a3828',
+        operator: '#c0a888',
+        value: '#3a2818',
+        url: '#2a6848',
+        comment: '#c0a888',
+      }
+    }
   },
   {
     id: 'bloodmoon',
@@ -367,7 +447,17 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#280f12',
       '--sidebar-ring': '#e03848',
     },
-    tokens: { comment: '#380a10', keyword: '#e03848', attrName: '#f07888', attrValue: '#f8b8c0', url: '#fff0f2', varName: '#f0c040', varNameBg: '#1a1200', annotation: '#e03848', string: '#d8884a', number: '#f0c040', bool: '#c060b0', propName: '#f07888', null: '#c060b0', separator: '#380a10', squareBracket: '#780820', brace: '#780820' }
+    tokens: {
+      comment: '#380a10', keyword: '#e03848', attrName: '#f07888', attrValue: '#f8b8c0', url: '#fff0f2', varName: '#f0c040', varNameBg: '#1a1200', annotation: '#e03848', string: '#d8884a', number: '#f0c040', bool: '#c060b0', propName: '#f07888', null: '#c060b0', separator: '#380a10', squareBracket: '#780820', brace: '#780820',
+      environment: {
+        environmentName: '#e03848',
+        key: '#f07888',
+        operator: '#380a10',
+        value: '#f8b8c0',
+        url: '#d8884a',
+        comment: '#380a10',
+      }
+    }
   },
   {
     id: 'slate',
@@ -408,6 +498,16 @@ export const themes: PostchiTheme[] = [
       '--sidebar-border': '#1e2330',
       '--sidebar-ring': '#8899bb',
     },
-    tokens: { comment: '#2a3348', keyword: '#8899bb', attrName: '#aabbd4', attrValue: '#ccd8ee', url: '#eef2ff', varName: '#e8c86a', varNameBg: '#1a1600', annotation: '#8899bb', string: '#78b8a0', number: '#e8c86a', bool: '#b090d8', propName: '#aabbd4', null: '#b090d8', separator: '#2a3348', squareBracket: '#485878', brace: '#485878' }
+    tokens: {
+      comment: '#2a3348', keyword: '#8899bb', attrName: '#aabbd4', attrValue: '#ccd8ee', url: '#eef2ff', varName: '#e8c86a', varNameBg: '#1a1600', annotation: '#8899bb', string: '#78b8a0', number: '#e8c86a', bool: '#b090d8', propName: '#aabbd4', null: '#b090d8', separator: '#2a3348', squareBracket: '#485878', brace: '#485878',
+      environment: {
+        environmentName: '#8899bb',
+        key: '#aabbd4',
+        operator: '#2a3348',
+        value: '#ccd8ee',
+        url: '#78b8a0',
+        comment: '#2a3348',
+      }
+    }
   }
 ];
