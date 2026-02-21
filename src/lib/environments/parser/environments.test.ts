@@ -32,11 +32,11 @@ VAR2=value2
 
 });
 
-test("values with double slash", () => {
+test("values with all possible characters", () => {
 
     const env = `
 # production
-VAR1= http://example.com
+VAR1= http://example-api.com/#endpoint?query=param&other=va.lue
 VAR2=value2
 `
 

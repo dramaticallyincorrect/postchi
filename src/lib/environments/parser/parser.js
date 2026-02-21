@@ -2,15 +2,15 @@
 import {LRParser} from "@lezer/lr"
 export const parser = LRParser.deserialize({
   version: 14,
-  states: "#xQVQPOOOOQO'#C`'#C`ObQQO'#C_OjQPO'#C_OOQO'#Ce'#CeQVQPOOOoQPO'#CbOOQO'#Cf'#CfQtQPOOOOQO'#Ca'#CaOOQO,58y,58yOyQPO,58yO!OQQO,58yOOQO-E6c-E6cOOQO'#Cd'#CdO!WQPO,58|OOQO-E6d-E6dOOQO1G.e1G.eO!]QPO1G.eO!bQPO1G.hOOQO7+$P7+$PO!pQPO7+$S",
-  stateData: "#R~OPOS~OVUO]PO^QO~O_XO`YO~O^[O~O]^O~OVUO~O`aO~O_XO`aO~O`cO~O`dO~O]PO^QOVUiZUi~O]PO^QOVUqZUq~O_P~",
-  goto: "!XZPPP[bhnPsv!QXSOTceXROTceQZQRb[VVOTWR_UQTOS]TeRecSWOTR`W",
+  states: "$bQVQPOOOOQO'#C`'#C`ObQQO'#C_OjQPO'#C_OOQO'#Ce'#CeQVQPOOOoQPO'#CbOOQO'#Cg'#CgQtQPOOOyQPO'#CaOOQO,58y,58yO!RQPO,58yO!WQQO,58yOOQO-E6c-E6cOOQO'#Cd'#CdO!`QPO,58|OOQO-E6e-E6eO!eQQO'#CfO!jQPO,58{OOQO1G.e1G.eO!rQPO1G.eO!wQPO1G.hOOQO,59Q,59QOOQO-E6d-E6dOOQO7+$P7+$PO#VQPO7+$S",
+  stateData: "#h~OPOS~OVUO^PO_QO~O`XOaYO~O_[O~O^^O~OVUO~O_aOaTX~OacO~O`XOacO~OaeO~O`fO~O_aOaTa~OahO~O^PO_QOVUi[Ui~O^PO_QOVUq[Uq~O`P~",
+  goto: "!`[PPP]cioPtw!R!XXSOTeiXROTeiQZQRd[VVOTWR_UQTOS]TiRieQbXRgbSWOTR`W",
   nodeNames: "⚠ Comment Environments Entry Key Value Environment Pound EnvironmentName",
-  maxTerm: 16,
+  maxTerm: 17,
   skippedNodes: [0,1],
-  repeatNodeCount: 2,
-  tokenData: "&^~RYYZqstv!O!P!g!P!Q#U!Q![%h![!]!g!_!`&X!c!}%h#R#S%h#T#o%h~vO`~R}WVP_Qst!g!O!P!g!P!Q!g!Q![!g![!]!g!c!}!g#R#S!g#T#o!gQ!lW_Qst!g!O!P!g!P!Q!g!Q![!g![!]!g!c!}!g#R#S!g#T#o!g~#ZW_Qst!g!O!P!g!P!Q#s!Q![!g![!]!g!c!}!g#R#S!g#T#o!g~#za_QP~OY%PZs%Pst#st!O%P!O!P#s!P!Q#s!Q![#s![!]#s!]!c%P!c!}#s!}#R%P#R#S#s#S#T%P#T#o#s#o;'S%P;'S;=`%b<%lO%P~%USP~OY%PZ;'S%P;'S;=`%b<%lO%P~%eP;=`<%l%PR%oW]P_Qst!g!O!P!g!P!Q!g!Q![%h![!]!g!c!}%h#R#S%h#T#o%h~&^O^~",
+  repeatNodeCount: 3,
+  tokenData: "'l~R]YZzst!Pvw!y}!O!y!O!P!y!P!Q#q!Q![&m![!]!y!_!`'g!a!b!y!c!}&m#R#S&m#T#o&m~!POa~R!WZVP`Qst!yvw!y}!O!y!O!P!y!P!Q!y!Q![!y![!]!y!a!b!y!c!}!y#R#S!y#T#o!yQ#OZ`Qst!yvw!y}!O!y!O!P!y!P!Q!y!Q![!y![!]!y!a!b!y!c!}!y#R#S!y#T#o!y~#vZ`Qst!yvw!y}!O!y!O!P!y!P!Q$i!Q![!y![!]!y!a!b!y!c!}!y#R#S!y#T#o!y~$pf`QP~OY&UZs&Ust$itv&Uvw$iw}&U}!O$i!O!P$i!P!Q$i!Q![$i![!]$i!]!a&U!a!b$i!b!c&U!c!}$i!}#R&U#R#S$i#S#T&U#T#o$i#o;'S&U;'S;=`&g<%lO&U~&ZSP~OY&UZ;'S&U;'S;=`&g<%lO&U~&jP;=`<%l&UR&tZ^P`Qst!yvw!y}!O!y!O!P!y!P!Q!y!Q![&m![!]!y!a!b!y!c!}&m#R#S&m#T#o&m~'lO_~",
   tokenizers: [0, 1],
   topRules: {"Environments":[0,2]},
-  tokenPrec: 92
+  tokenPrec: 113
 })

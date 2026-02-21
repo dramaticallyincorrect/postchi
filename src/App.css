@@ -134,6 +134,7 @@
   html {
     @apply font-sans;
   }
+
 }
 
 html body {
@@ -161,19 +162,12 @@ html body {
 }
 
 .cm-scroller {
- border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl);
 }
 
 .cm-editor {
   outline: none;
   border-radius: var(--radius-xl);
-}
-
-.variableName {
-  color: #fab387;
-  background: rgba(250, 179, 135, 0.2);
-  padding: 2px 4px;
-  border-radius: 4px;
 }
 
 .cm-activeLine {
@@ -186,6 +180,50 @@ html body {
   display: grid;
   grid-template-columns: auto max-content;
 }
+
+.cm-tooltip-lint {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  border-radius: var(--radius-md) !important;
+  font-size: var(--font-size-xs) !important;
+}
+
+.cm-panel.cm-panel-lint {
+    background: var(--background) !important;
+    border-top: 1px solid var(--muted) !important;
+  }
+
+  /* individual diagnostic items */
+  .cm-panel.cm-panel-lint ul li {
+    color: var(--foreground) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  /* severity icons/text */
+  .cm-panel.cm-panel-lint ul [aria-label~="error"] {
+    color: var(--destructive) !important;
+  }
+
+  .cm-panel.cm-panel-lint ul [aria-label~="warning"] {
+    color: var(--accent) !important;
+  }
+
+  .ͼ1 .cm-panel.cm-panel-lint ul [aria-selected] {
+    color: var(--foreground) !important;
+    background: var(--accent) !important;
+  }
+
+  /* selected/active item */
+  /* .cm-panel.cm-panel-lint ul li:focus { */
+    /* background: var(--primary) !important; */
+    /* outline: none; */
+  /* } */
+
+  /* the close button */
+  .cm-panel.cm-panel-lint button[name="close"] {
+    color: var(--muted-foreground) !important;
+    padding: 0.25rem !important;
+  }
 
 @layer base {
   .theme-rose {

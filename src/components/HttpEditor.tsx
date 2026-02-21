@@ -4,44 +4,33 @@ import { autocompletion } from "@codemirror/autocomplete"
 import { lintGutter } from '@codemirror/lint';
 import { buildCMTheme } from '@/lib/theme/theme-builder';
 import { EnvironmentsLanguage, environmentSyntaxHighlighting } from '@/lib/environments/environments-language';
+import { useEffect, useState } from 'react';
+import { TauriFileStorage } from '@/lib/data/files/file-tauri';
+import { customHttp } from '@/lib/http/http-language';
 
-export function HttpEditor({ theme }: { theme: PostchiTheme }) {
-  const defaultValue =
-    `POST /api/v1/data
-Content-Type: application/json // this is a comment
-user-agent: postchi/1.0.0 // <<useragent>>
-Authorization: basic(param1, param2, <<token>>)
+export function HttpEditor({ theme, path }: { theme: PostchiTheme, path: string }) {
 
-@body
-{
-  "name": "John",
-  "age": 30,
-  "location": {
-    "city": "New York",
-    "country": "USA"
-  }
-}
-`;
+  const language = path.endsWith('.env') ? EnvironmentsLanguage() : customHttp()
 
-const environments =
-    `
-# production
-api_url=https://api.example.com // this is a comment
-auth_url = https://api.auth.example.com
+  const [text, setText] = useState('')
 
-# development
+  useEffect(() => {
+    const loadFile = async () => {
+      const storage = new TauriFileStorage()
+      const content = await storage.readText(path)
+      setText(content)
+    }
+    loadFile()
+  }, [path])
 
-api_url=http://localhost:3000
 
-`.trim();
-
-  return (
+  return text ? (
     <CodeMirror
-      value={environments}
+      value={text}
       height='100%'
       theme={buildCMTheme(environmentSyntaxHighlighting(theme))}
       className='height: 100% outline-none'
-      extensions={[lintGutter(), EnvironmentsLanguage(), autocompletion()]}
+      extensions={[lintGutter(), language, autocompletion()]}
     />
-  );
+  ) : null;
 }

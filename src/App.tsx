@@ -9,12 +9,14 @@ import {
 import { themes } from './lib/theme/themes';
 import { useEffect, useState } from 'react';
 import { FileTree } from './components/FileTree';
-import { FileTreeItem, readFileTree } from './lib/data/project-files';
+import { FileItem, FileTreeItem, readFileTree } from './lib/data/project-files';
 
 
 export function App() {
 
     const [fileTree, setFileTree] = useState<FileTreeItem[]>([])
+
+    const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
 
     useEffect(() => {
         const fetchFileTree = async () => {
@@ -34,8 +36,8 @@ export function App() {
             </div>
         </div>
         <Split>
-            <FileTree items={fileTree} />
-            <HttpEditor theme={themes[0]} />
+            <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
+            {selectedFile ? <HttpEditor theme={themes[0]} path={selectedFile.path} /> : null}
         </Split>
     </div>
 }

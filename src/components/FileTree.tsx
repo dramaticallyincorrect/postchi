@@ -10,14 +10,22 @@ import { cn } from "@/lib/utils"
 import { FileTreeItem } from "@/lib/data/project-files"
 
 
-export const FileTree = ({ items }: { items: FileTreeItem[] }) => {
+export const FileTree = ({ items, onItemClick, selectedPath }: { 
+    items: FileTreeItem[], 
+    onItemClick: (item: FileTreeItem) => void,
+    selectedPath?: string
+}) => {
+
+    const isAncestor = (folderPath: string) => 
+        selectedPath?.startsWith(folderPath + '/') ?? false
 
     const renderItem = (fileItem: FileTreeItem) => {
         if ("items" in fileItem) {
             const hasChildren = fileItem.items.length > 0
+            const isOpen = isAncestor(fileItem.path)
 
             return (
-                <Collapsible key={fileItem.name}>
+                <Collapsible key={fileItem.name} open={isOpen || undefined}>
                     <CollapsibleTrigger asChild>
                         <Button
                             variant="ghost"
@@ -41,14 +49,19 @@ export const FileTree = ({ items }: { items: FileTreeItem[] }) => {
             )
         }
 
+        const isSelected = selectedPath === fileItem.path
+
         return (
             <Button
                 key={fileItem.name}
                 variant="ghost"
                 size="sm"
+                onClick={() => onItemClick(fileItem)}
                 className={cn(
                     "w-full justify-start gap-2 transition-none",
-                    "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    isSelected
+                        ? "text-sidebar-foreground bg-sidebar-accent"
+                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
                 )}
             >
                 <FileCodeIcon />

@@ -22,14 +22,14 @@ Key {
 }
 
 Value {
-    value
+    value (equal value)*
 }
 
 @tokens {
     Comment { "//" ![\n]* }
     Pound { "#" }
     identifier { $[a-zA-Z0-9_]+ }
-    value { $[a-zA-Z0-9_/:#.]+ }
+    value { $[a-zA-Z0-9?_&/:#.-]+ }
     equal { "=" }
     newline { "\n" }
 

@@ -16,7 +16,7 @@
       1. ~~syntax highlighting~~
       2. ~~error~~
 4. file tree
-   1. use file system
-   2. opne files in editor
+   1. ~~use file system~~
+   2. open files in editor
 5. learn
    1. react course
