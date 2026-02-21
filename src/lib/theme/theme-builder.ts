@@ -19,6 +19,7 @@ export function applyThemeToCSSVars(theme: PostchiTheme) {
 }
 
 export function buildCMTheme(syntaxHighlighting: Extension): Extension[] {
+    const background = getCSSVar('--background');
     const bg = getCSSVar('--background-secondary');
     const fg = getCSSVar('--foreground');
     const muted = getCSSVar('--muted-foreground');
@@ -36,7 +37,15 @@ export function buildCMTheme(syntaxHighlighting: Extension): Extension[] {
             'border-radius': getCSSVar('--radius-xl'),
         },
         "&.cm-focused": {
-            outline: "none"
+            outline: "none",
+        },
+        ".cm-tooltip-autocomplete": {
+            background: bg,
+            color: fg,
+            "& > ul > li[aria-selected]": {
+                backgroundColor: background,
+                color: fg,
+            }
         },
         '.cm-content': {
             caretColor: primary,
