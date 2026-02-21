@@ -18,4 +18,5 @@
 4. file tree
    1. use file system
    2. opne files in editor
-ı
+5. learn
+   1. react course

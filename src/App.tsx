@@ -1,5 +1,4 @@
 import { PanelLeftIcon } from 'lucide-react';
-import { FileTree } from './components/FileTree';
 import { HttpEditor } from './components/HttpEditor';
 import { Button } from './components/ui/button';
 import {
@@ -8,13 +7,22 @@ import {
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { themes } from './lib/theme/themes';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './components/ui/dropdown-menu';
-import { useState } from 'react';
-import { applyThemeToCSSVars } from './lib/theme/theme-builder';
+import { useEffect, useState } from 'react';
+import { FileTree } from './components/FileTree';
+import { FileTreeItem, readFileTree } from './lib/data/project-files';
+
 
 export function App() {
 
-    const [theme, setTheme] = useState(() => themes[0]);
+    const [fileTree, setFileTree] = useState<FileTreeItem[]>([])
+
+    useEffect(() => {
+        const fetchFileTree = async () => {
+            const tree = await readFileTree('/Users/hamedmonji/Desktop/test/titled');
+            setFileTree(tree);
+        };
+        fetchFileTree();
+    }, []);
 
     return <div className='flex-col h-screen w-screen flex'>
         <div className="titlebar bg-primary mt-1.5">
@@ -23,29 +31,16 @@ export function App() {
                 <Button variant="ghost" className='text-foreground'>Project</Button>
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <Button variant="ghost">Production</Button>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost">{theme.name}</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        {themes.map(theme => {
-                            return <DropdownMenuItem onClick={() => {
-                                applyThemeToCSSVars(theme)
-                                setTheme(theme);
-                            }} key={theme.id}>{theme.name}</DropdownMenuItem>
-                        })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
             </div>
         </div>
-        <ResizableDemo>
-            <FileTree />
-            <HttpEditor theme={theme} />
-        </ResizableDemo>
+        <Split>
+            <FileTree items={fileTree} />
+            <HttpEditor theme={themes[0]} />
+        </Split>
     </div>
 }
 
-export function ResizableDemo(props: { children: React.ReactNode[] }) {
+export function Split(props: { children: React.ReactNode[] }) {
     return (
         <ResizablePanelGroup
             orientation="horizontal"

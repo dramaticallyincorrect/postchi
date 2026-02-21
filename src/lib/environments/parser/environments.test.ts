@@ -1,7 +1,6 @@
 import { testTree } from "@lezer/generator/test";
 import { test } from "vitest";
 import { parser } from "./parser";
-import printTree from "@/lib/lezer-test-utils";
 
 
 
