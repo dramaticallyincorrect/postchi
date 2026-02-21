@@ -7,7 +7,7 @@
 RequestLine { Method Path }
 
 Path { 
-    slash? (identifier | Variable)+
+    slash? (url | Variable)+
 }
 
 Header { Key? colon expression "\n"? }
@@ -30,7 +30,7 @@ TextBody {
 
 
 Key {
-    identifier (" " identifier)*
+    headerKey (" " headerKey)*
 }
 
 Value {
@@ -60,11 +60,13 @@ argumentList {
 
   Method { "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" }
   Variable { "<<" ![>]+ ">>" }
+  headerKey { $[a-zA-Z0-9-=]+ }
   identifier { $[a-zA-Z0-9-."_]+ $[/@]* $[a-zA-Z0-9-."_]* $[/@]? }
+  url { $[a-zA-Z0-9-._~:/?#\[\]@!$&'()*+,;=%]+}
   BodyStart { "@body" }
   slash { "/" }
   colon { ":" }
 
-  @precedence {Comment slash}
+  @precedence {url Comment slash}
 
 }

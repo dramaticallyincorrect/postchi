@@ -1,16 +1,37 @@
 import { test } from 'vitest'
 import { parser } from "./parser.js"
 import { testTree } from "@lezer/generator/test"
+import printTree from '@/lib/lezer-test-utils.js';
 
 test('request line', () => {
   const defaultValue = `
-  POST /api/v1/data spaces `;
+  POST https://testpages.eviltester.com/pages/auth/basic-auth/basic-auth%:-results.html#path?a=b&c=d`;
   const tree = parser.parse(defaultValue)
   let spec = `Request(
                 RequestLine(
                   Method,
                   Path))`
+  testTree(tree, spec)
 
+})
+
+test('request line', () => {
+  const defaultValue = `
+GET https://testpages.eviltester.com/pages/auth/basic-auth/basic-auth-results.html
+
+authorization= basic(sdfs)
+
+
+
+@body`;
+  const tree = parser.parse(defaultValue)
+  let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path),
+                Header(Key, Function(FunctionName)),
+                BodyStart)`
+  printTree(tree, defaultValue)
   testTree(tree, spec)
 
 })
