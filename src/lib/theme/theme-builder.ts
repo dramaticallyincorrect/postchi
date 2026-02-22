@@ -22,6 +22,7 @@ export function buildCMTheme(syntaxHighlighting: Extension): Extension[] {
     const background = getCSSVar('--background');
     const bg = getCSSVar('--background-secondary');
     const fg = getCSSVar('--foreground');
+    const error = getCSSVar('--destructive');
     const muted = getCSSVar('--muted-foreground');
     const mutedFg = getCSSVar('--muted-foreground');
     const primary = getCSSVar('--primary');
@@ -31,7 +32,7 @@ export function buildCMTheme(syntaxHighlighting: Extension): Extension[] {
     const editorTheme = EditorView.theme({
         '&': {
             background: bg,
-            color: fg,
+            color: error,
         },
         "cm-scroller": {
             'border-radius': getCSSVar('--radius-xl'),
