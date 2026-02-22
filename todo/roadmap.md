@@ -21,5 +21,15 @@
 5. learn
    1. react course
 6. http parser
-7. parser for lints
+   1. ~~comments~~
+   2. ~~request line~~
+   3. ~~headers~~
+      1. ~~liters~~
+      2. ~~variables~~
+      3. ~~functions~~
+   4. errors
+7. editor
+   1. lints
+   2. auto complete
 8. run request
+9. body
