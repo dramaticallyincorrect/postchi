@@ -11,7 +11,6 @@ export const httpLinter = linter(view => {
 export function computeHttpDiagnostics(tree: Tree, doc: string | Text): Diagnostic[] {
     let diagnostics: Diagnostic[] = []
     var hasMethod = false;
-
     tree.cursor().iterate(node => {
         if (node.name == "RequestLine") {
             const method = node.node.getChild('Method')

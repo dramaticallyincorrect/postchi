@@ -1,6 +1,7 @@
 import { Tree } from "@lezer/common"
 
 export default function printTree(tree: Tree, value: string) {
+  console.log('------------------------------------------------')
   if (tree.children.length === 0) {
     console.log("No tree")
   }

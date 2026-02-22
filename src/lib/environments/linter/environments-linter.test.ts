@@ -1,7 +1,6 @@
 import { expect, test } from "vitest";
 import { parser } from "../parser/parser";
 import { computeEnvironmentDiagnostics, EnvironmentLint, errorDiagnostic } from "./environments-linter";
-import printTree from "@/lib/lezer-test-utils";
 
 test("variables have no associated environment", () => {
 
@@ -33,7 +32,6 @@ test("variables has no key", () => {
 
     const errors = computeEnvironmentDiagnostics(tree, env)
 
-    printTree(tree, env)
     const index = env.indexOf("=");
 
     expect(errors).toStrictEqual([

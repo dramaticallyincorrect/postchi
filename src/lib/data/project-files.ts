@@ -1,5 +1,5 @@
 
-import { TauriFileStorage } from './files/file-tauri';
+import DefaultFileStorage from './files/file-default';
 
 export type FileItem = { name: string, path: string }
 export type FolderItem = { name: string; path: string, items: FileTreeItem[] }
@@ -10,13 +10,12 @@ export const environmentsName = "environments"
 export const secretsName = "secrets"
 export const envExtension = '.cenv'
 
-export async function readFileTree(root: string, storage: FileStorage = new TauriFileStorage()): Promise<FileTreeItem[]> {
-
+export async function readFileTree(root: string, storage: FileStorage = new DefaultFileStorage()): Promise<FileTreeItem[]> {
     const items = await readItems(root, storage)
     return items
 }
 
-async function readItems(path: string, storage: FileStorage = new TauriFileStorage()): Promise<FileTreeItem[]> {
+async function readItems(path: string, storage: FileStorage = new DefaultFileStorage()): Promise<FileTreeItem[]> {
     return storage.readDirectory(path).then(entries => {
         return Promise.all(
             entries.filter(entry => !entry.filename.startsWith('.'))
