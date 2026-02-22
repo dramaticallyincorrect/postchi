@@ -1,4 +1,5 @@
 import { BrowserFileStorage } from "./file-browser"
+import { TauriFileStorage } from "./file-tauri"
 
 export default class DefaultFileStorage implements FileStorage {
     private storage: FileStorage = defaultFileStorage()
@@ -20,11 +21,11 @@ export default class DefaultFileStorage implements FileStorage {
 }
 
 function defaultFileStorage(): FileStorage {
-    // if (isTauri()) {
-    //     return new BrowserFileStorage()
-    // }
+    if (isTauri()) {
+        return new TauriFileStorage()
+    }
 
     return new BrowserFileStorage()
 }
 
-const isTauri = () => typeof window !== 'undefined' && '__TAURI__' in window;
+const isTauri = () => 'isTauri' in window && !!window.isTauri;
