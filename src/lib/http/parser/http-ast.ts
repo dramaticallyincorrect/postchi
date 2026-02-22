@@ -1,3 +1,4 @@
+import { start } from "repl";
 
 
 export type HttpRequestAst = {
@@ -5,6 +6,7 @@ export type HttpRequestAst = {
     url: (Variable | Node)[];
     headers: { key: Node, value: Expression }[];
     body: Expression;
+    errors: HttpParseError[];
 };
 
 type Node = {
@@ -33,13 +35,22 @@ type Variable = {
     to: number;
 }
 
+export type HttpParseError = {
+    message: string;
+    from: number;
+    to: number;
+}
+
+export enum HttpErrorMessage {
+    MissingUrl = "Missing URL",
+    MissingValue = "Missing header value",
+}
+
 
 export type Expression = Variable | RequestFunction | Literal;
 
 
 export function computeHttpAst(request: string): HttpRequestAst {
-
-
 
     var hasProccessedRequestLine = false;
 
@@ -48,6 +59,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
         url: [],
         headers: [],
         body: { type: "literal", from: 0, to: 0 },
+        errors: []
     }
 
     var hasProccessedRequestLine = false;
@@ -55,18 +67,6 @@ export function computeHttpAst(request: string): HttpRequestAst {
 
 
     for (const line of lines(request)) {
-
-        function lastCharacterIndexBefore(terminator: string): [number, number] {
-            let lastCharacterIndexBeforeColon = line.start;
-            let start = line.start
-            while (start < line.end && request[start] !== terminator) {
-                if (request[start] !== ' ' && request[start] !== '\t') {
-                    lastCharacterIndexBeforeColon++;
-                }
-                start++;
-            }
-            return [start, lastCharacterIndexBeforeColon];
-        }
 
         if (request.slice(line.start, line.end).trim().startsWith("//")) {
             continue
@@ -77,18 +77,22 @@ export function computeHttpAst(request: string): HttpRequestAst {
             ast.method = method;
             ast.url = url;
             hasProccessedRequestLine = true;
+            if (ast.url.length === 0) {
+                ast.errors.push({
+                    message: HttpErrorMessage.MissingUrl,
+                    from: line.end,
+                    to: line.end
+                })
+            }
         } else if (!startBody) {
 
-            let [start, keyEnd] = lastCharacterIndexBefore(":");
-            start++
-            // skipt leading whitespace
-            while (start < line.end && (request[start] === ' ' || request[start] === '\t')) {
-                start++;
-            }
+            let [start, keyEnd] = line.toNoneWhitespaceBefore(":");
+            line.toAfter(":");
+            line.skipWhitespace();
 
             const key = {
                 type: "literal",
-                from: line.start,
+                from: start,
                 to: keyEnd
             }
 
@@ -97,14 +101,23 @@ export function computeHttpAst(request: string): HttpRequestAst {
                 continue
             }
 
-            const value = expression({ start: start, end: line.end }, request);
+            const value = expression(line, request);
+
+            if (value.from == value.to) {
+                const index = Math.max(key.to, value.from)
+                ast.errors.push({
+                    message: HttpErrorMessage.MissingValue,
+                    from: index,
+                    to: index
+                });
+            }
 
             ast.headers.push({
                 key: key,
                 value: value
             })
 
-        }else {
+        } else {
             break
         }
     }
@@ -114,56 +127,40 @@ export function computeHttpAst(request: string): HttpRequestAst {
 
 
 function parseRequestLine(range: Line, request: string): [Node, (Variable | Literal)[]] {
-    const firstSpaceIndex = request.indexOf(" ", range.start);
-
-    if (firstSpaceIndex === -1) {
-        return [{
-            type: "method",
-            from: range.start,
-            to: range.end
-        }, []];
-    }
-
-    const segments = parseSegments({
-        start: firstSpaceIndex + 1,
-        end: range.end,
-    }, request);
-
-    return [{
+    range.toNextWhitespace();
+    const method = {
         type: "method",
         from: range.start,
-        to: firstSpaceIndex
-    }, segments];
+        to: range.curr
+    }
+
+    const segments = parseSegments(range, request);
+
+    return [method, segments];
 }
 
 function parseSegments(range: Line, request: string): (Variable | Literal)[] {
+    range.skipWhitespace();
     const segments: (Variable | Literal)[] = [];
 
-    let start = range.start;
-
     // skip leading whitespace
-    while (start < range.end && request[start] == ' ') {
-        start++;
-    }
 
-    while (start < range.end) {
-        if (request[start] === "<") {
-            const end = request.indexOf(">", start + 1) || range.end;
+    while (range.curr < range.end) {
+        if (request[range.curr] === "<") {
+            const begin = range.curr;
+            range.toAfter(">");
             segments.push({
                 type: "variable",
-                from: start,
-                to: end + 1
+                from: begin,
+                to: range.curr
             });
-            start = end + 1;
         } else {
-            const begin = start
-            while (start < range.end && request[start] !== "<") {
-                start++;
-            }
+            const begin = range.curr;
+            range.toBefore("<");
             segments.push({
                 type: "literal",
                 from: begin,
-                to: start
+                to: range.curr
             });
         }
 
@@ -174,14 +171,94 @@ function parseSegments(range: Line, request: string): (Variable | Literal)[] {
 }
 
 
-type Line = {
-    start: number;
-    end: number;
+class Line {
+    readonly start: number;
+    readonly end: number;
+    private container: string;
+    curr: number;
+
+    constructor(start: number, end: number, container: string) {
+        this.start = start;
+        this.end = end;
+        this.container = container;
+        this.curr = start;
+    }
+
+    eol(): boolean {
+        return this.curr >= this.end;
+    }
+
+    toNextWhitespace() {
+        while (this.curr < this.end && this.container[this.curr] !== " " && this.container[this.curr] !== "\t") {
+            this.curr++;
+        }
+    }
+
+    skipWhitespace() {
+        while (this.curr < this.end && (this.container[this.curr] === " " || this.container[this.curr] === "\t")) {
+            this.curr++;
+        }
+    }
+
+    toBefore(character: string | string[]) {
+        if (typeof character === "string") {
+            while (this.curr < this.end && this.container[this.curr] !== character) {
+                this.curr++;
+            }
+        } else {
+            while (this.curr < this.end && !character.includes(this.container[this.curr])) {
+                this.curr++;
+            }
+        }
+    }
+
+    consume(character: string) {
+        if (this.curr < this.end && this.container[this.curr] === character) {
+            this.curr++;
+        }
+    }
+
+    toAfter(character: string) {
+        while (this.curr < this.end && this.container[this.curr] !== character) {
+            this.curr++;
+        }
+        if (this.curr < this.end && this.container[this.curr] === character) {
+            this.curr++;
+        }
+    }
+
+    toNoneWhitespaceBefore(terminator: string): [number, number] {
+        const begin = this.curr;
+        let lastCharacterIndexBeforeColon = this.curr;
+        while (this.curr < this.end && this.container[this.curr] !== terminator) {
+            if (this.notWhitespace()) {
+                lastCharacterIndexBeforeColon++;
+            }
+            this.curr++;
+        }
+        return [begin, lastCharacterIndexBeforeColon];
+    }
+
+    current(): string {
+        return this.container[this.curr]
+    }
+
+    is(character: string): boolean {
+        return this.current() === character;
+    }
+
+    not(character: string): boolean {
+        return this.current() !== character;
+    }
+
+    notWhitespace(): boolean {
+        return this.not(' ') && this.not('\t');
+    }
+
 }
 
 
 /**
- * 
  * Splits the input into lines and yields the start and end index of each line, excluding leading whitespace and new line characters.
  * @param input the text to split into lines
  */
@@ -193,7 +270,7 @@ function* lines(input: string): Generator<Line> {
         const end = newline === -1 ? input.length : newline;
 
         // skip leading whitespace
-        while (start < end && input[start] == ' ') {
+        while (start < end && (input[start] == ' ' || input[start] == '\t')) {
             start++;
         }
 
@@ -203,7 +280,7 @@ function* lines(input: string): Generator<Line> {
             continue
         }
 
-        yield { start, end };
+        yield new Line(start, end, input);
 
         start = end + 1;
     }
@@ -211,57 +288,53 @@ function* lines(input: string): Generator<Line> {
 
 
 function expression(range: Line, input: string): Expression {
-    let pos = range.start;
-
-    function skipWhitespace() {
-        while (pos < input.length && input[pos] === " ") pos++;
+    if (range.curr >= range.end) {
+        return { type: "literal", from: range.end, to: range.end };
     }
 
+
     function parseIdentifier(): string {
-        let name = "";
-        while (pos < input.length && input[pos] !== "(" && input[pos] !== ")" && input[pos] !== "," && input[pos] !== " ") {
-            name += input[pos++];
-        }
-        return name;
+        const start = range.curr;
+        range.toBefore(['(', ')', ',', ' ']);
+        return input.slice(start, range.curr);
     }
 
     function parseExpression(): Expression {
-        skipWhitespace();
-        const from = pos;
+        range.skipWhitespace();
+        const from = range.curr;
 
         // Variable: <name>
-        if (input[pos] === "<") {
-            while (pos < input.length && input[pos] !== ">") pos++;
-            if (input[pos] === ">") pos++;
-            return { type: "variable", from, to: pos };
+        if (range.is("<")) {
+            range.toAfter(">");
+            return { type: "variable", from, to: range.curr };
         }
 
         // Read identifier
         const name = parseIdentifier();
-        if (name === "") return { type: "literal", from, to: pos };
+        const nameNode: Literal = { type: "literal", from, to: range.curr };
+        if (name === "") return nameNode;
 
         // Function: name(args...)
-        if (input[pos] === "(") {
-            const nameNode: Literal = { type: "literal", from, to: pos };
-            pos++; // skip '('
+        if (range.is("(")) {
+            range.toAfter("(");
             const args: Expression[] = [];
 
-            while (pos < input.length && input[pos] !== ")") {
-                skipWhitespace();
-                if (input[pos] === ")") break;
+            while (!range.eol() && !range.is(")")) {
+                range.skipWhitespace();
+                if (range.is(")")) break;
                 args.push(parseExpression());
-                skipWhitespace();
-                if (input[pos] === ",") pos++; // skip ','
+                range.skipWhitespace();
+                range.consume(",");
             }
 
-            if (input[pos] !== ")") throw new Error("Unterminated function call");
-            pos++; // skip ')'
+            if (range.not(")")) throw new Error("Unterminated function call");
+            range.toAfter(")");
 
-            return { type: "function", from, to: pos, name: nameNode, args };
+            return { type: "function", from, to: range.curr, name: nameNode, args };
         }
 
         // Literal
-        return { type: "literal", from, to: pos };
+        return { type: "literal", from, to: range.curr };
     }
 
     return parseExpression();
