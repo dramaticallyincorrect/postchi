@@ -17,6 +17,9 @@
       2. ~~error~~
 4. file tree
    1. ~~use file system~~
-   2. open files in editor
+   2. ~~open files in editor~~
 5. learn
    1. react course
+6. http parser
+7. parser for lints
+8. run request
