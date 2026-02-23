@@ -1,6 +1,3 @@
-import { start } from "repl";
-
-
 export type HttpRequestAst = {
     method: Node;
     url: (Variable | Node)[];

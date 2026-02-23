@@ -30,7 +30,7 @@ export const FileTree = ({ items, onItemClick, selectedPath }: {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="group text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent w-full justify-start transition-none data-[state=open]:text-sidebar-foreground data-[state=open]:bg-transparent"
+                            className="group text-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                         >
                             {hasChildren
                                 ? <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
@@ -60,8 +60,8 @@ export const FileTree = ({ items, onItemClick, selectedPath }: {
                 className={cn(
                     "w-full justify-start gap-2 transition-none",
                     isSelected
-                        ? "text-sidebar-foreground bg-sidebar-accent"
-                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                        ? "text-foreground bg-muted"
+                        : "text-foreground hover:bg-muted"
                 )}
             >
                 <FileCodeIcon />

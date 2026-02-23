@@ -18,21 +18,13 @@ export function applyThemeToCSSVars(theme: PostchiTheme) {
     styleEl.textContent = `:root {\n${declarations}\n}`;
 }
 
-export function buildCMTheme(syntaxHighlighting: Extension): Extension[] {
-    const background = getCSSVar('--background');
-    const bg = getCSSVar('--background-secondary');
-    const fg = getCSSVar('--foreground');
-    const error = getCSSVar('--destructive');
-    const muted = getCSSVar('--muted-foreground');
-    const mutedFg = getCSSVar('--muted-foreground');
-    const primary = getCSSVar('--primary');
-    const border = getCSSVar('--border');
-    const accent = getCSSVar('--accent');
+export function buildCMTheme(syntaxHighlighting: Extension, colors: EditorColors ): Extension[] {
+    const background = colors.background;
 
     const editorTheme = EditorView.theme({
         '&': {
-            background: bg,
-            color: error,
+            background: background,
+            color: getCSSVar('--destructive'),
         },
         "cm-scroller": {
             'border-radius': getCSSVar('--radius-xl'),
@@ -41,39 +33,36 @@ export function buildCMTheme(syntaxHighlighting: Extension): Extension[] {
             outline: "none",
         },
         ".cm-tooltip-autocomplete": {
-            background: bg,
-            color: fg,
+            background: colors.tooltip.tooltipBackground,
+            color: colors.tooltip.tooltipForeground,
             "& > ul > li[aria-selected]": {
-                backgroundColor: background,
-                color: fg,
+                backgroundColor: colors.tooltip.activeItemBackground,
+                color: colors.tooltip.activeItemForeground,
             }
         },
         '.cm-content': {
-            caretColor: primary,
+            caretColor: colors.caret,
             fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
         },
         '.cm-cursor': {
-            borderLeftColor: fg,
+            borderLeftColor: colors.caret,
         },
         '.cm-selectionBackground, ::selection': {
-            background: accent + ' !important',
+            background: colors.selectionBackground + ' !important',
         },
         '.cm-scroller .cm-gutters': {
-            background: getCSSVar('--background-secondary'),
-            color: getCSSVar('--muted-foreground'),
-            borderRight: '1px solid ' + getCSSVar('--border'),
-        },
-        '.cm-activeLine': {
-            background: accent,
+            background: colors.gutterBackground,
+            color: colors.gutterForeground,
+            borderRight: colors.gutterBorder,
         },
         '.cm-activeLineGutter': {
-            background: accent,
-            color: fg,
+            background: colors.gutterBackground,
+            color: colors.gutterActiveForeground,
         },
         '.cm-foldPlaceholder': {
-            background: muted,
-            border: `1px solid ${border}`,
-            color: mutedFg,
+            background: colors.gutterForeground,
+            border: `1px solid ${colors.gutterBorder}`,
+            color: colors.gutterActiveForeground,
         },
     }, { dark: isDarkTheme() });
 

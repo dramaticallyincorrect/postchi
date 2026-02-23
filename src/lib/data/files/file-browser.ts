@@ -8,14 +8,21 @@ GET /api/path`;
     }
 
     async readDirectory(path: string): Promise<StorageEntry[]> {
-        if (path.endsWith('/folder1')) {
+        console.log(`Reading directory at ${path}`)
+        if (path.endsWith('collections')) {
+            return [
+                { filename: 'users.get', path: '/collections/users.get', isDirectory: false },
+                { filename: 'token.get', path: '/collections/token.get', isDirectory: false },
+                { filename: 'courses', path: '/collections/courses', isDirectory: true },
+            ]
+        }
+        if (path.endsWith('courses')) {
             return []
         }
         return [
-            { filename: 'file1.get', path: '/file1.get', isDirectory: false },
-            { filename: 'file2.get', path: '/file2.get', isDirectory: false },
-            { filename: 'folder1', path: '/folder1', isDirectory: true },
+            { filename: 'collections', path: '/collections', isDirectory: true },
         ]
+
     }
 
     async create(path: string): Promise<void> {

@@ -22,22 +22,27 @@ export function App() {
         const fetchFileTree = async () => {
             const tree = await readFileTree('/Users/hamedmonji/Desktop/test/titled');
             setFileTree(tree);
+            setSelectedFile(tree[0] || null);
         };
         fetchFileTree();
     }, []);
 
     return <div className='flex-col h-screen w-screen flex'>
-        <div className="titlebar bg-primary mt-1.5">
+        <div className="titlebar bg-background-panel mt-1.5">
             <div data-tauri-drag-region>
                 <PanelLeftIcon className='ms-22 me-1 size-4 inline' />
-                <Button variant="ghost" className='text-foreground'>Project</Button>
+                <Button variant="ghost" className='hover:bg-muted-foreground'>Project</Button>
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <Button variant="ghost">Production</Button>
             </div>
         </div>
         <Split>
             <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
-            {selectedFile ? <HttpEditor theme={themes[0]} path={selectedFile.path} /> : null}
+            {selectedFile ? <HttpEditor theme={themes[1]} path={selectedFile.path} /> : null}
+            {/* <HttpRequestResponse>
+                
+                <div className='text-center'>Command + Enter</div>
+            </HttpRequestResponse> */}
         </Split>
     </div>
 }
@@ -46,14 +51,32 @@ export function Split(props: { children: React.ReactNode[] }) {
     return (
         <ResizablePanelGroup
             orientation="horizontal"
-            className="w-full h-full">
-            <ResizablePanel defaultSize="17%" className='m-1 rounded-xl bg-sidebar'>
+            className="w-full h-full" >
+            <ResizablePanel defaultSize="17%" className='m-1 rounded-xl bg-background-panel'>
                 {props.children[0]}
             </ResizablePanel>
 
             <ResizableHandle className='bg-transparent' />
 
-            <ResizablePanel className='m-1 rounded-xl bg-background-secondary'>
+            <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
+                {props.children[1]}
+            </ResizablePanel>
+        </ResizablePanelGroup>
+    )
+}
+
+function HttpRequestResponse(props: { children: React.ReactNode[] }) {
+    return (
+        <ResizablePanelGroup
+            orientation="horizontal"
+            className="w-full h-full">
+            <ResizablePanel defaultSize="50%" className='m-1 rounded-xl bg-background-panel'>
+                {props.children[0]}
+            </ResizablePanel>
+
+            <ResizableHandle className='bg-primary' />
+
+            <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
                 {props.children[1]}
             </ResizablePanel>
         </ResizablePanelGroup>

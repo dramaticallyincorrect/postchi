@@ -11,7 +11,7 @@ export function HttpEditor({ theme, path }: { theme: PostchiTheme, path: string 
 
   const language = path.endsWith('.env') ? EnvironmentsLanguage() : customHttp()
 
-  const cmTheme = path.endsWith('.env') ? buildCMTheme(environmentSyntaxHighlighting(theme)) : buildCMTheme(httpSyntaxHighlighting(theme))
+  const cmTheme = path.endsWith('.env') ? buildCMTheme(environmentSyntaxHighlighting(theme), theme.editor) : buildCMTheme(httpSyntaxHighlighting(theme), theme.editor)
 
   const [text, setText] = useState('')
 

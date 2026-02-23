@@ -4,8 +4,8 @@ import App from "./App";
 import "./App.css";
 import { themes } from "./lib/theme/themes";
 import { applyThemeToCSSVars } from "./lib/theme/theme-builder";
-
-applyThemeToCSSVars(themes[0]);
+  
+applyThemeToCSSVars(themes[1]);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

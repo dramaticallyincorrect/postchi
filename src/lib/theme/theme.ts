@@ -4,46 +4,21 @@ type PostchiTheme = {
     name: string;
     vars: VarColors;
     tokens: ThemeTokens;
+    editor: EditorColors; 
 };
 
 type SidebarColors = { background: string, activeBg: string, foreground: string, mutedFg: string, sectionLabel: string }
 type GutterColors = { background: string, border: string, foreground: string, activeFg: string }
 
 type VarColors = {
-    '--background': string,
-    '--background-secondary': string,
-    '--foreground': string,
-    '--card': string,
-    '--card-foreground': string,
-    '--popover': string,
-    '--popover-foreground': string,
     '--primary': string,
-    '--primary-foreground': string,
-    '--secondary': string,
-    '--secondary-foreground': string,
-    '--text-soft': string,
+    '--background': string,
+    '--background-elevated' : string,
     '--muted': string,
+    '--background-panel': string,
+    '--foreground': string,
     '--muted-foreground': string,
-    '--accent': string,
-    '--accent-foreground': string,
     '--destructive': string,
-    '--border': string,
-    '--input': string,
-    '--ring': string,
-    '--chart-1': string,
-    '--chart-2': string,
-    '--chart-3': string,
-    '--chart-4': string,
-    '--chart-5': string,
-    '--radius': string,
-    '--sidebar': string,
-    '--sidebar-foreground': string,
-    '--sidebar-primary': string,
-    '--sidebar-primary-foreground': string,
-    '--sidebar-accent': string,
-    '--sidebar-accent-foreground': string,
-    '--sidebar-border': string,
-    '--sidebar-ring': string,
 }
 
 type ThemeTokens = {
@@ -66,11 +41,29 @@ type ThemeTokens = {
     environment: EnvironmentStyles;
 };
 
+type EditorColors = {
+    background: string;
+    gutterBorder: string;
+    gutterBackground: string;
+    gutterForeground: string;
+    gutterActiveForeground: string;
+    tooltip: EditorTooltipColors
+    caret: string;
+    selectionBackground: string;
+}
+
+type EditorTooltipColors = {
+    tooltipBackground: string;
+    tooltipForeground: string;
+    activeItemBackground: string;
+    activeItemForeground: string;
+}   
+
 type EnvironmentStyles = {
-        environmentName: string,
-        key: string,
-        operator: string,
-        value: string,
-        url: string,
-        comment: string,
-    }
+    environmentName: string,
+    key: string,
+    operator: string,
+    value: string,
+    url: string,
+    comment: string,
+}

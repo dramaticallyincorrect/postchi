@@ -3,11 +3,9 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
-@custom-variant dark (&:is(.dark *));
-
 :root {
   --background: oklch(1 0 0);
-  --background-secondary: oklch(1 0 0);
+  --background-panel: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -42,42 +40,6 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  --background: lch(2.74% 0 296.81);
-  --background-secondary: #191A1C;
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.637 0.237 25.331);
-  --primary-foreground: oklch(0.971 0.013 17.38);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --soft-muted: oklch(0.80 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.808 0.114 19.571);
-  --chart-2: oklch(0.637 0.237 25.331);
-  --chart-3: oklch(0.577 0.245 27.325);
-  --chart-4: oklch(0.505 0.213 27.518);
-  --chart-5: oklch(0.444 0.177 26.899);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.637 0.237 25.331);
-  --sidebar-primary-foreground: oklch(0.971 0.013 17.38);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
 @theme inline {
   --font-sans: 'Inter Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -104,11 +66,11 @@
   --color-soft-muted: var(--soft-muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
-  --color-background-secondary: var(--background-secondary);
+  --color-background-panel: var(--background-panel);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
+  --color-popover-foreground: var(--color-foreground);
+  --color-popover: var(--background-elevated);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-foreground: var(--foreground);
@@ -147,12 +109,6 @@ html body {
   --background: var(--background);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f0f0f;
-  }
-}
-
 .root {
   height: 100%;
 }
@@ -189,73 +145,38 @@ html body {
 }
 
 .cm-panel.cm-panel-lint {
-    background: var(--background) !important;
-    border-top: 1px solid var(--muted) !important;
-  }
+  background: var(--background) !important;
+  border-top: 1px solid var(--muted) !important;
+}
 
-  /* individual diagnostic items */
-  .cm-panel.cm-panel-lint ul li {
-    color: var(--foreground) !important;
-    border-bottom: 1px solid var(--border) !important;
-  }
+/* individual diagnostic items */
+.cm-panel.cm-panel-lint ul li {
+  color: var(--foreground) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
 
-  /* severity icons/text */
-  .cm-panel.cm-panel-lint ul [aria-label~="error"] {
-    color: var(--destructive) !important;
-  }
+/* severity icons/text */
+.cm-panel.cm-panel-lint ul [aria-label~="error"] {
+  color: var(--destructive) !important;
+}
 
-  .cm-panel.cm-panel-lint ul [aria-label~="warning"] {
-    color: var(--accent) !important;
-  }
+.cm-panel.cm-panel-lint ul [aria-label~="warning"] {
+  color: var(--accent) !important;
+}
 
-  .ͼ1 .cm-panel.cm-panel-lint ul [aria-selected] {
-    color: var(--foreground) !important;
-    background: var(--accent) !important;
-  }
+.ͼ1 .cm-panel.cm-panel-lint ul [aria-selected] {
+  color: var(--foreground) !important;
+  background: var(--accent) !important;
+}
 
-  /* selected/active item */
-  /* .cm-panel.cm-panel-lint ul li:focus { */
-    /* background: var(--primary) !important; */
-    /* outline: none; */
-  /* } */
+/* selected/active item */
+/* .cm-panel.cm-panel-lint ul li:focus { */
+/* background: var(--primary) !important; */
+/* outline: none; */
+/* } */
 
-  /* the close button */
-  .cm-panel.cm-panel-lint button[name="close"] {
-    color: var(--muted-foreground) !important;
-    padding: 0.25rem !important;
-  }
-
-@layer base {
-  .theme-rose {
-    --background: hsl(340 20% 97%);
-    --foreground: hsl(340 30% 12%);
-
-    --card: hsl(340 20% 100%);
-    --card-foreground: hsl(340 30% 12%);
-
-    --popover: hsl(340 20% 100%);
-    --popover-foreground: hsl(340 30% 12%);
-
-    --primary: hsl(346 77% 50%);
-    --primary-foreground: hsl(0 0% 100%);
-
-    --secondary: hsl(340 25% 88%);
-    --secondary-foreground: hsl(340 30% 15%);
-
-    --muted: hsl(340 15% 91%);
-    --muted-foreground: hsl(340 15% 40%);
-    /* darkened for contrast */
-
-    --accent: hsl(340 25% 88%);
-    --accent-foreground: hsl(340 30% 15%);
-
-    --destructive: hsl(0 84% 60%);
-    --destructive-foreground: hsl(0 0% 100%);
-
-    --border: hsl(340 15% 82%);
-    --input: hsl(340 15% 82%);
-    --ring: hsl(346 77% 50%);
-
-    --radius: 0.75rem;
-  }
+/* the close button */
+.cm-panel.cm-panel-lint button[name="close"] {
+  color: var(--muted-foreground) !important;
+  padding: 0.25rem !important;
 }

@@ -34,8 +34,11 @@
 7. editor
    1. ~~lints~~
    2. auto complete
+      1. method
+      2. headers
+      3. functions
 8. run request
-9.  body
+9. body
 10. errors
    1.  UnSupportedFunction
    2.  MissingParameterValue
