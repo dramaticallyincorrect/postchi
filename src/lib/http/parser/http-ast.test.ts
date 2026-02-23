@@ -187,11 +187,28 @@ describe("errors", () => {
         }
     })
 
-    it("key :? space?", () => {
+    it('wrong url -> ! ( / http https <variable> )', () => {
+        const httpRequest = `GET htp://getpostchi.com`
+            const expected = expectation("GET", ['htp://getpostchi.com'], [], "", [HttpErrorMessage.WrongUrlProtocol]);
+
+            assert(httpRequest, expected);
+    })
+
+    it("missing value -> key :? space?", () => {
 
         for (const addIn of ['', ':', ': ', ' : \n', '\n', ...whitespaces]) {
             const httpRequest = `GET /\nuser-agent${addIn}`
             const expected: Expectation = expectation("GET", ["/"], [['user-agent', '']], "", [HttpErrorMessage.MissingValue]);
+
+            assert(httpRequest, expected);
+        }
+    })
+
+    it("missing key -> space? : space? value", () => {
+
+        for (const addIn of ['', ...whitespaces]) {
+            const httpRequest = `GET /\n${addIn}:${addIn}postchi/1.0`
+            const expected: Expectation = expectation("GET", ["/"], [['', 'postchi/1.0']], "", [HttpErrorMessage.MissingKey]);
 
             assert(httpRequest, expected);
         }

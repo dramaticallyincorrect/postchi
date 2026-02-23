@@ -28,8 +28,24 @@
       2. ~~variables~~
       3. ~~functions~~
    4. errors
+      1. ~~MissingUrl~~
+      2. ~~InvalidUrlProtocol~~
+      3. ~~HeaderValueNotSpecified~~
 7. editor
-   1. lints
+   1. ~~lints~~
    2. auto complete
 8. run request
-9. body
+9.  body
+10. errors
+   1.  UnSupportedFunction
+   2.  MissingParameterValue
+   3.  MissingKey
+   4.  DuplicateValue
+   5.  MissingValue
+   6.  FilePathNotExist
+   7.  PathIsDirectory
+   8.  VariableNotDefined
+   9.  InValidVariableDefinition
+   10. RelativeUrlShouldStartWithSlash
+   11. InvalidContentType
+   12. JsonBodyError

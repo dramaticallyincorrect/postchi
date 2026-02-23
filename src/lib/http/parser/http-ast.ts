@@ -43,6 +43,8 @@ export type HttpParseError = {
 
 export enum HttpErrorMessage {
     MissingUrl = "Missing URL",
+    MissingKey = "Missing header key",
+    WrongUrlProtocol = "URL should start with / for relative urls or http:// | https:// for absolute urls",
     MissingValue = "Missing header value",
 }
 
@@ -83,6 +85,15 @@ export function computeHttpAst(request: string): HttpRequestAst {
                     from: line.end,
                     to: line.end
                 })
+            } else {
+                const urlString = request.slice(url[0].from, url[0].to);
+                if (!urlString.startsWith('/') && !urlString.startsWith("http://") && !urlString.startsWith("https://") && !urlString.startsWith("<")) {
+                    ast.errors.push({
+                        message: HttpErrorMessage.WrongUrlProtocol,
+                        from: url[0].from,
+                        to: url[0].to
+                    })
+                }
             }
         } else if (!startBody) {
 
@@ -94,6 +105,14 @@ export function computeHttpAst(request: string): HttpRequestAst {
                 type: "literal",
                 from: start,
                 to: keyEnd
+            }
+
+            if (key.from == key.to) {
+                ast.errors.push({
+                    message: HttpErrorMessage.MissingKey,
+                    from: keyEnd,
+                    to: keyEnd
+                });
             }
 
             if (request.slice(key.from, key.to).toLowerCase() === "@body") {
