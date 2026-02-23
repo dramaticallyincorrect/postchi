@@ -54,9 +54,9 @@ export const themes: PostchiTheme[] = [
     },
     editor: {
       background: '#191A1C',
-      gutterBorder: '1px solid #25262A',
+      gutterBorder: 'none',
       gutterBackground: '#191A1C',
-      gutterForeground: '#7a9cc8',
+      gutterForeground: '#696969',
       gutterActiveForeground: '#c8d8f0',
       caret: '#4a7fd4',
       selectionBackground: '#2d4a7a',

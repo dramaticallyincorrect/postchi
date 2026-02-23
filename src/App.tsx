@@ -10,6 +10,7 @@ import { themes } from './lib/theme/themes';
 import { useEffect, useState } from 'react';
 import { FileTree } from './components/FileTree';
 import { FileItem, FileTreeItem, readFileTree } from './lib/data/project-files';
+import HttpResponseView from './components/http-response-view';
 
 
 export function App() {
@@ -38,11 +39,10 @@ export function App() {
         </div>
         <Split>
             <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
-            {selectedFile ? <HttpEditor theme={themes[1]} path={selectedFile.path} /> : null}
-            {/* <HttpRequestResponse>
-                
-                <div className='text-center'>Command + Enter</div>
-            </HttpRequestResponse> */}
+            <HttpRequestResponse>
+                {selectedFile ? <HttpEditor theme={themes[1]} path={selectedFile.path} /> : null}
+                <HttpResponseView />
+            </HttpRequestResponse>
         </Split>
     </div>
 }
@@ -70,11 +70,11 @@ function HttpRequestResponse(props: { children: React.ReactNode[] }) {
         <ResizablePanelGroup
             orientation="horizontal"
             className="w-full h-full">
-            <ResizablePanel defaultSize="50%" className='m-1 rounded-xl bg-background-panel'>
+            <ResizablePanel defaultSize="10%" className='m-1 rounded-xl bg-background-panel'>
                 {props.children[0]}
             </ResizablePanel>
 
-            <ResizableHandle className='bg-primary' />
+            <ResizableHandle className='bg-muted/70' />
 
             <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
                 {props.children[1]}

@@ -12,6 +12,7 @@ import completeHttp from "./autocomplete/http-autocomplete";
 import { httpLinter } from "./linter/http-linter";
 import { HighlightStyle, syntaxHighlighting, TagStyle } from "@codemirror/language";
 import { Extension } from "@codemirror/state";
+import { jsonTokens } from "@/components/json-editor-tokens";
 
 export const customHttpLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -53,16 +54,7 @@ function tokenConfig(tk: ThemeTokens): TagStyle[] {
         { tag: t.url, color: `${tk.url}` },
         { tag: t.variableName, color: `${tk.varName}`, backgroundColor: `${tk.varNameBg}` },
         { tag: t.annotation, color: `${tk.annotation}` },
-
-        // json
-        { tag: t.string, color: `${tk.string}` },
-        { tag: t.number, color: `${tk.number}` },
-        { tag: t.bool, color: `${tk.bool}` },
-        { tag: t.propertyName, color: `${tk.propName}` },
-        { tag: t.null, color: `${tk.null}` },
-        { tag: t.separator, color: `${tk.separator}` },
-        { tag: t.squareBracket, color: `${tk.squareBracket}` },
-        { tag: t.brace, color: `${tk.brace}` }
+        ...jsonTokens(tk)
     ]
 }
 

@@ -25,6 +25,7 @@ export function buildCMTheme(syntaxHighlighting: Extension, colors: EditorColors
         '&': {
             background: background,
             color: getCSSVar('--destructive'),
+            fontSize: '10pt'
         },
         "cm-scroller": {
             'border-radius': getCSSVar('--radius-xl'),
