@@ -5,7 +5,7 @@ export default function resolveHttpTemplate(template: string): HttpRequest {
 
     const ast = computeHttpAst(template);
 
-    const value = (node: { from: number, to: number }) => template.substring(node.from, node.to)
+    const value = (node: { from: number, to: number } | null) => node ? template.substring(node.from, node.to) : ""
 
 
     return {

@@ -2,9 +2,16 @@ export type HttpRequestAst = {
     method: Node;
     url: (Variable | Node)[];
     headers: { key: Node, value: Expression }[];
-    body: Expression;
+    body: BodyNode | null;
     errors: HttpParseError[];
 };
+
+export type BodyNode = {
+    inferredContentType: string;
+    type: "body";
+    from: number;
+    to: number;
+}
 
 type Node = {
     type: string;
@@ -57,7 +64,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
         method: { type: "method", from: 0, to: 0 },
         url: [],
         headers: [],
-        body: { type: "literal", from: 0, to: 0 },
+        body: null,
         errors: []
     }
 
@@ -134,6 +141,15 @@ export function computeHttpAst(request: string): HttpRequestAst {
             })
 
         } else {
+            line.skipWhitespace();
+            const bodyText = request.slice(line.curr).trim();
+            const inferredContentType = inferContentType(bodyText);
+            ast.body = {
+                type: "body",
+                from: line.curr,
+                to: line.curr + bodyText.length,
+                inferredContentType
+            }
             break
         }
     }
@@ -354,4 +370,15 @@ function expression(range: Line, input: string): Expression {
     }
 
     return parseExpression();
+}
+
+
+function inferContentType(bodyText: string): string {
+    if (bodyText.startsWith("{") || bodyText.startsWith("[")) {
+        return "json";
+    }
+    if (bodyText.includes('=')) {
+        return "form";
+    }
+    return "text";
 }

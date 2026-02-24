@@ -173,12 +173,12 @@ describe("headers", () => {
 
 describe("body", () => {
 
-    test('@body _', () => {
+    it('@body null', () => {
 
         const httpRequest = `
 GET /
 @body`
-        const expected = expectation("GET", ["/"], [], "");
+        const expected = expectation("GET", ["/"], [],);
 
         const httpRequestAst = computeHttpAst(httpRequest);
 
@@ -186,6 +186,82 @@ GET /
 
     })
 
+
+    it('json', () => {
+
+        const jsonBodies = ['{', '[']
+
+
+        for (const body of jsonBodies) {
+            const httpRequest = `
+GET /
+@body
+${body}`
+            const expected = expectation("GET", ["/"], [], {
+                inferredContentType: "json",
+                text: body
+            });
+
+            const httpRequestAst = computeHttpAst(httpRequest);
+
+            expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+        }
+
+    })
+
+
+    it('form', () => {
+
+        const httpRequest = `
+GET /
+@body
+key=value`
+        const expected = expectation("GET", ["/"], [], {
+            inferredContentType: "form",
+            text: "key=value"
+        });
+
+        const httpRequestAst = computeHttpAst(httpRequest);
+
+        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+
+    })
+
+    it('text', () => {
+
+        const httpRequest = `
+GET /
+@body
+this is a text`
+        const expected = expectation("GET", ["/"], [], {
+            inferredContentType: "text",
+            text: "this is a text"
+        });
+
+        const httpRequestAst = computeHttpAst(httpRequest);
+
+        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+
+    })
+
+    it('trimmed on both sides', () => {
+
+        const bodies = ['{}', '[]', 'key=value']
+
+        for (const body of bodies) {
+            for (const whitespace of [...whitespaces, ...newlines]) {
+                const httpRequest = `
+GET /
+@body
+${whitespace}${body}${whitespace}`
+
+                const httpRequestAst = computeHttpAst(httpRequest);
+
+                expect(httpRequest.slice(httpRequestAst.body?.from, httpRequestAst.body?.to)).toEqual(body);
+            }
+        }
+
+    })
 
 })
 
@@ -195,7 +271,7 @@ describe("errors", () => {
     it('missing url', () => {
         for (const whitespace of ['', ...newlines, ...whitespaces]) {
             const httpRequest = `GET${whitespace}`
-            const expected = expectation("GET", [], [], "", [HttpErrorMessage.MissingUrl]);
+            const expected = expectation("GET", [], [], null, [HttpErrorMessage.MissingUrl]);
 
             assert(httpRequest, expected);
         }
@@ -203,16 +279,16 @@ describe("errors", () => {
 
     it('wrong url -> ! ( / http https <variable> )', () => {
         const httpRequest = `GET htp://getpostchi.com`
-            const expected = expectation("GET", ['htp://getpostchi.com'], [], "", [HttpErrorMessage.WrongUrlProtocol]);
+        const expected = expectation("GET", ['htp://getpostchi.com'], [], null, [HttpErrorMessage.WrongUrlProtocol]);
 
-            assert(httpRequest, expected);
+        assert(httpRequest, expected);
     })
 
     it("missing value -> key :? space?", () => {
 
         for (const addIn of ['', ':', ': ', ' : \n', '\n', ...whitespaces]) {
             const httpRequest = `GET /\nuser-agent${addIn}`
-            const expected: Expectation = expectation("GET", ["/"], [['user-agent', '']], "", [HttpErrorMessage.MissingValue]);
+            const expected: Expectation = expectation("GET", ["/"], [['user-agent', '']], null, [HttpErrorMessage.MissingValue]);
 
             assert(httpRequest, expected);
         }
@@ -222,7 +298,7 @@ describe("errors", () => {
 
         for (const addIn of ['', ...whitespaces]) {
             const httpRequest = `GET /\n${addIn}:${addIn}postchi/1.0`
-            const expected: Expectation = expectation("GET", ["/"], [['', 'postchi/1.0']], "", [HttpErrorMessage.MissingKey]);
+            const expected: Expectation = expectation("GET", ["/"], [['', 'postchi/1.0']], null, [HttpErrorMessage.MissingKey]);
 
             assert(httpRequest, expected);
         }
@@ -237,7 +313,7 @@ function assert(request: string, expected: Expectation) {
 }
 
 
-function expectation(method: string, url: string[] = [], headers: [string, string][] = [], body: string = "", errors: HttpErrorMessage[] = []): Expectation {
+function expectation(method: string, url: string[] = [], headers: [string, string][] = [], body: ExpectedBody | null = null, errors: HttpErrorMessage[] = []): Expectation {
     return {
         method: method,
         url: url,
@@ -262,7 +338,10 @@ function valuesOf(ast: HttpRequestAst, request: string): Expectation {
         method: value(ast.method),
         url: ast.url.map(u => value(u)),
         headers: ast.headers.map(({ key, value: v }) => ({ key: value(key), value: value(v) })),
-        body: value(ast.body),
+        body: ast.body && {
+            inferredContentType: ast.body.inferredContentType,
+            text: value(ast.body)
+        },
         errors: ast.errors.map(e => (e.message)).join(",")
     }
 }
@@ -291,4 +370,9 @@ function expressionString(node: Expression, request: string): string {
 }
 
 
-type Expectation = { method: string; url: string[]; headers: { key: string, value: string }[]; body: string; errors: string };
+type Expectation = { method: string; url: string[]; headers: { key: string, value: string }[]; body: ExpectedBody | null; errors: string };
+
+type ExpectedBody = {
+    inferredContentType: string;
+    text: string;
+}

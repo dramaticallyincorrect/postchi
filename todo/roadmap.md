@@ -19,7 +19,7 @@
    1. ~~use file system~~
    2. ~~open files in editor~~
 5. learn
-   1. react course
+   1. ~~react course~~
 6. http parser
    1. ~~comments~~
    2. ~~request line~~
@@ -37,18 +37,18 @@
       1. method
       2. headers
       3. functions
-8. run request
+8. ~~run request~~
 9. body
 10. errors
-   1.  UnSupportedFunction
-   2.  MissingParameterValue
-   3.  MissingKey
-   4.  DuplicateValue
-   5.  MissingValue
-   6.  FilePathNotExist
-   7.  PathIsDirectory
-   8.  VariableNotDefined
-   9.  InValidVariableDefinition
-   10. RelativeUrlShouldStartWithSlash
-   11. InvalidContentType
-   12. JsonBodyError
+    1. UnSupportedFunction
+    2. MissingParameterValue
+    3. MissingKey
+    4. DuplicateValue
+    5. MissingValue
+    6. FilePathNotExist
+    7. PathIsDirectory
+    8. VariableNotDefined
+    9. InValidVariableDefinition
+    10. RelativeUrlShouldStartWithSlash
+    11. InvalidContentType
+    12. JsonBodyError

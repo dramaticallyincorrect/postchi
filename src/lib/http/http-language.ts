@@ -7,7 +7,7 @@ import {
 } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight";
 import { parser } from "./parser/parser";
-import { json } from "@codemirror/lang-json"
+import { json, jsonParseLinter } from "@codemirror/lang-json"
 import completeHttp from "./autocomplete/http-autocomplete";
 import { httpLinter } from "./linter/http-linter";
 import { HighlightStyle, syntaxHighlighting, TagStyle } from "@codemirror/language";

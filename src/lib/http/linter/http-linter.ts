@@ -11,9 +11,27 @@ export const httpLinter = linter(view => {
 
 export function computeHttpDiagnostics(tree: Tree, doc: string | Text): Diagnostic[] {
 
-    const { errors } = computeHttpAst(sliceInput(doc, 0, doc.length))
+    const ast = computeHttpAst(sliceInput(doc, 0, doc.length))
 
-    return errors.map(error => errorDiagnostic(error.message, error.from, error.to))
+    const diagnostics = ast.errors.map(error => errorDiagnostic(error.message, error.from, error.to))
+
+    const body = ast.body
+    if (body?.inferredContentType === "json") {
+      
+      const jsonText = sliceInput(doc, body.from, body.to);
+      try {
+        JSON.parse(jsonText);
+      } catch (e: any) {
+        diagnostics.push({
+          from: body.from,
+          to: body.to,
+          severity: "error",
+          message: e.message,
+        });
+      }
+    }
+
+    return diagnostics;
 }
 
 

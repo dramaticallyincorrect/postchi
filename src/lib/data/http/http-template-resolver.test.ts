@@ -9,6 +9,7 @@ describe('creates http request from ast', () => {
         const template = `GET https://getpostchi.com/download
                             Authorization: Bearer 12345
                             @body
+                            {}
                             `.trim()
 
 
@@ -19,7 +20,7 @@ describe('creates http request from ast', () => {
             headers: [
                 ["Authorization", "Bearer 12345"]
             ],
-            body: ``
+            body: `{}`
         });
 
 
