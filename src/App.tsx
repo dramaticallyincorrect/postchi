@@ -1,16 +1,14 @@
 import { PanelLeftIcon } from 'lucide-react';
-import { HttpEditor } from './components/HttpEditor';
 import { Button } from './components/ui/button';
 import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { themes } from './lib/theme/themes';
 import { useEffect, useState } from 'react';
 import { FileTree } from './components/FileTree';
 import { FileItem, FileTreeItem, readFileTree } from './lib/data/project-files';
-import HttpResponseView from './components/http-response-view';
+import HttpRequestResponse from './http/http-request-response';
 
 
 export function App() {
@@ -39,10 +37,7 @@ export function App() {
         </div>
         <Split>
             <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
-            <HttpRequestResponse>
-                {selectedFile ? <HttpEditor theme={themes[1]} path={selectedFile.path} /> : null}
-                <HttpResponseView />
-            </HttpRequestResponse>
+            <HttpRequestResponse path={selectedFile?.path || ''} />
         </Split>
     </div>
 }
@@ -64,24 +59,5 @@ export function Split(props: { children: React.ReactNode[] }) {
         </ResizablePanelGroup>
     )
 }
-
-function HttpRequestResponse(props: { children: React.ReactNode[] }) {
-    return (
-        <ResizablePanelGroup
-            orientation="horizontal"
-            className="w-full h-full">
-            <ResizablePanel defaultSize="10%" className='m-1 rounded-xl bg-background-panel'>
-                {props.children[0]}
-            </ResizablePanel>
-
-            <ResizableHandle className='bg-muted/70' />
-
-            <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
-                {props.children[1]}
-            </ResizablePanel>
-        </ResizablePanelGroup>
-    )
-}
-
 
 export default App;

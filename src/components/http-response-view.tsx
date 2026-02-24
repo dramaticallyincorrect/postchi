@@ -5,12 +5,14 @@ import { buildCMTheme } from '@/lib/theme/theme-builder';
 import { themes } from '@/lib/theme/themes';
 import { jsonSyntaxHighlighting } from './json-editor-tokens';
 
-const HttpresponseView = () => {
-    const response = {
-        status: 200,
-        durationInMillies: 123
-    }
+export type HttpResponse = {
+    status: number,
+    durationInMillies: number,
+    body: string
+}
 
+const HttpresponseView = ({ response }: { response: HttpResponse }) => {
+  
     return (
         <div className='flex-col overflow-y-auto h-full'>
             <div className='flex flex-row my-2 mx-6 font-mono'>
@@ -19,7 +21,7 @@ const HttpresponseView = () => {
                 <span className='text-muted-foreground'>{response.durationInMillies} ms</span>
             </div>
             <CodeMirror
-                value={jsonResponse}
+                value={response.body}
                 theme={buildCMTheme(jsonSyntaxHighlighting(themes[1]), themes[1].editor)}
                 readOnly={true}
                 className='height: 100% outline-none'

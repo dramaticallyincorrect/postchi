@@ -4,7 +4,7 @@ export class BrowserFileStorage implements FileStorage {
     async readText(path: string): Promise<string> {
         return `
 // this is a comment
-GET /api/path`;
+GET https://jsonplaceholder.typicode.com/todos`;
     }
 
     async readDirectory(path: string): Promise<StorageEntry[]> {

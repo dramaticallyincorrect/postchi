@@ -311,7 +311,7 @@ function expression(range: Line, input: string): Expression {
 
     function parseIdentifier(): string {
         const start = range.curr;
-        range.toBefore(['(', ')', ',', ' ']);
+        range.toBefore(['(', ')', ',']);
         return input.slice(start, range.curr);
     }
 

@@ -18,6 +18,11 @@
         "**"
       ]
     },
-    "log:default"
+    "log:default",
+    "http:default",
+    {
+      "identifier": "http:default",
+      "allow": ["**"]
+    }
   ]
 }

@@ -1,37 +1,37 @@
-import CodeMirror from '@uiw/react-codemirror';
+import CodeMirror, { keymap, Prec } from '@uiw/react-codemirror';
 import { autocompletion } from "@codemirror/autocomplete"
 import { lintGutter } from '@codemirror/lint';
 import { buildCMTheme } from '@/lib/theme/theme-builder';
 import { EnvironmentsLanguage, environmentSyntaxHighlighting } from '@/lib/environments/environments-language';
-import { useEffect, useState } from 'react';
 import { customHttp, httpSyntaxHighlighting } from '@/lib/http/http-language';
-import DefaultFileStorage from '@/lib/data/files/file-default';
 
-export function HttpEditor({ theme, path }: { theme: PostchiTheme, path: string }) {
+export enum EditorType {
+  HTTP,
+  ENVIRONMENT
+}
 
-  const language = path.endsWith('.env') ? EnvironmentsLanguage() : customHttp()
+export function HttpEditor({ theme, type, text, onChange }: { theme: PostchiTheme, type: EditorType, text: string, onChange: (value: string) => void }) {
 
-  const cmTheme = path.endsWith('.env') ? buildCMTheme(environmentSyntaxHighlighting(theme), theme.editor) : buildCMTheme(httpSyntaxHighlighting(theme), theme.editor)
+  const language = type === EditorType.ENVIRONMENT ? EnvironmentsLanguage() : customHttp()
 
-  const [text, setText] = useState('')
+  const cmTheme = type === EditorType.ENVIRONMENT ? buildCMTheme(environmentSyntaxHighlighting(theme), theme.editor) : buildCMTheme(httpSyntaxHighlighting(theme), theme.editor)
 
-  useEffect(() => {
-    const loadFile = async () => {
-      const storage = new DefaultFileStorage()
-      const content = await storage.readText(path)
-      setText(content)
+  const submitKeymap = keymap.of([{
+    key: "Mod-Enter", // "Mod" = Cmd on Mac, Ctrl on Windows
+    run: () => {
+      return true;
     }
-    loadFile()
-  }, [path])
+  }]);
 
 
   return text ? (
     <CodeMirror
       value={text}
+      onChange={onChange}
       height='100%'
       theme={cmTheme}
       className='height: 100% outline-none'
-      extensions={[lintGutter(), language, autocompletion()]}
+      extensions={[lintGutter(), language, autocompletion(), Prec.highest(submitKeymap)]}
     />
   ) : null;
 }

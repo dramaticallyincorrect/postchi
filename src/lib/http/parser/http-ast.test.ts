@@ -106,6 +106,20 @@ describe("headers", () => {
         }
     })
 
+
+    test("key: value space value", () => {
+
+
+        for (const whitespace of ['', ...whitespaces]) {
+            const httpRequest = `GET /\nContent-Type${whitespace}:${whitespace}application${whitespace}/json`
+            const expected = expectation("GET", ["/"], [["Content-Type", `application${whitespace}/json`]]);
+
+            const httpRequestAst = computeHttpAst(httpRequest);
+
+            expect(valuesOf(httpRequestAst, httpRequest), httpRequest + '<eof>\n\n').toEqual(expected);
+        }
+    })
+
     test("key space? : space? value", () => {
 
 
