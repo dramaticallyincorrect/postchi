@@ -1,4 +1,4 @@
-import HttpResponseView, { HttpResponse } from "@/components/http-response-view";
+import HttpResponseView, { HttpResponse } from "@/http/http-response-view";
 import { EditorType, HttpEditor } from "@/components/HttpEditor";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { themes } from "@/lib/theme/themes";
