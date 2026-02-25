@@ -8,7 +8,7 @@ export default function executeHttpTemplate(template: string): Promise<Response>
     return fetch(request.url, {
         method: request.method,
         headers: request.headers,
-        // body: request.body
+        body: request.body
     });
 
 

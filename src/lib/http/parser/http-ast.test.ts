@@ -1,28 +1,24 @@
 import { describe, expect, it, test } from "vitest";
-import { computeHttpAst, Expression, HttpErrorMessage, HttpRequestAst, RequestFunction } from "./http-ast";
+import { computeHttpAst, Expression, FormBodyNode, HttpErrorMessage, HttpRequestAst, JsonBodyNode, RequestFunction, TextBodyNode } from "./http-ast";
 
 const whitespaces = [' ', '  ', '   ', '\t', ' \t\t']
 const newlines = ['\n', '\n\n', '\n\n\n']
 
+const functions = [
+    ['basic(username, <password>, date())', 'function(basic, username, variable(<password>), function(date))']
+]
+
+type Varient = [string, string]
+
+const skippedVarients: Varient[] = [[' ', 'space'], ['   ', 'multiple spaces'], ['\t', 'tab'], ['\n', 'newline'], ['\n\n\n', 'multiple newlines'], ['// this is a comment\n', 'comment']]
+
 describe("request line", () => {
-
-    test("emptyline* method /", () => {
-        const httpRequest = `\n\nGET /`
-        const expected = expectation("GET", ["/"]);
-
-        const httpRequestAst = computeHttpAst(httpRequest);
-
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
-
-    })
 
     test("method /", () => {
         const httpRequest = `GET /`
         const expected = expectation("GET", ["/"])
 
-        const httpRequestAst = computeHttpAst(httpRequest);
-
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+        assert(httpRequest, expected);
 
     })
 
@@ -30,20 +26,7 @@ describe("request line", () => {
         const httpRequest = `GET /this/is/a/test`
         const expected = expectation("GET", ["/this/is/a/test"]);
 
-        const httpRequestAst = computeHttpAst(httpRequest);
-
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
-
-    })
-
-
-    test("method whitespace url", () => {
-        const httpRequest = `GET   /this/is/a/test`
-        const expected = expectation("GET", ["/this/is/a/test"]);
-
-        const httpRequestAst = computeHttpAst(httpRequest);
-
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+        assert(httpRequest, expected);
 
     })
 
@@ -51,9 +34,7 @@ describe("request line", () => {
         const httpRequest = `GET <api>`
         const expected = expectation("GET", ['variable(<api>)']);
 
-        const httpRequestAst = computeHttpAst(httpRequest);
-
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+        assert(httpRequest, expected);
 
     })
 
@@ -61,30 +42,29 @@ describe("request line", () => {
         const httpRequest = `GET <api>/users<userid>`
         const expected = expectation("GET", ['variable(<api>)', '/users', 'variable(<userid>)'])
 
-        const httpRequestAst = computeHttpAst(httpRequest);
+        assert(httpRequest, expected);
 
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+    })
+
+    test("method whitespace url", () => {
+        const httpRequest = `GET   /this/is/a/test`
+        const expected = expectation("GET", ["/this/is/a/test"]);
+
+        assert(httpRequest, expected);
 
     })
 
 
-    test("comment method url", () => {
-        const httpRequest = `// this is a comment\nGET /`
-        const expected = expectation("GET", ["/"])
+    describe('(varient) method /', () => {
 
-        const httpRequestAst = computeHttpAst(httpRequest);
+        for (const [addIn, description] of skippedVarients) {
+            test(`${description}`, () => {
+                const httpRequest = `${addIn}GET /`
+                const expected = expectation("GET", ["/"]);
 
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
-
-    })
-
-    test("whitespace method url", () => {
-        const httpRequest = `     GET /`
-        const expected = expectation("GET", ["/"])
-
-        const httpRequestAst = computeHttpAst(httpRequest);
-
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+                assert(httpRequest, expected);
+            })
+        }
 
     })
 
@@ -93,79 +73,54 @@ describe("request line", () => {
 
 describe("headers", () => {
 
-    test("comment key space? : space? value", () => {
+    const requestLine = (rest: string) => `GET /\n// this is a comment\n${rest}`
 
+    test("key : literal", () => {
 
-        for (const whitespace of ['', ...whitespaces]) {
-            const httpRequest = `//this is a comment\nGET /\nContent-Type${whitespace}:${whitespace}application/json`
-            const expected = expectation("GET", ["/"], [["Content-Type", "application/json"]]);
+        const httpRequest = `GET /\nContent-Type: application/json`
+        const expected = expectation("GET", ["/"], [["Content-Type", "application/json"]]);
 
-            const httpRequestAst = computeHttpAst(httpRequest);
+        assert(httpRequest, expected);
+    })
 
-            expect(valuesOf(httpRequestAst, httpRequest), httpRequest + '<eof>\n\n').toEqual(expected);
+    test("key : variable", () => {
+
+        const httpRequest = `GET /\nContent-Type: <content_type>`
+        const expected = expectation("GET", ["/"], [["Content-Type", "variable(<content_type>)"]]);
+
+        assert(httpRequest, expected);
+    })
+
+    test("key : function", () => {
+
+        const httpRequest = `GET /\nContent-Type: time()`
+        const expected = expectation("GET", ["/"], [["Content-Type", "function(time)"]]);
+
+        assert(httpRequest, expected);
+    })
+
+    test("key : function(literal, variable, function())", () => {
+        const httpRequest = `GET /\nContent-Type: basic(username, <password>, date())`
+        const expected = expectation("GET", ["/"], [["Content-Type", "function(basic, username, variable(<password>), function(date))"]]);
+
+        assert(httpRequest, expected);
+    })
+
+    it('key value are trimmed on both sides', () => {
+        for (const whitespace of whitespaces) {
+            const httpRequest = requestLine(`${whitespace}Content-Type${whitespace}:${whitespace}application/json${whitespace}`)
+            const expected = expectation("GET", ["/"], [["Content-Type", `application/json`]]);
+            assert(httpRequest, expected);
         }
     })
 
+    test("space in key or value are kept", () => {
+        const spaces = [' ', '\t']
+        for (const whitespace of spaces) {
+            const httpRequest = requestLine(`Content${whitespace}Type: application${whitespace}/json`)
+            const expected = expectation("GET", ["/"], [[`Content${whitespace}Type`, `application${whitespace}/json`]]);
 
-    test("key: value space value", () => {
-
-
-        for (const whitespace of ['', ...whitespaces]) {
-            const httpRequest = `GET /\nContent-Type${whitespace}:${whitespace}application${whitespace}/json`
-            const expected = expectation("GET", ["/"], [["Content-Type", `application${whitespace}/json`]]);
-
-            const httpRequestAst = computeHttpAst(httpRequest);
-
-            expect(valuesOf(httpRequestAst, httpRequest), httpRequest + '<eof>\n\n').toEqual(expected);
-        }
-    })
-
-    test("key space? : space? value", () => {
-
-
-        for (const whitespace of ['', ...whitespaces]) {
-            const httpRequest = `GET /\nContent-Type${whitespace}:${whitespace}application/json`
-            const expected = expectation("GET", ["/"], [["Content-Type", "application/json"]]);
-
-            const httpRequestAst = computeHttpAst(httpRequest);
-
-            expect(valuesOf(httpRequestAst, httpRequest), httpRequest + '<eof>\n\n').toEqual(expected);
-        }
-    })
-
-    test("key space? : space? variable", () => {
-
-        for (const whitespace of ['',]) {
-            const httpRequest = `GET /\nContent-Type${whitespace}:${whitespace}<content_type>`
-            const expected = expectation("GET", ["/"], [["Content-Type", "variable(<content_type>)"]]);
-
-            const httpRequestAst = computeHttpAst(httpRequest);
-
-            expect(valuesOf(httpRequestAst, httpRequest), httpRequest + '<eof>\n\n').toEqual(expected);
-        }
-    })
-
-    test("key space? : space? function", () => {
-
-        for (const whitespace of ['', ...whitespaces]) {
-            const httpRequest = `GET /\nContent-Type${whitespace}:${whitespace}time()`
-            const expected = expectation("GET", ["/"], [["Content-Type", "function(time)"]]);
-
-            const httpRequestAst = computeHttpAst(httpRequest);
-
-            expect(valuesOf(httpRequestAst, httpRequest), httpRequest + '<eof>\n\n').toEqual(expected);
-        }
-    })
-
-    test("key space? : space? function(literal, variable, function(function))", () => {
-
-        for (const whitespace of ['', ...whitespaces]) {
-            const httpRequest = `GET /\nContent-Type${whitespace}:${whitespace}basic(username, <password>, date())`
-            const expected = expectation("GET", ["/"], [["Content-Type", "function(basic, username, variable(<password>), function(date))"]]);
-
-            const httpRequestAst = computeHttpAst(httpRequest);
-
-            expect(valuesOf(httpRequestAst, httpRequest), httpRequest + '<eof>\n\n').toEqual(expected);
+            assert(httpRequest, expected);
         }
     })
 })
@@ -173,70 +128,82 @@ describe("headers", () => {
 
 describe("body", () => {
 
+    const body = (rest: string) => `GET /\n// this is a comment\n@body\n${rest}`
+
     it('@body null', () => {
 
-        const httpRequest = `
-GET /
-@body`
-        const expected = expectation("GET", ["/"], [],);
-
-        const httpRequestAst = computeHttpAst(httpRequest);
-
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+        const httpRequest = body(``)
+        assert(httpRequest, expectation("GET", ["/"], [], null));
 
     })
 
 
     it('json', () => {
 
-        const jsonBodies = ['{', '[']
+        const jsonBodies = ['{sdf', '[sdf']
 
+        for (const jsonBody of jsonBodies) {
+            
+            const httpRequest = body(jsonBody)
+            const expected = expectation("GET", ["/"], [], `json(${jsonBody})`);
 
-        for (const body of jsonBodies) {
-            const httpRequest = `
-GET /
-@body
-${body}`
-            const expected = expectation("GET", ["/"], [], {
-                inferredContentType: "json",
-                text: body
-            });
-
-            const httpRequestAst = computeHttpAst(httpRequest);
-
-            expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+            assert(httpRequest, expected);
         }
 
     })
 
 
-    it('form', () => {
+    describe('form', () => {
 
-        const httpRequest = `
-GET /
-@body
-key=value`
-        const expected = expectation("GET", ["/"], [], {
-            inferredContentType: "form",
-            text: "key=value"
-        });
+        const pair = (key: string, value: string, pad: string = '') => `${pad}${key}${pad}=${pad}${value}${pad}`
 
-        const httpRequestAst = computeHttpAst(httpRequest);
+        it('key=value pairs', () => {
 
-        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+            const httpRequest = body(`${pair('key', 'value')}\n${pair('key', 'val')}`)
+            const expected = expectation("GET", ["/"], [], "form(key=value,key=val)");
+
+            assert(httpRequest, expected);
+
+        })
+
+        it('key = variable', () => {
+
+            const httpRequest = body(pair('key', '<value>'))
+            const expected = expectation("GET", ["/"], [], "form(key=variable(<value>))");
+
+            assert(httpRequest, expected);
+
+        })
+
+        for (const [template, fxExpected] of functions) {
+            it(`key = ${fxExpected}`, () => {
+
+                const httpRequest = body(pair('key', template))
+                const expected = expectation("GET", ["/"], [], `form(key=${fxExpected})`);
+
+                assert(httpRequest, expected);
+
+            })
+        }
+
+        it('trims spaces before and after key value', () => {
+
+            for (const whitespace of [...whitespaces]) {
+
+                const httpRequest = body(pair('key', 'value', whitespace))
+                const expected = expectation("GET", ["/"], [], "form(key=value)");
+
+                assert(httpRequest, expected);
+            }
+
+        })
 
     })
 
     it('text', () => {
 
-        const httpRequest = `
-GET /
-@body
-this is a text`
-        const expected = expectation("GET", ["/"], [], {
-            inferredContentType: "text",
-            text: "this is a text"
-        });
+        const httpRequest = body(`this is a text`)
+        const expected = expectation("GET", ["/"], [], "text(this is a text)");
 
         const httpRequestAst = computeHttpAst(httpRequest);
 
@@ -246,18 +213,15 @@ this is a text`
 
     it('trimmed on both sides', () => {
 
-        const bodies = ['{}', '[]', 'key=value']
+        const varients = ['{}', '[]', 'key=value']
 
-        for (const body of bodies) {
+        for (const bodyVariant of varients) {
             for (const whitespace of [...whitespaces, ...newlines]) {
-                const httpRequest = `
-GET /
-@body
-${whitespace}${body}${whitespace}`
+                const httpRequest = body(`${whitespace}${bodyVariant}${whitespace}`)
 
                 const httpRequestAst = computeHttpAst(httpRequest);
 
-                expect(httpRequest.slice(httpRequestAst.body?.from, httpRequestAst.body?.to)).toEqual(body);
+                expect(httpRequest.slice(httpRequestAst.body?.from, httpRequestAst.body?.to)).toEqual(bodyVariant);
             }
         }
 
@@ -313,7 +277,7 @@ function assert(request: string, expected: Expectation) {
 }
 
 
-function expectation(method: string, url: string[] = [], headers: [string, string][] = [], body: ExpectedBody | null = null, errors: HttpErrorMessage[] = []): Expectation {
+function expectation(method: string, url: string[] = [], headers: [string, string][] = [], body: string | null = null, errors: HttpErrorMessage[] = []): Expectation {
     return {
         method: method,
         url: url,
@@ -334,14 +298,18 @@ function valuesOf(ast: HttpRequestAst, request: string): Expectation {
         return request.slice(node.from, node.to);
     };
 
+    const bodyValue = (body: JsonBodyNode | FormBodyNode | TextBodyNode | null) => {
+        if (!body) return null;
+        if (body.type === "json") return `json(${value(body)})`;
+        if (body.type === "text") return `text(${value(body)})`;
+        return `form(${body.entries.map(({ key, value }) => `${key}=${expressionString(value, request)}`).join(",")})`;
+    }
+
     return {
         method: value(ast.method),
         url: ast.url.map(u => value(u)),
         headers: ast.headers.map(({ key, value: v }) => ({ key: value(key), value: value(v) })),
-        body: ast.body && {
-            inferredContentType: ast.body.inferredContentType,
-            text: value(ast.body)
-        },
+        body: bodyValue(ast.body),
         errors: ast.errors.map(e => (e.message)).join(",")
     }
 }
@@ -370,9 +338,4 @@ function expressionString(node: Expression, request: string): string {
 }
 
 
-type Expectation = { method: string; url: string[]; headers: { key: string, value: string }[]; body: ExpectedBody | null; errors: string };
-
-type ExpectedBody = {
-    inferredContentType: string;
-    text: string;
-}
+type Expectation = { method: string; url: string[]; headers: { key: string, value: string }[]; body: string | null; errors: string };

@@ -2,13 +2,25 @@ export type HttpRequestAst = {
     method: Node;
     url: (Variable | Node)[];
     headers: { key: Node, value: Expression }[];
-    body: BodyNode | null;
+    body: JsonBodyNode | FormBodyNode | TextBodyNode | null;
     errors: HttpParseError[];
 };
 
-export type BodyNode = {
-    inferredContentType: string;
-    type: "body";
+export type FormBodyNode = {
+    type: "form";
+    from: number;
+    to: number;
+    entries: { key: string, value: Expression }[];
+}
+
+export type JsonBodyNode = {
+    type: "json";
+    from: number;
+    to: number;
+}
+
+export type TextBodyNode = {
+    type: "text";
     from: number;
     to: number;
 }
@@ -71,8 +83,8 @@ export function computeHttpAst(request: string): HttpRequestAst {
     var hasProccessedRequestLine = false;
     var startBody = false;
 
-
-    for (const line of lines(request)) {
+    const linesGenerator = lines(request);
+    for (const line of linesGenerator) {
 
         if (request.slice(line.start, line.end).trim().startsWith("//")) {
             continue
@@ -142,15 +154,44 @@ export function computeHttpAst(request: string): HttpRequestAst {
 
         } else {
             line.skipWhitespace();
+
             const bodyText = request.slice(line.curr).trim();
+            const bodyStart = line.curr;
+            const bodyEnd = bodyStart + bodyText.length;
             const inferredContentType = inferContentType(bodyText);
-            ast.body = {
-                type: "body",
-                from: line.curr,
-                to: line.curr + bodyText.length,
-                inferredContentType
+
+            if (inferredContentType === "form") {
+                const keyValuePairs: { key: string, value: Expression }[] = [];
+
+                const [start, end] = line.toNoneWhitespaceBefore("=");
+                line.toAfter("=");
+                const key = request.slice(start, end);
+                const value = expression(line, request);
+                keyValuePairs.push({ key, value });
+
+                for (const entry of linesGenerator) {
+                    line.skipWhitespace();
+                    const [start, end] = entry.toNoneWhitespaceBefore("=");
+                    entry.toAfter("=");
+                    const key = request.slice(start, end);
+                    const value = expression(entry, request);
+                    keyValuePairs.push({ key, value });
+                }
+                ast.body = {
+                    type: "form",
+                    from: bodyStart,
+                    to: bodyEnd,
+                    entries: keyValuePairs
+                }
+                break;
+            } else {
+                ast.body = {
+                    type: inferredContentType === "json" ? "json" : "text",
+                    from: bodyStart,
+                    to: bodyEnd,
+                }
             }
-            break
+            break;
         }
     }
 
@@ -259,12 +300,12 @@ class Line {
         }
     }
 
-    toNoneWhitespaceBefore(terminator: string): [number, number] {
+    toNoneWhitespaceBefore(terminator: string | string[]): [number, number] {
         const begin = this.curr;
         let lastCharacterIndexBeforeColon = this.curr;
-        while (this.curr < this.end && this.container[this.curr] !== terminator) {
+        while (this.curr < this.end && (typeof terminator === "string" ? this.container[this.curr] !== terminator : !terminator.includes(this.container[this.curr]))) {
             if (this.notWhitespace()) {
-                lastCharacterIndexBeforeColon++;
+                lastCharacterIndexBeforeColon = this.curr + 1;
             }
             this.curr++;
         }
@@ -325,28 +366,23 @@ function expression(range: Line, input: string): Expression {
     }
 
 
-    function parseIdentifier(): string {
-        const start = range.curr;
-        range.toBefore(['(', ')', ',']);
-        return input.slice(start, range.curr);
+    function parseIdentifier(): [number, number] {
+        return range.toNoneWhitespaceBefore(['(', ')', ',']);
     }
 
     function parseExpression(): Expression {
         range.skipWhitespace();
         const from = range.curr;
 
-        // Variable: <name>
         if (range.is("<")) {
             range.toAfter(">");
             return { type: "variable", from, to: range.curr };
         }
 
-        // Read identifier
-        const name = parseIdentifier();
-        const nameNode: Literal = { type: "literal", from, to: range.curr };
-        if (name === "") return nameNode;
+        const [nameStart, nameEnd] = parseIdentifier();
+        const nameNode: Literal = { type: "literal", from: nameStart, to: nameEnd };
+        if (nameStart === nameEnd) return nameNode;
 
-        // Function: name(args...)
         if (range.is("(")) {
             range.toAfter("(");
             const args: Expression[] = [];
@@ -365,8 +401,7 @@ function expression(range: Line, input: string): Expression {
             return { type: "function", from, to: range.curr, name: nameNode, args };
         }
 
-        // Literal
-        return { type: "literal", from, to: range.curr };
+        return { type: "literal", from: nameStart, to: nameEnd };
     }
 
     return parseExpression();
