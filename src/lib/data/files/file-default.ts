@@ -28,4 +28,4 @@ function defaultFileStorage(): FileStorage {
     return new BrowserFileStorage()
 }
 
-const isTauri = () => 'isTauri' in window && !!window.isTauri;
+const isTauri = () => typeof window !== 'undefined' && 'isTauri' in window && !!window.isTauri;

@@ -10,7 +10,7 @@ export type FormBodyNode = {
     type: "form";
     from: number;
     to: number;
-    entries: { key: HttpNode, separator: number; value: Expression }[];
+    entries: HeaderNode[];
 }
 
 export type JsonBodyNode = {
@@ -30,7 +30,7 @@ export type HeaderNode = {
     from: number;
     to: number;
     key: HttpNode;
-    separator: number;
+    separator: number | undefined;
     value: Expression;
 }
 
@@ -122,34 +122,23 @@ export function computeHttpAst(request: string): HttpRequestAst {
             }
         } else if (!startBody) {
 
-            let [start, keyEnd] = line.toNoneWhitespaceBefore(":");
-            line.toAfter(":");
-            const separatorIndex = line.curr - 1;
-            line.skipWhitespace();
+            const headerNode = pair(line, request, ":");
 
-            const key = {
-                type: "literal",
-                from: start,
-                to: keyEnd
-            }
-
-            if (key.from == key.to) {
-                ast.errors.push({
-                    message: HttpErrorMessage.MissingKey,
-                    from: keyEnd,
-                    to: keyEnd
-                });
-            }
-
-            if (request.slice(key.from, key.to).toLowerCase() === "@body") {
+            if (request.slice(headerNode.key.from, headerNode.key.to).toLowerCase() === "@body") {
                 startBody = true;
                 continue
             }
 
-            const value = expression(line, request);
+            if (headerNode.key.from == headerNode.key.to) {
+                ast.errors.push({
+                    message: HttpErrorMessage.MissingKey,
+                    from: headerNode.key.from,
+                    to: headerNode.key.to
+                });
+            }
 
-            if (value.from == value.to) {
-                const index = Math.max(key.to, value.from)
+            if (headerNode.value.from == headerNode.value.to) {
+                const index = Math.max(headerNode.key.to, headerNode.value.from)
                 ast.errors.push({
                     message: HttpErrorMessage.MissingValue,
                     from: index,
@@ -157,14 +146,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
                 });
             }
 
-            ast.headers.push({
-                type: "header",
-                from: line.start,
-                to: line.end,
-                key,
-                value,
-                separator: separatorIndex
-            })
+            ast.headers.push(headerNode)
 
         } else {
             line.skipWhitespace();
@@ -175,31 +157,14 @@ export function computeHttpAst(request: string): HttpRequestAst {
             const inferredContentType = inferContentType(bodyText);
 
             if (inferredContentType === "form") {
-                const keyValuePairs: { key: HttpNode, separator: number, value: Expression }[] = [];
+                const keyValuePairs: HeaderNode[] = [];
 
-                const [start, end] = line.toNoneWhitespaceBefore("=");
-                line.toAfter("=");
-                const separatorIndex = line.curr - 1;
-                const key = {
-                    type: "literal",
-                    from: start,
-                    to: end
-                };
-                const value = expression(line, request);
-                keyValuePairs.push({ key, value, separator: separatorIndex });
+                const headerNode = pair(line, request, "=");
+                keyValuePairs.push(headerNode)
 
                 for (const entry of linesGenerator) {
-                    line.skipWhitespace();
-                    const [start, end] = entry.toNoneWhitespaceBefore("=");
-                    entry.toAfter("=");
-                    const separatorIndex = entry.curr - 1;
-                    const key = {
-                        type: "literal",
-                        from: start,
-                        to: end
-                    };
-                    const value = expression(entry, request);
-                    keyValuePairs.push({ key, value, separator: separatorIndex });
+                    const headerNode = pair(entry, request, "=");
+                    keyValuePairs.push(headerNode)
                 }
                 ast.body = {
                     type: "form",
@@ -252,12 +217,11 @@ function parseSegments(range: Line, request: string): (Variable | Literal)[] {
                 to: range.curr
             });
         } else {
-            const begin = range.curr;
-            range.toBefore("<");
+            const [start, end] = range.toNoneWhitespaceBefore("<");
             segments.push({
                 type: "literal",
-                from: begin,
-                to: range.curr
+                from: start,
+                to: end
             });
         }
 
@@ -265,6 +229,33 @@ function parseSegments(range: Line, request: string): (Variable | Literal)[] {
 
 
     return segments;
+}
+
+function pair(line: Line, request: string, separator: string): HeaderNode {
+    let [start, keyEnd] = line.toNoneWhitespaceBefore(separator);
+    line.toAfter(separator);
+    let separatorIndex = undefined;
+    if (request[line.curr - 1] === separator) {
+        separatorIndex = line.curr - 1;
+    }
+    line.skipWhitespace();
+
+    const key = {
+        type: "literal",
+        from: start,
+        to: keyEnd
+    }
+
+    const value = expression(line, request);
+
+    return {
+        type: "header",
+        from: line.start,
+        to: line.end,
+        key,
+        value,
+        separator: separatorIndex
+    }
 }
 
 
@@ -286,13 +277,13 @@ class Line {
     }
 
     toNextWhitespace() {
-        while (this.curr < this.end && this.container[this.curr] !== " " && this.container[this.curr] !== "\t") {
+        while (this.curr < this.end && !this.isWhitespace()) {
             this.curr++;
         }
     }
 
     skipWhitespace() {
-        while (this.curr < this.end && (this.container[this.curr] === " " || this.container[this.curr] === "\t")) {
+        while (this.curr < this.end && this.isWhitespace()) {
             this.curr++;
         }
     }
@@ -350,6 +341,10 @@ class Line {
 
     notWhitespace(): boolean {
         return this.not(' ') && this.not('\t');
+    }
+
+    isWhitespace(): boolean {
+        return this.is(' ') || this.is('\t');
     }
 
 }

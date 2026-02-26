@@ -24,14 +24,13 @@ authorization= basic(sdfs)
 
 
 @body`;
+
   const tree = parser.parse(defaultValue)
   let spec = `Request(
-                RequestLine(
-                  Method,
-                  Path),
-                Header(Key, Function(FunctionName)),
+                RequestLine(Method,Path),
+                Header(Key, Function(FunctionName, Value) ),
                 BodyStart)`
-  printTree(tree, defaultValue)
+  // printTree(tree, defaultValue)
   testTree(tree, spec)
 
 })
