@@ -1,7 +1,7 @@
 export type HttpRequestAst = {
-    method: Node;
-    url: (Variable | Node)[];
-    headers: { key: Node, value: Expression }[];
+    method: HttpNode;
+    url: (Variable | HttpNode)[];
+    headers: HeaderNode[];
     body: JsonBodyNode | FormBodyNode | TextBodyNode | null;
     errors: HttpParseError[];
 };
@@ -10,7 +10,7 @@ export type FormBodyNode = {
     type: "form";
     from: number;
     to: number;
-    entries: { key: string, value: Expression }[];
+    entries: { key: HttpNode, separator: number; value: Expression }[];
 }
 
 export type JsonBodyNode = {
@@ -25,7 +25,16 @@ export type TextBodyNode = {
     to: number;
 }
 
-type Node = {
+export type HeaderNode = {
+    type: "header";
+    from: number;
+    to: number;
+    key: HttpNode;
+    separator: number;
+    value: Expression;
+}
+
+export type HttpNode = {
     type: string;
     from: number;
     to: number;
@@ -115,6 +124,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
 
             let [start, keyEnd] = line.toNoneWhitespaceBefore(":");
             line.toAfter(":");
+            const separatorIndex = line.curr - 1;
             line.skipWhitespace();
 
             const key = {
@@ -148,8 +158,12 @@ export function computeHttpAst(request: string): HttpRequestAst {
             }
 
             ast.headers.push({
-                key: key,
-                value: value
+                type: "header",
+                from: line.start,
+                to: line.end,
+                key,
+                value,
+                separator: separatorIndex
             })
 
         } else {
@@ -161,21 +175,31 @@ export function computeHttpAst(request: string): HttpRequestAst {
             const inferredContentType = inferContentType(bodyText);
 
             if (inferredContentType === "form") {
-                const keyValuePairs: { key: string, value: Expression }[] = [];
+                const keyValuePairs: { key: HttpNode, separator: number, value: Expression }[] = [];
 
                 const [start, end] = line.toNoneWhitespaceBefore("=");
                 line.toAfter("=");
-                const key = request.slice(start, end);
+                const separatorIndex = line.curr - 1;
+                const key = {
+                    type: "literal",
+                    from: start,
+                    to: end
+                };
                 const value = expression(line, request);
-                keyValuePairs.push({ key, value });
+                keyValuePairs.push({ key, value, separator: separatorIndex });
 
                 for (const entry of linesGenerator) {
                     line.skipWhitespace();
                     const [start, end] = entry.toNoneWhitespaceBefore("=");
                     entry.toAfter("=");
-                    const key = request.slice(start, end);
+                    const separatorIndex = entry.curr - 1;
+                    const key = {
+                        type: "literal",
+                        from: start,
+                        to: end
+                    };
                     const value = expression(entry, request);
-                    keyValuePairs.push({ key, value });
+                    keyValuePairs.push({ key, value, separator: separatorIndex });
                 }
                 ast.body = {
                     type: "form",
@@ -199,7 +223,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
 }
 
 
-function parseRequestLine(range: Line, request: string): [Node, (Variable | Literal)[]] {
+function parseRequestLine(range: Line, request: string): [HttpNode, (Variable | Literal)[]] {
     range.toNextWhitespace();
     const method = {
         type: "method",

@@ -143,7 +143,7 @@ describe("body", () => {
         const jsonBodies = ['{sdf', '[sdf']
 
         for (const jsonBody of jsonBodies) {
-            
+
             const httpRequest = body(jsonBody)
             const expected = expectation("GET", ["/"], [], `json(${jsonBody})`);
 
@@ -302,7 +302,7 @@ function valuesOf(ast: HttpRequestAst, request: string): Expectation {
         if (!body) return null;
         if (body.type === "json") return `json(${value(body)})`;
         if (body.type === "text") return `text(${value(body)})`;
-        return `form(${body.entries.map(({ key, value }) => `${key}=${expressionString(value, request)}`).join(",")})`;
+        return `form(${body.entries.map(({ key, value: v }) => `${value(key)}=${expressionString(v, request)}`).join(",")})`;
     }
 
     return {
