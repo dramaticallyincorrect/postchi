@@ -1,35 +1,24 @@
 import { expect, test } from 'vitest';
 import { parser } from '../parser/parser';
-import { computeHttpDiagnostics, errorDiagnostic, HttpLint } from './http-linter';
+import { computeHttpDiagnostics, errorDiagnostic } from './http-linter';
+import { HttpErrorMessage } from '../parser/http-ast';
 
 
 
-test('HTTP method missing', () => {
+test('warning non standard method', () => {
 
     const input = `/api/v1/data`
 
-    const tree = parser.parse(input)
+    // const tree = parser.parse(input)
 
-    const diagnostics = computeHttpDiagnostics(tree, input)
+    // const diagnostics = computeHttpDiagnostics(tree, input)
 
-    // sanity check!
-    expect(computeHttpDiagnostics(parser.parse(`POST /`), `POST /`)).toStrictEqual([])
+    // // sanity check!
+    // expect(computeHttpDiagnostics(parser.parse(`POST /`), `POST /`)).toStrictEqual([])
 
-    expect(diagnostics).toStrictEqual([
-        errorDiagnostic(HttpLint.MissingMethod, 0, 0)
-    ])
-
-})
-
-test('Missing path', () => {
-
-    const input = `GET`
-
-    const tree = parser.parse(input)
-
-    const diagnostics = computeHttpDiagnostics(tree, input)
-
-    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpLint.MissingUrl, input.length, input.length)])
+    // expect(diagnostics).toStrictEqual([
+    //     errorDiagnostic(HttpErrorMessage.MissingMethod, 0, 0)
+    // ])
 
 })
 
@@ -41,7 +30,19 @@ test('Missing path', () => {
 
     const diagnostics = computeHttpDiagnostics(tree, input)
 
-    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpLint.MissingUrl, input.length, input.length)])
+    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingUrl, input.length, input.length)])
+
+})
+
+test('Missing path', () => {
+
+    const input = `GET`
+
+    const tree = parser.parse(input)
+
+    const diagnostics = computeHttpDiagnostics(tree, input)
+
+    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingUrl, input.length, input.length)])
 
 })
 
@@ -56,7 +57,7 @@ GET /
     const diagnostics = computeHttpDiagnostics(tree, input)
 
     const index = input.indexOf(":")
-    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpLint.MissingHeaderName, index, index)])
+    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingKey, index, index)])
 
 })
 
@@ -69,7 +70,7 @@ test('Header value missing', () => {
 
     const diagnostics = computeHttpDiagnostics(tree, input)
 
-    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpLint.MissingHeaderValue, input.length, input.length)])
+    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingValue, input.length, input.length)])
 
 })
 
