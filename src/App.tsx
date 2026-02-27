@@ -9,9 +9,14 @@ import { useEffect, useState } from 'react';
 import { FileTree } from './components/FileTree';
 import { FileItem, FileTreeItem, readFileTree } from './lib/data/project-files';
 import HttpRequestResponse from './http/http-request-response';
+import { ActiveEnvironment } from './active-environment/active-environment';
+import { Project } from './lib/data/project/project';
+import { getFileTypeFromPath } from './lib/data/file-type-recognizer';
+import { FileType } from './lib/data/supported-filetypes';
+import { EnvironmentEditor } from './editors/environment-editor';
 
 
-export function App() {
+export default function App({ project }: { project: Project }) {
 
     const [fileTree, setFileTree] = useState<FileTreeItem[]>([])
 
@@ -19,9 +24,8 @@ export function App() {
 
     useEffect(() => {
         const fetchFileTree = async () => {
-            const tree = await readFileTree('/Users/hamedmonji/Desktop/test/titled');
+            const tree = await readFileTree(project.path);
             setFileTree(tree);
-            setSelectedFile(tree[0] || null);
         };
         fetchFileTree();
     }, []);
@@ -30,19 +34,32 @@ export function App() {
         <div className="titlebar bg-background-panel mt-1.5">
             <div data-tauri-drag-region>
                 <PanelLeftIcon className='ms-22 me-1 size-4 inline' />
-                <Button variant="ghost" className='hover:bg-muted-foreground'>Project</Button>
+                <Button variant="ghost" className='hover:bg-muted-foreground'>{project.name}</Button>
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
-                <Button variant="ghost">Production</Button>
+                <ActiveEnvironment envPath={project.envPath} />
             </div>
         </div>
         <Split>
             <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
-            <HttpRequestResponse path={selectedFile?.path || ''} />
+            {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
         </Split>
     </div>
 }
 
-export function Split(props: { children: React.ReactNode[] }) {
+const Editor = ({ path }: { path: string }) => {
+
+    const type = getFileTypeFromPath(path)
+
+    switch (type) {
+        case FileType.HTTP:
+            return <HttpRequestResponse path={path} />
+        default:
+            return <EnvironmentEditor path={path} />
+    }
+
+}
+
+function Split(props: { children: React.ReactNode[] }) {
     return (
         <ResizablePanelGroup
             orientation="horizontal"
@@ -59,5 +76,3 @@ export function Split(props: { children: React.ReactNode[] }) {
         </ResizablePanelGroup>
     )
 }
-
-export default App;

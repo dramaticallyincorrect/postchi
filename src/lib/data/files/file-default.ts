@@ -1,3 +1,4 @@
+import { isTauri } from "@tauri-apps/api/core"
 import { BrowserFileStorage } from "./file-browser"
 import { TauriFileStorage } from "./file-tauri"
 
@@ -6,12 +7,17 @@ export default class DefaultFileStorage implements FileStorage {
     readText(path: string): Promise<string> {
         return this.storage.readText(path)
     }
+    
+    writeText(path: string, text: string): Promise<void> {
+        return this.storage.writeText(path, text)
+    }
+
     readDirectory(path: string): Promise<StorageEntry[]> {
         return this.storage.readDirectory(path)
     }
 
-    create(path: string): Promise<void> {
-        return this.storage.create(path)
+    create(path: string, text?: string): Promise<void> {
+        return this.storage.create(path, text)
     }
 
     mkdir(path: string): Promise<void> {
@@ -27,5 +33,3 @@ function defaultFileStorage(): FileStorage {
 
     return new BrowserFileStorage()
 }
-
-const isTauri = () => typeof window !== 'undefined' && 'isTauri' in window && !!window.isTauri;

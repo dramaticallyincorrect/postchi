@@ -1,7 +1,8 @@
- interface FileStorage {
+interface FileStorage {
     readText(path: string): Promise<string>;
+    writeText(path: string, text: string): Promise<void>;
     readDirectory(path: string): Promise<StorageEntry[]>;
-    create(path: string): Promise<void>;
+    create(path: string, text?: string): Promise<void>;
     mkdir(path: string): Promise<void>;
 }
 

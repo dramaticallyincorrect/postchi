@@ -1,26 +1,22 @@
+import CodeMirror, { keymap, Prec } from '@uiw/react-codemirror';
 import HttpResponseView, { HttpResponse } from "@/http/http-response-view";
-import { EditorType, HttpEditor } from "@/components/HttpEditor";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { themes } from "@/lib/theme/themes";
 import { useEffect, useState } from "react";
 import executeHttpTemplate from "@/lib/data/http/http-runner";
-import DefaultFileStorage from "@/lib/data/files/file-default";
+import { SendRequestInstructions } from "@/components/send-request-shortcut";
+import { useAutoSave } from "@/editors/use-auto-save";
+import { lintGutter } from "@codemirror/lint";
+import { autocompletion } from "@codemirror/autocomplete";
+import { buildCMTheme } from "@/lib/theme/theme-builder";
+import { customHttp, httpSyntaxHighlighting } from "@/lib/http/http-language";
 
 
 export default function HttpRequestResponse({ path }: { path: string }) {
 
     const [response, setResponse] = useState<HttpResponse | null>(null)
 
-    const [text, setText] = useState('')
-
-    useEffect(() => {
-        const loadFile = async () => {
-            const storage = new DefaultFileStorage()
-            const content = await storage.readText(path)
-            setText(content)
-        }
-        loadFile()
-    }, [path])
+    const { text, setText, save } = useAutoSave(path)
 
     useEffect(() => {
         const handler = async (e: KeyboardEvent) => {
@@ -44,19 +40,34 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         return () => window.removeEventListener("keydown", handler);
     }, [text]);
 
+    const submitKeymap = keymap.of([{
+        key: "Mod-Enter",
+        run: () => {
+            return true;
+        }
+    }]);
+
 
     return (
         <ResizablePanelGroup
+            onBlur={save}
             orientation="horizontal"
             className="w-full h-full">
-            <ResizablePanel defaultSize="50%" className='m-1 rounded-xl bg-background-panel'>
-                <HttpEditor type={EditorType.HTTP} onChange={setText} theme={themes[1]} text={text} />
+            <ResizablePanel defaultSize="50%" className='rounded-xl bg-background-panel'>
+                <CodeMirror
+                    value={text}
+                    onChange={setText}
+                    height='100%'
+                    theme={buildCMTheme(httpSyntaxHighlighting(themes[1]), themes[1].editor)}
+                    className='height: 100% outline-none'
+                    extensions={[lintGutter(), customHttp(), autocompletion(), Prec.highest(submitKeymap)]}
+                />
             </ResizablePanel>
 
             <ResizableHandle className='bg-muted/70' />
 
             <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
-                {response ? <HttpResponseView response={response} /> : null}
+                {response ? <HttpResponseView response={response} /> : <SendRequestInstructions />}
             </ResizablePanel>
         </ResizablePanelGroup>
     )

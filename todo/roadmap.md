@@ -12,15 +12,21 @@
          1. ~~readText, readFile path completion~~
          2. nested functions
          3. args with spaces or trailing spaces
-3. environments
+3. save file
+   1. when should a file be saved
+      1. when closing the app
+      2. ~~when editor loses focus~~
+4. environments
    1. select environments
-      1. + shortcut
-   2. resolve when running requests
-4. run request
+   2. select by shortcut
+   3. updating env file updates environments
+   4. save selected env index so when env changes in realtime it still points to the correct index rather than the name that might have changed
+5. run request
    1. url encoded form
    2. multipart form
    3. resolve function expressions
-5. errors
+   4. resolve env variables
+6. errors
     1. UnSupportedFunction
     2. MissingParameterValue
     3. MissingKey

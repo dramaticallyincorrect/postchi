@@ -1,14 +1,29 @@
 
 import DefaultFileStorage from './files/file-default';
 
-export type FileItem = { name: string, path: string }
-export type FolderItem = { name: string; path: string, items: FileTreeItem[] }
-export type FileTreeItem = FileItem | FolderItem
+export class FileItem {
+    name: string;
+    path: string;
 
-export const collectionsDirName = "collections"
-export const environmentsName = "environments"
-export const secretsName = "secrets"
-export const envExtension = '.cenv'
+    constructor(name: string, path: string) {
+        this.name = name;
+        this.path = path;
+    }
+}
+
+export class FolderItem {
+    name: string;
+    path: string;
+    items: FileTreeItem[]
+
+    constructor(name: string, path: string, items: FileTreeItem[]) {
+        this.name = name;
+        this.path = path;
+        this.items = items;
+    }
+}
+
+export type FileTreeItem = FileItem | FolderItem
 
 export async function readFileTree(root: string, storage: FileStorage = new DefaultFileStorage()): Promise<FileTreeItem[]> {
     const items = await readItems(root, storage)
@@ -22,10 +37,10 @@ async function readItems(path: string, storage: FileStorage = new DefaultFileSto
                 .sort((a, b) => a.filename.localeCompare(b.filename))
                 .map(async entry => {
                     if (entry.isDirectory) {
-                        return { name: entry.filename, path: entry.path, items: await readItems(entry.path, storage) }
+                        return new FolderItem(entry.filename, entry.path, await readItems(entry.path, storage))
                     }
 
-                    return { name: entry.filename, path: entry.path }
+                    return new FileItem(entry.filename, entry.path)
                 }))
     })
 }

@@ -1,35 +1,38 @@
+import { fs } from 'memfs';
+import { pathOf } from './join';
+
+type IDirent = {
+    name: string
+    parentPath: string
+    isDirectory: () => boolean
+    isFile: () => boolean
+    isSymbolicLink: () => boolean
+}
 
 export class BrowserFileStorage implements FileStorage {
 
     async readText(path: string): Promise<string> {
-        return `
-// this is a comment
-GET https://jsonplaceholder.typicode.com/todos`;
+        return fs.promises.readFile(path, 'utf-8').then<string>((data) => data.toString());
+    }
+
+    writeText(path: string, text: string): Promise<void> {
+        return fs.promises.writeFile(path, text);
     }
 
     async readDirectory(path: string): Promise<StorageEntry[]> {
-        console.log(`Reading directory at ${path}`)
-        if (path.endsWith('collections')) {
-            return [
-                { filename: 'users.get', path: '/collections/users.get', isDirectory: false },
-                { filename: 'token.get', path: '/collections/token.get', isDirectory: false },
-                { filename: 'courses', path: '/collections/courses', isDirectory: true },
-            ]
-        }
-        if (path.endsWith('courses')) {
-            return []
-        }
-        return [
-            { filename: 'collections', path: '/collections', isDirectory: true },
-        ]
-
+        return fs.readdirSync(path, { withFileTypes: true }).map((file) => {
+            if ((file as IDirent) !== undefined) {
+                const entry = file as IDirent
+                return { filename: entry.name, path: pathOf(path, entry.name), isDirectory: entry.isDirectory() }
+            }
+        }).filter(entry => entry !== undefined);
     }
 
-    async create(path: string): Promise<void> {
-        console.log(`Creating file at ${path}`)
+    async create(path: string, text?: string): Promise<void> {
+        fs.writeFileSync(path, text || '')
     }
 
     async mkdir(path: string): Promise<void> {
-        console.log(`Creating directory at ${path}`)
+        fs.mkdirSync(path, { recursive: true })
     }
 }

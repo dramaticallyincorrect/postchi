@@ -1,0 +1,1 @@
+export const isTauri = () => typeof window !== 'undefined' && 'isTauri' in window && !!window.isTauri;

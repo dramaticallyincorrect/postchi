@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
 import { collectionsDirName, envExtension, environmentsName, FileItem, FileTreeItem, FolderItem, readFileTree, secretsName } from "./project-files";
-import { TestFileStorage } from "./files/test-file-storage";
-import fs, { mkdirSync, writeFileSync } from 'fs';
+import { fs } from 'memfs';
 import { join } from 'path';
+import { BrowserFileStorage } from "./files/file-browser";
 
 const rootPath = join('postchi-test-project',)
 
@@ -34,7 +34,7 @@ secrets.cenv
     createFileTree(expected)
 
 
-    const items = await readFileTree(rootPath, new TestFileStorage())
+    const items = await readFileTree(rootPath, new BrowserFileStorage())
 
 
     expect(items).toStrictEqual(expected)
@@ -130,10 +130,10 @@ function parseFileTree(input: string, basePath: string): FileTreeItem[] {
 function createFileTree(items: FileTreeItem[]): void {
     for (const item of items) {
         if ('items' in item) {
-            mkdirSync(item.path, { recursive: true })
+            fs.mkdirSync(item.path, { recursive: true })
             createFileTree(item.items)
         } else {
-            writeFileSync(item.path, '')
+            fs.writeFileSync(item.path, '')
         }
     }
 }

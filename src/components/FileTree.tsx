@@ -7,21 +7,20 @@ import {
 import { ChevronRightIcon, FileCodeIcon, FolderIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { FileTreeItem } from "@/lib/data/project-files"
+import { FileTreeItem, FolderItem } from "@/lib/data/project-files"
 
 
-export const FileTree = ({ items, onItemClick, selectedPath }: { 
-    items: FileTreeItem[], 
+export const FileTree = ({ items, onItemClick, selectedPath }: {
+    items: FileTreeItem[],
     onItemClick: (item: FileTreeItem) => void,
     selectedPath?: string
 }) => {
 
-    const isAncestor = (folderPath: string) => 
+    const isAncestor = (folderPath: string) =>
         selectedPath?.startsWith(folderPath + '/') ?? false
 
     const renderItem = (fileItem: FileTreeItem) => {
-        if ("items" in fileItem) {
-            const hasChildren = fileItem.items.length > 0
+        if (fileItem instanceof FolderItem) {
             const isOpen = isAncestor(fileItem.path)
 
             return (
@@ -32,15 +31,12 @@ export const FileTree = ({ items, onItemClick, selectedPath }: {
                             size="sm"
                             className="group text-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                         >
-                            {hasChildren
-                                ? <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
-                                : <span className="size-4" />
-                            }
+                            <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                             <FolderIcon />
                             {fileItem.name}
                         </Button>
                     </CollapsibleTrigger>
-                    <CollapsibleContent hidden={!hasChildren} className="style-lyra:ml-4 mt-1 ml-5">
+                    <CollapsibleContent className="style-lyra:ml-4 ml-5">
                         <div className="flex flex-col gap-1">
                             {fileItem.items.map((child) => renderItem(child))}
                         </div>
