@@ -1,11 +1,27 @@
-import { computeHttpAst } from "@/lib/http/parser/http-ast"
+import { computeHttpAst, HttpNode } from "@/lib/http/parser/http-ast"
 
 
-export default function resolveHttpTemplate(template: string): HttpRequest {
+export default function resolveHttpTemplate(template: string, context: ExecutionContext = { variables: new Map() }): HttpRequest {
 
     const ast = computeHttpAst(template);
 
-    const value = (node: { from: number, to: number } | null) => node ? template.substring(node.from, node.to) : ""
+    function value(node: HttpNode | null) {
+        if (!node) {
+            return "";
+        }
+
+        const text = template.substring(node.from, node.to);
+
+        if (node.type === 'variable') {
+            const key = text.replace(/[<>]/g, "");
+            const value = context.variables.get(key);
+            if (value !== undefined) {
+                return value;
+            }
+        }
+
+        return text
+    }
 
 
     return {
@@ -15,6 +31,10 @@ export default function resolveHttpTemplate(template: string): HttpRequest {
         body: value(ast.body)
     }
 
+}
+
+type ExecutionContext = {
+    variables: Map<string, string>
 }
 
 

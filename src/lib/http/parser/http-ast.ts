@@ -1,10 +1,18 @@
 export type HttpRequestAst = {
-    method: HttpNode;
-    url: (Variable | HttpNode)[];
+    method: Method;
+    url: (Variable | Literal)[];
     headers: HeaderNode[];
     body: JsonBodyNode | FormBodyNode | TextBodyNode | null;
     errors: HttpParseError[];
 };
+
+export type HttpNode = Method | Variable | Literal | HeaderNode | FormBodyNode | JsonBodyNode | TextBodyNode | RequestFunction;
+
+type Method = {
+    type: "method";
+    from: number;
+    to: number;
+}
 
 export type FormBodyNode = {
     type: "form";
@@ -29,15 +37,9 @@ export type HeaderNode = {
     type: "header";
     from: number;
     to: number;
-    key: HttpNode;
+    key: Literal;
     separator: number | undefined;
     value: Expression;
-}
-
-export type HttpNode = {
-    type: string;
-    from: number;
-    to: number;
 }
 
 type Literal = {
@@ -188,9 +190,9 @@ export function computeHttpAst(request: string): HttpRequestAst {
 }
 
 
-function parseRequestLine(range: Line, request: string): [HttpNode, (Variable | Literal)[]] {
+function parseRequestLine(range: Line, request: string): [Method, (Variable | Literal)[]] {
     range.toNextWhitespace();
-    const method = {
+    const method : Method = {
         type: "method",
         from: range.start,
         to: range.curr
@@ -240,7 +242,7 @@ function pair(line: Line, request: string, separator: string): HeaderNode {
     }
     line.skipWhitespace();
 
-    const key = {
+    const key : Literal = {
         type: "literal",
         from: start,
         to: keyEnd
