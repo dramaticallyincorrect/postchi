@@ -25,7 +25,7 @@
    1. url encoded form
    2. multipart form
    3. resolve function expressions
-   4. resolve env variables
+   4. ~~resolve env variables~~
 6. errors
     1. UnSupportedFunction
     2. MissingParameterValue

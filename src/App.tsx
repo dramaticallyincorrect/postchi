@@ -14,6 +14,7 @@ import { Project } from './lib/data/project/project';
 import { getFileTypeFromPath } from './lib/data/file-type-recognizer';
 import { FileType } from './lib/data/supported-filetypes';
 import { EnvironmentEditor } from './editors/environment-editor';
+import { EnvironmentProvider } from './active-environment/environment-context';
 
 
 export default function App({ project }: { project: Project }) {
@@ -30,20 +31,23 @@ export default function App({ project }: { project: Project }) {
         fetchFileTree();
     }, []);
 
-    return <div className='flex-col h-screen w-screen flex'>
-        <div className="titlebar bg-background-panel mt-1.5">
-            <div data-tauri-drag-region>
-                <PanelLeftIcon className='ms-22 me-1 size-4 inline' />
-                <Button variant="ghost" className='hover:bg-muted-foreground'>{project.name}</Button>
-                <span className='text-muted-foreground mx-1 select-none'>•</span>
-                <ActiveEnvironment envPath={project.envPath} />
+    return <EnvironmentProvider path={project.envPath} >
+        <div className='flex-col h-screen w-screen flex'>
+            <div className="titlebar bg-background-panel mt-1.5">
+                <div data-tauri-drag-region>
+                    <PanelLeftIcon className='ms-22 me-1 size-4 inline' />
+                    <Button variant="ghost" className='hover:bg-muted-foreground'>{project.name}</Button>
+                    <span className='text-muted-foreground mx-1 select-none'>•</span>
+                    <ActiveEnvironment envPath={project.envPath} />
+                </div>
             </div>
+            <Split>
+                <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
+                {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
+            </Split>
         </div>
-        <Split>
-            <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
-            {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
-        </Split>
-    </div>
+    </EnvironmentProvider>
+
 }
 
 const Editor = ({ path }: { path: string }) => {
