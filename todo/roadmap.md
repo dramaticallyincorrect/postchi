@@ -17,9 +17,9 @@
       1. when closing the app
       2. ~~when editor loses focus~~
 4. environments
-   1. select environments
-   2. select by shortcut
-   3. updating env file updates environments
+   1. ~~select environments~~
+   2. ~~select by shortcut~~
+   3. ~~updating env file updates environments~~
    4. save selected env index so when env changes in realtime it still points to the correct index rather than the name that might have changed
 5. run request
    1. url encoded form

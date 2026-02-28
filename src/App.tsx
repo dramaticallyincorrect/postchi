@@ -38,7 +38,7 @@ export default function App({ project }: { project: Project }) {
                     <PanelLeftIcon className='ms-22 me-1 size-4 inline' />
                     <Button variant="ghost" className='hover:bg-muted-foreground'>{project.name}</Button>
                     <span className='text-muted-foreground mx-1 select-none'>•</span>
-                    <ActiveEnvironment envPath={project.envPath} />
+                    <ActiveEnvironment />
                 </div>
             </div>
             <Split>

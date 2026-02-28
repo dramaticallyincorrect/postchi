@@ -22,7 +22,10 @@
     "http:default",
     {
       "identifier": "http:default",
-      "allow": ["**"]
-    }
+      "allow": [
+        "**"
+      ]
+    },
+    "os:default"
   ]
 }
