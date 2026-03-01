@@ -7,13 +7,15 @@ import {
 } from "@codemirror/language"
 import { styleTags, tags as t } from "@lezer/highlight";
 import { parser } from "./parser/parser";
-import { json, jsonParseLinter } from "@codemirror/lang-json"
+import { json } from "@codemirror/lang-json"
 import completeHttp from "./autocomplete/http-autocomplete";
 import { httpLinter } from "./linter/http-linter";
 import { HighlightStyle, syntaxHighlighting, TagStyle } from "@codemirror/language";
 import { Extension } from "@codemirror/state";
 import { jsonTokens } from "@/components/json-editor-tokens";
 import { Environment } from "../environments/parser/environments-parser";
+import { useMemo } from "react";
+import { autocompletion } from "@codemirror/autocomplete";
 
 export const customHttpLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -60,8 +62,8 @@ function tokenConfig(tk: ThemeTokens): TagStyle[] {
 }
 
 export function customHttp(environment?: Environment): LanguageSupport {
-    const httpAutoComplete = customHttpLanguage.data.of({
-        autocomplete: completeHttp
-    })
+    const httpAutoComplete = useMemo(() => [
+        autocompletion({ override: [completeHttp(environment?.variables || [])] })
+    ], [environment])
     return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(environment)]);
 }

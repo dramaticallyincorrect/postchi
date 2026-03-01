@@ -3,13 +3,18 @@ import { httpHeaders } from "./http-headers"
 import { computeHttpAst, FormBodyNode, HeaderNode, HttpNode, HttpRequestAst } from "../parser/http-ast"
 import { EditorView } from "@uiw/react-codemirror"
 import DefaultFileStorage from "@/lib/data/files/file-default"
+import { asVariable } from "@/lib/utils/variable-name"
 
-export default async function completeHttp(context: CompletionContext): Promise<CompletionResult | null> {
-    return await computeHttpCompletions(context.pos, context.state.doc.toString(), (position: number) => context.state.doc.lineAt(position).number)
+export const completeHttp = (variables: { key: string, value: string }[]) => (context: CompletionContext) => {
+    return computeHttpCompletions(context.pos,
+        context.state.doc.toString(),
+        (position: number) => context.state.doc.lineAt(position).number,
+        variables)
 }
 
+export default completeHttp
 
-export async function computeHttpCompletions(position: number, doc: string, lineAt: (position: number) => number): Promise<CompletionResult> {
+export async function computeHttpCompletions(position: number, doc: string, lineAt: (position: number) => number, variables: { key: string, value: string }[] = []): Promise<CompletionResult> {
     const ast = computeHttpAst(doc)
 
     const node = findNodeAtPosition(position, ast)
@@ -29,6 +34,12 @@ export async function computeHttpCompletions(position: number, doc: string, line
                 from: node.from,
                 options: methods,
             }
+        case 'variable':
+            const variableOptions = variableCompletions(variables)
+            return {
+                from: node.from,
+                options: variableOptions,
+            }
         case "header":
             const headerNode = node as HeaderNode
             if (position <= headerNode.key.to) {
@@ -37,6 +48,13 @@ export async function computeHttpCompletions(position: number, doc: string, line
                     options: headerCompletions,
                 }
             } else {
+                if (headerNode.value.type == 'variable') {
+                    const variableOptions = variableCompletions(variables)
+                    return {
+                        from: headerNode.value.from || position,
+                        options: variableOptions,
+                    }
+                }
                 return {
                     from: headerNode.value.from || position,
                     options: functionCompletions,
@@ -124,6 +142,15 @@ const functionApply = (view: EditorView, completion: Completion, from: number, t
         // place cursor before closing parenthesis
         selection: { anchor: from + completion.label.length - 1, head: from + completion.label.length - 1 }
     })
+}
+
+export function variableCompletions(variables: { key: string, value: string }[]): Completion[] {
+    return variables.map(variable => ({
+        displayLabel: variable.key,
+        label: asVariable(variable.key),
+        detail: variable.value,
+        type: "variable"
+    }))
 }
 
 export const functionCompletions: Completion[] =

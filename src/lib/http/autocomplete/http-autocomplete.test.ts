@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest"
-import { computeHttpCompletions, functionCompletions, headerCompletions, methods, pathCompletion } from "./http-autocomplete"
+import { computeHttpCompletions, functionCompletions, headerCompletions, methods, pathCompletion, variableCompletions } from "./http-autocomplete"
 
 test('method', async () => {
 
@@ -14,6 +14,40 @@ test('method', async () => {
         ]
     })
 
+})
+
+describe('variable', () => {
+    it('url', async () => {
+        const httpRequest = `GET /<`
+        const vars = [
+            { key: 'var1', value: 'value1' },
+            { key: 'var2', value: 'value2' },
+        ]
+        const result = await computeHttpCompletions(httpRequest.indexOf('<') + 1, httpRequest, () => 2, vars)
+
+        expect(result).toEqual({
+            from: httpRequest.indexOf('<'),
+            options: [
+                ...variableCompletions(vars)
+            ]
+        })
+    })
+
+    it('header value', async () => {
+        const httpRequest = `GET /\nuseragent: <`
+        const vars = [
+            { key: 'var1', value: 'value1' },
+            { key: 'var2', value: 'value2' },
+        ]
+        const result = await computeHttpCompletions(httpRequest.indexOf('<'), httpRequest, () => 2, vars)
+
+        expect(result).toEqual({
+            from: httpRequest.indexOf('<'),
+            options: [
+                ...variableCompletions(vars)
+            ]
+        })
+    })
 })
 
 
@@ -56,7 +90,6 @@ describe('header', () => {
             ]
         })
     })
-
 
 })
 
