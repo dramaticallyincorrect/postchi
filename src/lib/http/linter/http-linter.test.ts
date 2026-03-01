@@ -1,5 +1,4 @@
-import { expect, test } from 'vitest';
-import { parser } from '../parser/parser';
+import { describe, expect, it, test } from 'vitest';
 import { computeHttpDiagnostics, errorDiagnostic } from './http-linter';
 import { HttpErrorMessage } from '../parser/http-ast';
 
@@ -26,21 +25,7 @@ test('Missing path', () => {
 
     const input = `GET`
 
-    const tree = parser.parse(input)
-
-    const diagnostics = computeHttpDiagnostics(tree, input)
-
-    expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingUrl, input.length, input.length)])
-
-})
-
-test('Missing path', () => {
-
-    const input = `GET`
-
-    const tree = parser.parse(input)
-
-    const diagnostics = computeHttpDiagnostics(tree, input)
+    const diagnostics = computeHttpDiagnostics(input)
 
     expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingUrl, input.length, input.length)])
 
@@ -52,9 +37,7 @@ test('Header name missing', () => {
 GET /
 : Postchi/1.0`.trim()
 
-    const tree = parser.parse(input)
-
-    const diagnostics = computeHttpDiagnostics(tree, input)
+    const diagnostics = computeHttpDiagnostics(input)
 
     const index = input.indexOf(":")
     expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingKey, index, index)])
@@ -66,11 +49,72 @@ test('Header value missing', () => {
     const input = `GET /
     useragent: `
 
-    const tree = parser.parse(input)
-
-    const diagnostics = computeHttpDiagnostics(tree, input)
+    const diagnostics = computeHttpDiagnostics(input)
 
     expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingValue, input.length, input.length)])
+
+})
+
+describe('variables', () => {
+
+    const undefined = '<undefined>'
+    const malformed = '<undefined'
+
+    const environment = {
+        name: "env",
+        variables: [
+            {
+                key: "var",
+                value: "value"
+            }
+        ]
+    }
+
+    function testMalformed(input: string) {
+        const diagnostics = computeHttpDiagnostics(input, environment)
+
+        const index = input.indexOf(malformed)
+        expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MalformedVariable, index, index + malformed.length)])
+    }
+
+    function testUndefined(input: string) {
+
+        const diagnostics = computeHttpDiagnostics(input, environment)
+
+        const index = input.indexOf(undefined)
+        expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.VariableNotDefined, index, index + undefined.length)])
+    }
+
+    describe('url', () => {
+        it('malformed variable', () => {
+            const input = 'GET /<undefined'
+
+            testMalformed(input)
+        })
+
+        it('undefined variable', () => {
+
+            const input = 'GET /<undefined>'
+
+            testUndefined(input)
+
+        })
+    })
+
+    describe('headers', () => {
+        it('malformed variable', () => {
+            const input = 'GET / \n useragent: <undefined'
+            testMalformed(input)
+        })
+
+        it('undefined variable', () => {
+
+            const input = 'GET / \n useragent: <undefined>'
+
+            testUndefined(input)
+
+        })
+    })
 
 })
 
@@ -112,8 +156,15 @@ test('correct request has no errors', () => {
     ]
 
     input.forEach(req => {
-        const tree = parser.parse(req)
-        const diagnostics = computeHttpDiagnostics(tree, req)
+        const diagnostics = computeHttpDiagnostics(req, {
+            name: "env",
+            variables: [
+                {
+                    key: "var",
+                    value: "value"
+                }
+            ]
+        })
         expect(diagnostics).toStrictEqual([])
     })
 

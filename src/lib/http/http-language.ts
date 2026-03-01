@@ -13,6 +13,7 @@ import { httpLinter } from "./linter/http-linter";
 import { HighlightStyle, syntaxHighlighting, TagStyle } from "@codemirror/language";
 import { Extension } from "@codemirror/state";
 import { jsonTokens } from "@/components/json-editor-tokens";
+import { Environment } from "../environments/parser/environments-parser";
 
 export const customHttpLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -58,9 +59,9 @@ function tokenConfig(tk: ThemeTokens): TagStyle[] {
     ]
 }
 
-export function customHttp(): LanguageSupport {
+export function customHttp(environment?: Environment): LanguageSupport {
     const httpAutoComplete = customHttpLanguage.data.of({
         autocomplete: completeHttp
     })
-    return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter]);
+    return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(environment)]);
 }

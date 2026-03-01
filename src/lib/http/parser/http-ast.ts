@@ -73,6 +73,8 @@ export enum HttpErrorMessage {
     MissingKey = "Missing header key",
     WrongUrlProtocol = "URL should start with / for relative urls or http:// | https:// for absolute urls",
     MissingValue = "Missing header value",
+    VariableNotDefined = "Variable not defined in the active environment",
+    MalformedVariable = "variables should be in the format <variableName>"
 }
 
 

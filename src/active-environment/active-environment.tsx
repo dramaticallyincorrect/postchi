@@ -12,7 +12,7 @@ export const ActiveEnvironment = () => {
     useEffect(() => {
         const handler = async (e: KeyboardEvent) => {
             const index = parseInt(e.key) - 1
-            if (index >= 1 && index < environments.length && isOsCommandKey(e)) {
+            if (index >= 0 && index < environments.length && isOsCommandKey(e)) {
                 e.preventDefault();
                 setActiveEnvironment(environments[index])
             }
