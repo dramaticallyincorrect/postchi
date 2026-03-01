@@ -10,8 +10,14 @@
       2. ~~headers~~
       3. ~~functions~~
          1. ~~readText, readFile path completion~~
-         2. nested functions
+         2. ~~nested functions~~
          3. args with spaces or trailing spaces
+      4. varialbes
+         1. ~~url~~
+         2. ~~header~~
+         3. ~~function parameters~~
+         4. ~~form~~
+         5. json
 3. save file
    1. when should a file be saved
       1. when closing the app

@@ -1,9 +1,9 @@
-import { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete"
+import { Completion, CompletionContext, CompletionResult, snippetCompletion } from "@codemirror/autocomplete"
 import { httpHeaders } from "./http-headers"
-import { computeHttpAst, FormBodyNode, HeaderNode, HttpNode, HttpRequestAst } from "../parser/http-ast"
-import { EditorView } from "@uiw/react-codemirror"
+import { computeHttpAst, Expression, FormBodyNode, HeaderNode, HttpNode, HttpRequestAst } from "../parser/http-ast"
 import DefaultFileStorage from "@/lib/data/files/file-default"
 import { asVariable } from "@/lib/utils/variable-name"
+import httpFunctions from "../functions/http-functions"
 
 export const completeHttp = (variables: { key: string, value: string }[]) => (context: CompletionContext) => {
     return computeHttpCompletions(context.pos,
@@ -18,6 +18,55 @@ export async function computeHttpCompletions(position: number, doc: string, line
     const ast = computeHttpAst(doc)
 
     const node = findNodeAtPosition(position, ast)
+
+    async function provideFunctionCompletions(expression: Expression) {
+        if (expression.type === 'variable') {
+            return {
+                from: expression.from,
+                options: variableCompletions(variables),
+            }
+        }
+
+        if (expression.type == 'function') {
+
+            if (position < expression.name.to) {
+                return {
+                    from: 0,
+                    options: [],
+                }
+            }
+
+            const arg = expression.args.find(arg => position >= arg.from && position <= arg.to)
+
+            if (arg && arg.type == 'function') {
+                return provideFunctionCompletions(arg)
+            }
+
+            const name = doc.slice(expression.name.from, expression.name.to)
+            if (name == 'readText') {
+
+                const from = arg?.from || position
+                const argText = arg ? doc.slice(arg.from, arg.to) : '/'
+                const completions = await pathCompletion(argText)
+                const result = {
+                    from: from,
+                    options: completions,
+                }
+                return result
+            }
+
+            return {
+                from: arg?.from || position,
+                options: [variableCompletions(variables), functionCompletions].flat(),
+            }
+
+        } else {
+            return {
+                from: expression.from,
+                options: functionCompletions,
+            }
+        }
+    }
 
     if (!node) {
         if (position > ast.url[ast.url.length - 1].to && (ast.body == null || position < ast.body.from)) {
@@ -48,60 +97,14 @@ export async function computeHttpCompletions(position: number, doc: string, line
                     options: headerCompletions,
                 }
             } else {
-                if (headerNode.value.type == 'variable') {
-                    const variableOptions = variableCompletions(variables)
-                    return {
-                        from: headerNode.value.from || position,
-                        options: variableOptions,
-                    }
-                }
-                return {
-                    from: headerNode.value.from || position,
-                    options: functionCompletions,
-                }
+                return provideFunctionCompletions(headerNode.value)
             }
         case "form":
             const formNode = node as FormBodyNode
             const line = lineAt(position)
             const entry = formNode.entries.find(entry => line == lineAt(entry.from))
             if (entry?.separator && position > entry.separator) {
-
-                if (entry.value.type == 'function') {
-
-
-                    if (position < entry.value.name.to) {
-                        return {
-                            from: 0,
-                            options: [],
-                        }
-                    }
-
-                    const arg = entry.value.args.find(arg => position >= arg.from && position <= arg.to)
-
-                    const name = doc.slice(entry.value.name.from, entry.value.name.to)
-                    if (name == 'readText') {
-
-                        const from = arg?.from || position
-                        const argText = arg ? doc.slice(arg.from, arg.to) : '/'
-                        const completions = await pathCompletion(argText)
-                        const result = {
-                            from: from,
-                            options: completions,
-                        }
-                        return result
-                    }
-
-                    return {
-                        from: entry.value.from || position,
-                        options: functionCompletions,
-                    }
-                } else {
-                    return {
-                        from: entry.value.from,
-                        options: functionCompletions,
-                    }
-                }
-
+                return provideFunctionCompletions(entry.value)
             }
     }
     return {
@@ -136,14 +139,6 @@ function findNodeAtPosition(position: number, ast: HttpRequestAst): HttpNode | u
     return nodes.find(node => position >= node.from && position <= node.to)
 }
 
-const functionApply = (view: EditorView, completion: Completion, from: number, to: number) => {
-    view.dispatch({
-        changes: { from, to, insert: completion.label },
-        // place cursor before closing parenthesis
-        selection: { anchor: from + completion.label.length - 1, head: from + completion.label.length - 1 }
-    })
-}
-
 export function variableCompletions(variables: { key: string, value: string }[]): Completion[] {
     return variables.map(variable => ({
         displayLabel: variable.key,
@@ -153,9 +148,14 @@ export function variableCompletions(variables: { key: string, value: string }[])
     }))
 }
 
-export const functionCompletions: Completion[] =
-    [{
-        label: 'basic()', type: "function", apply: functionApply
-    }, { label: 'bearer()', type: "function", apply: functionApply }]
+export const functionCompletions = Array.from(httpFunctions.entries()).map(([name, fn]) => {
+    const params = fn.parameters.map((p, i) => `\${${i + 1}:${p}}`).join(', ')
+
+    return snippetCompletion(`${name}(${params})`, {
+        label: name,
+        detail: `(${fn.parameters.join(', ')})`,
+        type: 'function'
+    })
+})
 
 export const headerCompletions = httpHeaders.map(header => ({ label: header, type: "keyword" }))

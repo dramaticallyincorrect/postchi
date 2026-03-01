@@ -194,7 +194,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
 
 function parseRequestLine(range: Line, request: string): [Method, (Variable | Literal)[]] {
     range.toNextWhitespace();
-    const method : Method = {
+    const method: Method = {
         type: "method",
         from: range.start,
         to: range.curr
@@ -244,7 +244,7 @@ function pair(line: Line, request: string, separator: string): HeaderNode {
     }
     line.skipWhitespace();
 
-    const key : Literal = {
+    const key: Literal = {
         type: "literal",
         from: start,
         to: keyEnd
