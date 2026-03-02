@@ -1,3 +1,5 @@
+import DefaultFileStorage from "@/lib/data/files/file-default"
+
 type HttpFunction = {
     parameters: string[],
     execute: (args: string[]) => Promise<string>
@@ -8,8 +10,8 @@ export const httpFunctions: Map<string, HttpFunction> = new Map([
         parameters: ['path'],
         execute: async (args: string[]) => {
             const path = args[0]
-            // Implement the logic to read text from the specified path
-            return `Content of ${path}`
+            const fileStorage = new DefaultFileStorage()
+            return fileStorage.readText(path)
         }
     }],
     ['bearer', {
