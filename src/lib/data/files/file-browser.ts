@@ -15,6 +15,13 @@ export class BrowserFileStorage implements FileStorage {
         return fs.promises.readFile(path, 'utf-8').then<string>((data) => data.toString());
     }
 
+    readFile(path: string): Promise<Blob> {
+        return fs.promises.readFile(path)
+            .then((data) => {
+                return new Blob([data as Uint8Array<ArrayBuffer>]);
+            });
+    }
+
     writeText(path: string, text: string): Promise<void> {
         return fs.promises.writeFile(path, text);
     }

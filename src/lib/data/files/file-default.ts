@@ -7,6 +7,10 @@ export default class DefaultFileStorage implements FileStorage {
     readText(path: string): Promise<string> {
         return this.storage.readText(path)
     }
+
+    readFile(path: string): Promise<Blob> {
+        return this.storage.readFile(path)
+    }
     
     writeText(path: string, text: string): Promise<void> {
         return this.storage.writeText(path, text)

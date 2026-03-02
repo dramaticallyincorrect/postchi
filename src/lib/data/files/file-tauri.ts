@@ -7,6 +7,10 @@ export class TauriFileStorage implements FileStorage {
         return fs.readTextFile(path)
     }
 
+    readFile(path: string): Promise<Blob> {
+        return fs.readFile(path).then((data) => new Blob([data]))
+    }
+
     writeText(path: string, text: string): Promise<void> {
         return fs.writeTextFile(path, text)
     }
