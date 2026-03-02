@@ -12,6 +12,7 @@
          1. ~~readText, readFile path completion~~
          2. ~~nested functions~~
          3. args with spaces or trailing spaces
+         4. < as param throws error
       4. varialbes
          1. ~~url~~
          2. ~~header~~
@@ -40,3 +41,4 @@
     10. RelativeUrlShouldStartWithSlash
     11. InvalidContentType
     12. JsonBodyError
+    13. Invalid Environment (empty name)

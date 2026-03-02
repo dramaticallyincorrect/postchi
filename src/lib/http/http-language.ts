@@ -14,7 +14,6 @@ import { HighlightStyle, syntaxHighlighting, TagStyle } from "@codemirror/langua
 import { Extension } from "@codemirror/state";
 import { jsonTokens } from "@/components/json-editor-tokens";
 import { Environment } from "../environments/parser/environments-parser";
-import { useMemo } from "react";
 import { autocompletion } from "@codemirror/autocomplete";
 
 export const customHttpLanguage = LRLanguage.define({
@@ -62,8 +61,6 @@ function tokenConfig(tk: ThemeTokens): TagStyle[] {
 }
 
 export function customHttp(environment?: Environment): LanguageSupport {
-    const httpAutoComplete = useMemo(() => [
-        autocompletion({ override: [completeHttp(environment?.variables || [])] })
-    ], [environment])
+    const httpAutoComplete = autocompletion({ override: [completeHttp(environment?.variables || [])] })
     return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(environment)]);
 }
