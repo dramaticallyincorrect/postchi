@@ -20,7 +20,7 @@
          4. ~~form~~
          5. json
       5. context aware values
-         1. content type
+         1. ~~content type~~
          2. no read file for headers
          3. no read file for nested functions
 3. save file
@@ -32,6 +32,7 @@
    2. ~~multipart form~~
    3. ~~resolve function expressions~~
    4. ~~resolve env variables~~
+   5. octet stream
 5. errors
     1. UnSupportedFunction
     2. MissingParameterValue

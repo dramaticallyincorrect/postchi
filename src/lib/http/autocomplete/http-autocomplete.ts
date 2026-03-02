@@ -97,7 +97,11 @@ export async function computeHttpCompletions(position: number, doc: string, line
                     options: headerCompletions,
                 }
             } else {
-                return provideFunctionCompletions(headerNode.value)
+                return provideFunctionCompletions(headerNode.value).then(result => {
+                    const headerName = doc.slice(headerNode.key.from, headerNode.key.to).toLowerCase()
+                    result.options = [headerName === 'content-type' ? contentTypeCompletions : [], result.options].flat()
+                    return result
+                })
             }
         case 'urlencoded':
         case 'multipart':
@@ -160,3 +164,38 @@ export const functionCompletions = Array.from(httpFunctions.entries()).map(([nam
 })
 
 export const headerCompletions = httpHeaders.map(header => ({ label: header, type: "keyword" }))
+
+export const contentTypeCompletions = [
+    // Text
+    'text/html',
+    'text/plain',
+    'text/css',
+    'text/csv',
+    'text/javascript',
+
+    // Application
+    'application/json',
+    'application/xml',
+    'application/x-www-form-urlencoded',
+    'application/octet-stream',
+
+    // Image
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+    'image/x-icon',
+
+    // Audio
+    'audio/mpeg',
+    'audio/wav',
+    'audio/ogg',
+
+    // Video
+    'video/mp4',
+    'video/webm',
+
+    // Multipart
+    'multipart/form-data',
+].map(contentType => ({ label: contentType, type: 'text' }));
