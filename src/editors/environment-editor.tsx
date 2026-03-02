@@ -6,7 +6,7 @@ import { buildCMTheme } from '@/lib/theme/theme-builder';
 import { themes } from '@/lib/theme/themes';
 import { useEnvironment } from '@/active-environment/environment-context';
 import DefaultFileStorage from '@/lib/data/files/file-default';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { loadText } from './load-text';
 
 export const EnvironmentEditor = ({ path }: { path: string }) => {
@@ -20,6 +20,12 @@ export const EnvironmentEditor = ({ path }: { path: string }) => {
             reload()
         })
     }
+
+    useEffect(() => {
+        if (viewRef.current) {
+            loadText(viewRef.current, path)
+        }
+    }, [path])
 
     //TODO: get theme from context
     const theme = themes[1]

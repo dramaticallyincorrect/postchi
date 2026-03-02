@@ -13,6 +13,7 @@ export async function createProject(path: string, name: string, fileStorage: Fil
     await fileStorage.mkdir(path)
     await fileStorage.mkdir(pathOf(path, collectionsDirName))
     await fileStorage.create(pathOf(path, collectionsDirName, 'users.get'), 'POST https://httpbin.org/post')
+    await fileStorage.create(pathOf(path, collectionsDirName, 'auth.get'), 'GET https://httpbin.org/get')
     await fileStorage.create(pathOf(path, environmentsName + envExtension), '# production \n API_KEY=123\n\n# staging')
     await fileStorage.create(pathOf(path, secretsName + envExtension))
     return {

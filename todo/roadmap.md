@@ -23,6 +23,7 @@
          1. ~~content type~~
          2. no read file for headers
          3. no read file for nested functions
+         4. body snippet
 3. save file
    1. when should a file be saved
       1. when closing the app
@@ -34,18 +35,19 @@
    4. ~~resolve env variables~~
    5. octet stream
 5. errors
-    1. UnSupportedFunction
-    2. MissingParameterValue
-    3. MissingKey
-    4. DuplicateValue
-    5. MissingValue
-    6. FilePathNotExist
-    7. PathIsDirectory
-    8. ~~VariableNotDefined~~
-    9. ~~InValidVariableDefinition~~
-    10. RelativeUrlShouldStartWithSlash
-    11. InvalidContentType
-    12. JsonBodyError
-    13. Invalid Environment (empty name)
-    14. read file used as an argument of another function
-    15. read file used in header
+    1. move all errors out of ast
+    2. UnSupportedFunction
+    3. MissingParameterValue
+    4. MissingKey
+    5. DuplicateValue
+    6. MissingValue
+    7. FilePathNotExist
+    8. PathIsDirectory
+    9. ~~VariableNotDefined~~
+    10. ~~InValidVariableDefinition~~
+    11. RelativeUrlShouldStartWithSlash
+    12. InvalidContentType
+    13. JsonBodyError
+    14. Invalid Environment (empty name)
+    15. read file used as an argument of another function
+    16. read file used in header
