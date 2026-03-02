@@ -1,9 +1,9 @@
 import resolveHttpTemplate from "./http-template-resolver";
 // import { fetch } from '@tauri-apps/plugin-http'
 
-export default function executeHttpTemplate(template: string): Promise<Response | null> {
+export default async function executeHttpTemplate(template: string): Promise<Response | null> {
 
-    const request = resolveHttpTemplate(template)
+    const request = await resolveHttpTemplate(template)
 
     if (!request || 'message' in request) {
         return Promise.resolve(null)

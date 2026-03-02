@@ -1,10 +1,12 @@
-import { computeHttpAst, FormBodyNode, HttpNode, JsonBodyNode, TextBodyNode } from "@/lib/http/parser/http-ast"
+import httpFunctions from "@/lib/http/functions/http-functions";
+import { computeHttpAst, Expression, FormBodyNode, HttpNode, JsonBodyNode, TextBodyNode } from "@/lib/http/parser/http-ast"
+import DefaultFileStorage from "../files/file-default";
 
 export type ResolveError = {
     message: string,
 }
 
-export default function resolveHttpTemplate(template: string, context: ExecutionContext = { variables: new Map() }): HttpRequest | ResolveError {
+export default async function resolveHttpTemplate(template: string, context: ExecutionContext = { variables: new Map() }): Promise<HttpRequest | ResolveError> {
 
     const ast = computeHttpAst(template);
 
@@ -12,7 +14,7 @@ export default function resolveHttpTemplate(template: string, context: Execution
         return { message: 'request contains errors' }
     }
 
-    function value(node: HttpNode | null) {
+    async function value(node: HttpNode | null): Promise<string> {
         if (!node) {
             return "";
         }
@@ -26,29 +28,50 @@ export default function resolveHttpTemplate(template: string, context: Execution
                 return value;
             }
         }
+
+        if (node.type === 'function') {
+            const name = await value(node.name);
+            const args = await Promise.all(node.args.map(value));
+            return httpFunctions.get(name)!.execute(args)
+        }
+
         return text
     }
 
-    function bodyValue(node: FormBodyNode | JsonBodyNode | TextBodyNode | null): string | URLSearchParams | FormData {
+    async function formExpressionValue(node: Expression): Promise<string | Blob> {
+        if (node.type === 'function') {
+            const name = await value(node.name);
+
+            if (name === 'readFile') {
+                const path = await value(node.args[0]);
+                const fileStorage = new DefaultFileStorage()
+                return fileStorage.readFile(path)
+            }
+        }
+
+        return value(node)
+    }
+
+    async function bodyValue(node: FormBodyNode | JsonBodyNode | TextBodyNode | null): Promise<string | URLSearchParams | FormData> {
         if (!node) {
             return "";
         }
 
         if (node.type === 'urlencoded') {
             const params = new URLSearchParams();
-            node.entries.forEach(entry => {
-                const key = value(entry.key);
-                const val = value(entry.value);
+            await Promise.all(node.entries.map(async entry => {
+                const key = await value(entry.key);
+                const val = await value(entry.value);
                 params.append(key, val);
-            })
+            }))
             return params;
         } else if (node.type === 'multipart') {
             const formData = new FormData();
-            node.entries.forEach(entry => {
-                const key = value(entry.key);
-                const val = value(entry.value);
+            await Promise.all(node.entries.map(async entry => {
+                const key = await value(entry.key);
+                const val = await formExpressionValue(entry.value);
                 formData.append(key, val);
-            })
+            }))
             return formData;
         }
 
@@ -57,10 +80,10 @@ export default function resolveHttpTemplate(template: string, context: Execution
 
 
     return {
-        method: value(ast.method),
-        url: ast.url.map(value).join(""),
-        headers: ast.headers.map(h => [value(h.key), value(h.value)] as [string, string]),
-        body: bodyValue(ast.body)
+        method: await value(ast.method),
+        url: (await Promise.all(ast.url.map(value))).join(""),
+        headers: await Promise.all(ast.headers.map(async h => [await value(h.key), await value(h.value)] as [string, string])),
+        body: await bodyValue(ast.body)
     }
 
 }

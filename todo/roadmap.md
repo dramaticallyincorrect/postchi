@@ -29,8 +29,8 @@
       2. ~~when editor loses focus~~
 4. run request
    1. ~~url encoded form~~
-   2. multipart form
-   3. resolve function expressions
+   2. ~~multipart form~~
+   3. ~~resolve function expressions~~
    4. ~~resolve env variables~~
 5. errors
     1. UnSupportedFunction
