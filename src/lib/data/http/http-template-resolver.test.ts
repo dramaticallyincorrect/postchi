@@ -134,6 +134,58 @@ describe('creates http request from ast', () => {
                 body: params
             });
         })
+
+        it('nested function', async () => {
+
+            const token = '12345'
+
+            const template = `GET https://getpostchi.com
+            Authorization: bearer(join(prefix, ${token}))
+            `.trim()
+
+
+            const httpRequest = await resolveHttpTemplate(template, {
+                variables: new Map([
+                    ["api", "download"],
+                    ["id", "12345"]
+                ])
+            });
+
+            expect(httpRequest, template).toStrictEqual({
+                method: "GET",
+                url: "https://getpostchi.com",
+                headers: [
+                    ["Authorization", `Bearer prefix${token}`],
+                ],
+                body: ''
+            });
+        })
+
+        it('variable as function argument', async () => {
+
+        
+            const template = `GET https://getpostchi.com
+            Authorization: bearer(<id>)
+            `.trim()
+
+
+            const httpRequest = await resolveHttpTemplate(template, {
+                variables: new Map([
+                    ["api", "download"],
+                    ["id", "12345"]
+                ])
+            });
+
+            expect(httpRequest, template).toStrictEqual({
+                method: "GET",
+                url: "https://getpostchi.com",
+                headers: [
+                    ["Authorization", `Bearer 12345`],
+                ],
+                body: ''
+            });
+        })
+
     })
 
 

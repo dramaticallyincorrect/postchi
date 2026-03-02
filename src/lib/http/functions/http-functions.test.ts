@@ -25,3 +25,9 @@ test('basicAuth', async () => {
     const result = await httpFunctions.get('basicAuth')?.execute([username, password])
     expect(result).toBe(expected)
 })
+
+test('join', async () => {
+    const expected = 'abc'
+    const result = await httpFunctions.get('join')?.execute(['a', 'b', 'c'])
+    expect(result).toBe(expected)
+})

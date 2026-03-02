@@ -21,6 +21,12 @@ export const httpFunctions: Map<string, HttpFunction> = new Map([
             return `Bearer ${token}`
         }
     }],
+    ['join', {
+        parameters: ['parts'],
+        execute: async (args: string[]) => {
+            return args.join('')
+        }
+    }],
     ['basicAuth', {
         parameters: ['username', 'password'],
         execute: async (args: string[]) => {
