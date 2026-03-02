@@ -99,7 +99,8 @@ export async function computeHttpCompletions(position: number, doc: string, line
             } else {
                 return provideFunctionCompletions(headerNode.value)
             }
-        case "form":
+        case 'urlencoded':
+        case 'multipart':
             const formNode = node as FormBodyNode
             const line = lineAt(position)
             const entry = formNode.entries.find(entry => line == lineAt(entry.from))

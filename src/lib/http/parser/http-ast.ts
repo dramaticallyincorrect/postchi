@@ -1,3 +1,4 @@
+
 export type HttpRequestAst = {
     method: Method;
     url: (Variable | Literal)[];
@@ -15,7 +16,7 @@ type Method = {
 }
 
 export type FormBodyNode = {
-    type: "form";
+    type: 'urlencoded' | 'multipart';
     from: number;
     to: number;
     entries: HeaderNode[];
@@ -74,7 +75,8 @@ export enum HttpErrorMessage {
     WrongUrlProtocol = "URL should start with / for relative urls or http:// | https:// for absolute urls",
     MissingValue = "Missing header value",
     VariableNotDefined = "Variable not defined in the active environment",
-    MalformedVariable = "variables should be in the format <variableName>"
+    MalformedVariable = "variables should be in the format <variableName>",
+    UrlEncodedWithAttachedFile = "URL encoded body cannot have files attached to it, consider using multipart form data instead"
 }
 
 
@@ -158,20 +160,33 @@ export function computeHttpAst(request: string): HttpRequestAst {
             const bodyText = request.slice(line.curr).trim();
             const bodyStart = line.curr;
             const bodyEnd = bodyStart + bodyText.length;
-            const inferredContentType = inferContentType(bodyText);
+            const explicitContentType = contentTypeFromHeaders(ast.headers, request);
+            const computedBodyType = bodyType(explicitContentType) ?? inferContentType(bodyText);
 
-            if (inferredContentType === "form") {
+            if (computedBodyType === "form") {
                 const keyValuePairs: HeaderNode[] = [];
-
-                const headerNode = pair(line, request, "=");
-                keyValuePairs.push(headerNode)
-
-                for (const entry of linesGenerator) {
+                
+                let formType = formContentType(explicitContentType);
+                for (const entry of [line, ...linesGenerator]) {
                     const headerNode = pair(entry, request, "=");
                     keyValuePairs.push(headerNode)
+                    if (headerNode.value.type === "function" && request.slice(headerNode.value.name.from, headerNode.value.name.to).toLowerCase() === "readfile") {
+                        if (!explicitContentType) {
+                            // if the content type is not explicitly set and there is a file attached, we consider it as multipart form data
+                            formType = "multipart";
+                        }
+
+                        if (explicitContentType && formType === "urlencoded") {
+                            ast.errors.push({
+                                message: HttpErrorMessage.UrlEncodedWithAttachedFile,
+                                from: headerNode.value.from,
+                                to: headerNode.value.to
+                            })
+                        }
+                    }
                 }
                 ast.body = {
-                    type: "form",
+                    type: formType,
                     from: bodyStart,
                     to: bodyEnd,
                     entries: keyValuePairs
@@ -179,7 +194,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
                 break;
             } else {
                 ast.body = {
-                    type: inferredContentType === "json" ? "json" : "text",
+                    type: computedBodyType === "json" ? "json" : "text",
                     from: bodyStart,
                     to: bodyEnd,
                 }
@@ -430,6 +445,41 @@ function expression(range: Line, input: string): Expression {
     return parseExpression();
 }
 
+function bodyType(contentType: string | null): string | null {
+    if (!contentType) {
+        return null;
+    }
+    switch (contentType.toLowerCase()) {
+        case "application/json":
+        case "application/json; charset=utf-8":
+            return "json";
+        case "application/x-www-form-urlencoded":
+            return "form";
+        case "multipart/form-data":
+            return "form";
+        default:
+            return 'text';
+    }
+}
+
+function formContentType(contentType: string | null): 'urlencoded' | 'multipart' {
+    if (!contentType) {
+        return "urlencoded";
+    }
+    switch (contentType?.toLowerCase()) {
+        case "application/x-www-form-urlencoded":
+            return "urlencoded";
+        case "multipart/form-data":
+            return "multipart";
+        default:
+            throw new Error(`Unsupported content type for form body: ${contentType}`);
+    }
+}
+
+function contentTypeFromHeaders(headers: HeaderNode[], request: string): string | null {
+    const contentTypeHeaderNode = headers.find(h => request.slice(h.key.from, h.key.to).toLowerCase() === "content-type");
+    return contentTypeHeaderNode?.value ? request.slice(contentTypeHeaderNode.value.from, contentTypeHeaderNode.value.to).toLowerCase() : null;
+}
 
 function inferContentType(bodyText: string): string {
     if (bodyText.startsWith("{") || bodyText.startsWith("[")) {

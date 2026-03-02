@@ -137,6 +137,12 @@ describe("body", () => {
 
     })
 
+    it('explicit content type overrides infered content type', () => {
+        const httpRequest = `GET /\nContent-Type: multipart/form-data\n@body\n{}`
+        const expected = expectation("GET", ["/"], [["Content-Type", "multipart/form-data"]], "multipart({}=)");
+        assert(httpRequest, expected);
+    })
+
 
     it('json', () => {
 
@@ -157,19 +163,48 @@ describe("body", () => {
 
         const pair = (key: string, value: string, pad: string = '') => `${pad}${key}${pad}=${pad}${value}${pad}`
 
-        it('key=value pairs', () => {
+        it('literal values are treated as urlencoded', () => {
 
             const httpRequest = body(`${pair('key', 'value')}\n${pair('key', 'val')}`)
-            const expected = expectation("GET", ["/"], [], "form(key=value,key=val)");
+            const expected = expectation("GET", ["/"], [], "urlencoded(key=value,key=val)");
 
             assert(httpRequest, expected);
 
         })
 
+        it('read file as value is considered multipart', () => {
+
+            const httpRequest = body(`${pair('key', 'value')}\n${pair('key', 'readfile()')}`)
+            const expected = expectation("GET", ["/"], [], "multipart(key=value,key=function(readfile))");
+
+            assert(httpRequest, expected);
+
+        })
+
+        it('explicit form content type sets form type to multipart even without any files attached', () => {
+
+            const httpRequest = `GET /\nContent-Type: multipart/form-data\n@body\nkey=value`
+            const expected = expectation("GET", ["/"], [["Content-Type", "multipart/form-data"]], "multipart(key=value)");
+
+            assert(httpRequest, expected);
+
+        })
+
+        it('explicit urlencoded content type sets form type to urlencoded even with files attached', () => {
+
+            const httpRequest = `GET /\nContent-Type: application/x-www-form-urlencoded\n@body\nkey=readFile()`
+            const expected = expectation("GET", ["/"], [["Content-Type", "application/x-www-form-urlencoded"]], "urlencoded(key=function(readFile))", [HttpErrorMessage.UrlEncodedWithAttachedFile]);
+
+            assert(httpRequest, expected);
+
+        })
+
+
+
         it('key = variable', () => {
 
             const httpRequest = body(pair('key', '<value>'))
-            const expected = expectation("GET", ["/"], [], "form(key=variable(<value>))");
+            const expected = expectation("GET", ["/"], [], "urlencoded(key=variable(<value>))");
 
             assert(httpRequest, expected);
 
@@ -179,7 +214,7 @@ describe("body", () => {
             it(`key = ${fxExpected}`, () => {
 
                 const httpRequest = body(pair('key', template))
-                const expected = expectation("GET", ["/"], [], `form(key=${fxExpected})`);
+                const expected = expectation("GET", ["/"], [], `urlencoded(key=${fxExpected})`);
 
                 assert(httpRequest, expected);
 
@@ -191,7 +226,7 @@ describe("body", () => {
             for (const whitespace of [...whitespaces]) {
 
                 const httpRequest = body(pair('key', 'value', whitespace))
-                const expected = expectation("GET", ["/"], [], "form(key=value)");
+                const expected = expectation("GET", ["/"], [], "urlencoded(key=value)");
 
                 assert(httpRequest, expected);
             }
@@ -268,6 +303,16 @@ describe("errors", () => {
         }
     })
 
+
+    it('url encoded content type cannot have files attached to it', () => {
+        const httpRequest = `GET http://getpostchi.com\nContent-Type: application/x-www-form-urlencoded\n@body\nkey=readFile()`
+        const expected = expectation("GET", ['http://getpostchi.com'], [
+            ["Content-Type", "application/x-www-form-urlencoded"]
+        ], 'urlencoded(key=function(readFile))', [HttpErrorMessage.UrlEncodedWithAttachedFile]);
+
+        assert(httpRequest, expected);
+    })
+
 })
 
 
@@ -302,7 +347,7 @@ function valuesOf(ast: HttpRequestAst, request: string): Expectation {
         if (!body) return null;
         if (body.type === "json") return `json(${value(body)})`;
         if (body.type === "text") return `text(${value(body)})`;
-        return `form(${body.entries.map(({ key, value: v }) => `${value(key)}=${expressionString(v, request)}`).join(",")})`;
+        return `${body.type}(${body.entries.map(({ key, value: v }) => `${value(key)}=${expressionString(v, request)}`).join(",")})`;
     }
 
     return {

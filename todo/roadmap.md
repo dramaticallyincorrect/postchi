@@ -19,12 +19,16 @@
          3. ~~function parameters~~
          4. ~~form~~
          5. json
+      5. context aware values
+         1. content type
+         2. no read file for headers
+         3. no read file for nested functions
 3. save file
    1. when should a file be saved
       1. when closing the app
       2. ~~when editor loses focus~~
 4. run request
-   1. url encoded form
+   1. ~~url encoded form~~
    2. multipart form
    3. resolve function expressions
    4. ~~resolve env variables~~
@@ -42,3 +46,5 @@
     11. InvalidContentType
     12. JsonBodyError
     13. Invalid Environment (empty name)
+    14. read file used as an argument of another function
+    15. read file used in header

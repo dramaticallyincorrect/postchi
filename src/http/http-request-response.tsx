@@ -31,6 +31,10 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
                 const response = await executeHttpTemplate(text);
 
+                if (!response) {
+                    return
+                }
+
                 setResponse({
                     status: response.status,
                     durationInMillies: 0,
