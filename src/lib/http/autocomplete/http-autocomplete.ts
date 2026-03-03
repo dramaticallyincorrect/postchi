@@ -43,7 +43,7 @@ export async function computeHttpCompletions(position: number, doc: string, line
             }
 
             const name = doc.slice(expression.name.from, expression.name.to)
-            if (name == 'readText') {
+            if (name == 'readText' || name == 'readFile') {
 
                 const from = arg?.from || position
                 const argText = arg ? doc.slice(arg.from, arg.to) : '/'
