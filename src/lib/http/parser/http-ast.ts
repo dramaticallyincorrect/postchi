@@ -70,6 +70,35 @@ export type HttpParseError = {
 
 export type Expression = Variable | RequestFunction | Literal;
 
+export function allNodes(ast: HttpRequestAst): HttpNode[] {
+
+    function expressionNodes(node: Expression): HttpNode[] {
+        if (node.type === "function") {
+            return [node, node.name, ...node.args.map(expressionNodes).flat()];
+        }
+        return [node];
+    }
+
+    function headerNodes(node: HeaderNode): HttpNode[] {
+        return [node, node.key, ...expressionNodes(node.value)]
+    }
+
+    function bodyNodes(node: JsonBodyNode | FormBodyNode | TextBodyNode | null): HttpNode[] {
+        if (!node) return [];
+        if (node.type === "json" || node.type === "text") {
+            return [node];
+        } else {
+            return [node, ...node.entries.flatMap(entry => headerNodes(entry))];
+        }
+    }
+
+    return [
+        ast.method,
+        ...ast.url,
+        ...ast.headers.flatMap(header => headerNodes(header)),
+        ...bodyNodes(ast.body)
+    ];
+}
 
 export function computeHttpAst(request: string): HttpRequestAst {
 
@@ -280,6 +309,7 @@ class Line {
         }
     }
 
+
     toNoneWhitespaceBefore(terminator: string | string[]): [number, number] {
         const begin = this.curr;
         let lastCharacterIndexBeforeColon = this.curr;
@@ -359,7 +389,8 @@ function expression(range: Line, input: string): Expression {
         const from = range.curr;
 
         if (range.is("<")) {
-            range.toAfter(">");
+            range.toBefore([">", ')']);
+            range.consume(">");
             return { type: "variable", from, to: range.curr };
         }
 
@@ -379,7 +410,7 @@ function expression(range: Line, input: string): Expression {
                 range.consume(",");
             }
 
-            if (range.not(")")) throw new Error("Unterminated function call");
+            // if (range.not(")")) throw new Error("Unterminated function call");
             range.toAfter(")");
 
             return { type: "function", from, to: range.curr, name: nameNode, args };

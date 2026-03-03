@@ -1,7 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import { computeHttpDiagnostics, errorDiagnostic, HttpErrorMessage } from './http-linter';
-import { newlines, whitespaces } from '@/lib/utils/test-utils';
+import { endOf, newlines, whitespaces } from '@/lib/utils/test-utils';
+import { Diagnostic } from '@codemirror/lint';
 
+
+function allFunctions(describeLabel: string, fn: string, error: HttpErrorMessage) {
+    const functions = [
+        { label: `header`, request: `GET / \nContent-Type: ${fn}` },
+        { label: `form body`, request: `GET / \n@body\nkey=${fn}` },
+        { label: `nested`, request: `GET / \n@body\nkey=join(1234, ${fn})` }
+    ]
+
+    describe(describeLabel, () => {
+        functions.forEach(({ label, request }) => {
+            it(label, () => {
+                expectError(request, errorDiagnostic(error, request.indexOf(fn), request.indexOf(fn) + fn.length))
+            })
+        })
+    })
+}
+
+function expectError(input: string, error: Diagnostic) {
+    const diagnostics = computeHttpDiagnostics(input)
+    expect(diagnostics, input).toStrictEqual([error])
+}
 
 describe('http lints', () => {
     it('warning non standard method', () => {
@@ -21,124 +43,98 @@ describe('http lints', () => {
 
     })
 
-    it('Missing path', () => {
+    describe('Missing path', () => {
 
-        for (const whitespace of ['', ...newlines, ...whitespaces]) {
-            const input = `${whitespace}GET${whitespace}`
+        it('when only method should start from end position', () => {
+            const input = 'GET'
+            const index = 3
+            expectError(input, errorDiagnostic(HttpErrorMessage.MissingUrl, index, index))
+        })
 
-            const diagnostics = computeHttpDiagnostics(input)
-            const index = input.indexOf("GET") + "GET".length + (whitespace ? 1 : 0)
-            expect(diagnostics, input).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingUrl, index, index)])
-        }
-
+        it('when white space should start 1 after method', () => {
+            const input = 'GET '
+            const index = 4
+            expectError(input, errorDiagnostic(HttpErrorMessage.MissingUrl, index, index))
+        })
     })
 
-    it('path should be relative or http', () => {
+    it('absolute path should be http', () => {
 
         const input = `GET wrong/path`
 
-        const diagnostics = computeHttpDiagnostics(input)
-
-        expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.WrongUrlProtocol, input.indexOf("wrong/path"), input.indexOf("wrong/path"))])
+        expectError(input, errorDiagnostic(HttpErrorMessage.WrongUrlProtocol, 4, 4))
 
     })
 
-    for (const addIn of ['', ...whitespaces]) {
-        it(`Header name missing with addIn: "${addIn}"`, () => {
-            const input = `GET /\n${addIn}:${addIn}postchi/1.0`
+    describe('missing header name', () => {
+        for (const addIn of ['', ...whitespaces]) {
+            const label = `addIn: '${addIn.replace('\n', '\\n').replace('\t', '\\t')}'`
+            it(label, () => {
+                const input = `GET /\n${addIn}:${addIn}postchi/1.0`
 
+                const index = input.indexOf(':')
+                expectError(input, errorDiagnostic(HttpErrorMessage.MissingKey, index, index))
+            })
+        }
+    })
 
-            const diagnostics = computeHttpDiagnostics(input)
-
-            const index = input.indexOf(":")
-            expect(diagnostics, input).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingKey, index, index)])
-        })
-
-        // const expected: Expectation = expectation("GET", ["/"], [['', 'postchi/1.0']], null, [HttpErrorMessage.MissingKey]);
-
-        // assert(httpRequest, expected);
-    }
-
-    for (const addIn of ['', ':', ': ', ' : \n', '\n', ...whitespaces]) {
-        it(`Header value missing with addIn: "${addIn}"`, () => {
-            const input = `GET /
+    describe('missing header value', () => {
+        for (const addIn of ['', ':', ': ', ' : \n', '\n', ...whitespaces]) {
+            const label = `addIn: '${addIn.replace('\n', '\\n').replace('\t', '\\t')}'`
+            it(label, () => {
+                const input = `GET /
     useragent${addIn}`
 
-            const diagnostics = computeHttpDiagnostics(input)
-            const index = input.indexOf("useragent") + "useragent".length + (addIn.replace('\n', '').length)
+                const diagnostics = computeHttpDiagnostics(input)
+                const index = input.indexOf("useragent") + "useragent".length + (addIn.replace('\n', '').length)
 
-            expect(diagnostics, input).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingValue, index, index)])
-        })
-    }
+                expect(diagnostics, input).toStrictEqual([errorDiagnostic(HttpErrorMessage.MissingValue, index, index)])
+            })
+        }
+    })
+
+    describe('functions', () => {
+        allFunctions("unrecognized function", "unknownFunction()", HttpErrorMessage.UnrecognizedFunction)
+
+        allFunctions("missing function parameters", "basicAuth()", HttpErrorMessage.MissingParameters)
+
+        allFunctions("too many parameters", "basicAuth(a,b,c)", HttpErrorMessage.ExtraParameters)
+    })
 
     describe('variables', () => {
 
-        const undefined = '<undefined>'
-        const malformed = '<undefined'
+        function allVariables(describeLabel: string, variable: string, error: HttpErrorMessage) {
+            const functions = [
+                { label: `url`, request: `GET /${variable}` },
+                { label: `header`, request: `GET / \nContent-Type: ${variable}` },
+                { label: `form body`, request: `GET / \n@body\nkey=${variable}` },
+                { label: `nested`, request: `GET / \n@body\nkey=join(1234, ${variable})` }
+            ]
 
-        const variables = [
-            {
-                key: "var",
-                value: "value"
-            }
-        ]
-
-        function testMalformed(input: string) {
-            const diagnostics = computeHttpDiagnostics(input, variables)
-
-            const index = input.indexOf(malformed)
-            expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.MalformedVariable, index, index + malformed.length)])
+            describe(describeLabel, () => {
+                functions.forEach(({ label, request }) => {
+                    it(label, () => {
+                        expectError(request, errorDiagnostic(error, request.indexOf(variable), endOf(request, variable)))
+                    })
+                })
+            })
         }
 
-        function testUndefined(input: string) {
+        allVariables("malformed variable", '<malformed', HttpErrorMessage.MalformedVariable)
 
-            const diagnostics = computeHttpDiagnostics(input, variables)
-
-            const index = input.indexOf(undefined)
-            expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.VariableNotDefined, index, index + undefined.length)])
-        }
-
-        describe('url', () => {
-            it('malformed variable', () => {
-                const input = 'GET /<undefined'
-
-                testMalformed(input)
-            })
-
-            it('undefined variable', () => {
-
-                const input = 'GET /<undefined>'
-
-                testUndefined(input)
-
-            })
-        })
-
-        describe('headers', () => {
-            it('malformed variable', () => {
-                const input = 'GET / \n useragent: <undefined'
-                testMalformed(input)
-            })
-
-            it('undefined variable', () => {
-
-                const input = 'GET / \n useragent: <undefined>'
-
-                testUndefined(input)
-
-            })
-        })
+        allVariables("undefined variable", '<undefined>', HttpErrorMessage.VariableNotDefined)
 
     })
 
     describe('body', () => {
         describe('form', () => {
+
             it('url encoded content type cannot have files attached to it', () => {
-                const input = `GET http://getpostchi.com\nContent-Type: application/x-www-form-urlencoded\n@body\nkey=readFile()`
+                const input = `GET http://getpostchi.com\nContent-Type: application/x-www-form-urlencoded\n@body\nkey=readFile(/)`
 
                 const diagnostics = computeHttpDiagnostics(input)
-                const index = input.indexOf("readFile()")
-                expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.UrlEncodedWithAttachedFile, index, index + "readFile()".length)])
+                const index = input.indexOf("readFile(/)")
+                expect(diagnostics).toStrictEqual([errorDiagnostic(HttpErrorMessage.UrlEncodedWithAttachedFile, index, index + "readFile(/)".length)])
             })
         })
     })
@@ -160,7 +156,7 @@ describe('http lints', () => {
 
             `GET /
     useragent: Postchi/1.0
-    content-type: basic()
+    content-type: bearer(1234)
     `,
             `GET /
     useragent: Postchi/1.0

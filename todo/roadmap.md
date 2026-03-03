@@ -35,9 +35,9 @@
    4. ~~resolve env variables~~
    5. octet stream
 5. errors
-    1. move all errors out of ast
-    2. UnSupportedFunction
-    3. MissingParameterValue
+    1. ~~move all errors out of ast~~
+    2. ~~UnSupportedFunction~~
+    3. ~~MissingParameterValue~~
     4. MissingKey
     5. DuplicateValue
     6. MissingValue
