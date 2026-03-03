@@ -1,6 +1,7 @@
 import httpFunctions from "@/lib/http/functions/http-functions";
 import { computeHttpAst, Expression, FormBodyNode, HttpNode, JsonBodyNode, TextBodyNode } from "@/lib/http/parser/http-ast"
 import DefaultFileStorage from "../files/file-default";
+import { computeHttpDiagnostics } from "@/lib/http/linter/http-linter";
 
 export type ResolveError = {
     message: string,
@@ -10,7 +11,8 @@ export default async function resolveHttpTemplate(template: string, context: Exe
 
     const ast = computeHttpAst(template);
 
-    if (ast.errors.length > 0) {
+    const errors = computeHttpDiagnostics(template, Array.from(context.variables.entries()).map(([key, value]) => ({ key, value })));
+    if (errors.length > 0) {
         return { message: 'request contains errors' }
     }
 

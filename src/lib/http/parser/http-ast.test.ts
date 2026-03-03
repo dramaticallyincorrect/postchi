@@ -1,8 +1,6 @@
 import { describe, expect, it, test } from "vitest";
-import { computeHttpAst, Expression, FormBodyNode, HttpErrorMessage, HttpRequestAst, JsonBodyNode, RequestFunction, TextBodyNode } from "./http-ast";
-
-const whitespaces = [' ', '  ', '   ', '\t', ' \t\t']
-const newlines = ['\n', '\n\n', '\n\n\n']
+import { computeHttpAst, Expression, FormBodyNode, HttpRequestAst, JsonBodyNode, RequestFunction, TextBodyNode } from "./http-ast";
+import { newlines, whitespaces } from "@/lib/utils/test-utils";
 
 const functions = [
     ['basic(username, <password>, date())', 'function(basic, username, variable(<password>), function(date))']
@@ -193,7 +191,7 @@ describe("body", () => {
         it('explicit urlencoded content type sets form type to urlencoded even with files attached', () => {
 
             const httpRequest = `GET /\nContent-Type: application/x-www-form-urlencoded\n@body\nkey=readFile()`
-            const expected = expectation("GET", ["/"], [["Content-Type", "application/x-www-form-urlencoded"]], "urlencoded(key=function(readFile))", [HttpErrorMessage.UrlEncodedWithAttachedFile]);
+            const expected = expectation("GET", ["/"], [["Content-Type", "application/x-www-form-urlencoded"]], "urlencoded(key=function(readFile))");
 
             assert(httpRequest, expected);
 
@@ -265,70 +263,18 @@ describe("body", () => {
 })
 
 
-describe("errors", () => {
-
-    it('missing url', () => {
-        for (const whitespace of ['', ...newlines, ...whitespaces]) {
-            const httpRequest = `GET${whitespace}`
-            const expected = expectation("GET", [], [], null, [HttpErrorMessage.MissingUrl]);
-
-            assert(httpRequest, expected);
-        }
-    })
-
-    it('wrong url -> ! ( / http https <variable> )', () => {
-        const httpRequest = `GET htp://getpostchi.com`
-        const expected = expectation("GET", ['htp://getpostchi.com'], [], null, [HttpErrorMessage.WrongUrlProtocol]);
-
-        assert(httpRequest, expected);
-    })
-
-    it("missing value -> key :? space?", () => {
-
-        for (const addIn of ['', ':', ': ', ' : \n', '\n', ...whitespaces]) {
-            const httpRequest = `GET /\nuser-agent${addIn}`
-            const expected: Expectation = expectation("GET", ["/"], [['user-agent', '']], null, [HttpErrorMessage.MissingValue]);
-
-            assert(httpRequest, expected);
-        }
-    })
-
-    it("missing key -> space? : space? value", () => {
-
-        for (const addIn of ['', ...whitespaces]) {
-            const httpRequest = `GET /\n${addIn}:${addIn}postchi/1.0`
-            const expected: Expectation = expectation("GET", ["/"], [['', 'postchi/1.0']], null, [HttpErrorMessage.MissingKey]);
-
-            assert(httpRequest, expected);
-        }
-    })
-
-
-    it('url encoded content type cannot have files attached to it', () => {
-        const httpRequest = `GET http://getpostchi.com\nContent-Type: application/x-www-form-urlencoded\n@body\nkey=readFile()`
-        const expected = expectation("GET", ['http://getpostchi.com'], [
-            ["Content-Type", "application/x-www-form-urlencoded"]
-        ], 'urlencoded(key=function(readFile))', [HttpErrorMessage.UrlEncodedWithAttachedFile]);
-
-        assert(httpRequest, expected);
-    })
-
-})
-
-
 function assert(request: string, expected: Expectation) {
     const httpRequestAst = computeHttpAst(request);
     expect(valuesOf(httpRequestAst, request), request).toEqual(expected);
 }
 
 
-function expectation(method: string, url: string[] = [], headers: [string, string][] = [], body: string | null = null, errors: HttpErrorMessage[] = []): Expectation {
+function expectation(method: string, url: string[] = [], headers: [string, string][] = [], body: string | null = null): Expectation {
     return {
         method: method,
         url: url,
         headers: headers.map(([k, v]) => ({ key: k, value: v })),
         body: body,
-        errors: errors.join(",")
     }
 }
 
@@ -355,7 +301,6 @@ function valuesOf(ast: HttpRequestAst, request: string): Expectation {
         url: ast.url.map(u => value(u)),
         headers: ast.headers.map(({ key, value: v }) => ({ key: value(key), value: value(v) })),
         body: bodyValue(ast.body),
-        errors: ast.errors.map(e => (e.message)).join(",")
     }
 }
 
@@ -383,4 +328,4 @@ function expressionString(node: Expression, request: string): string {
 }
 
 
-type Expectation = { method: string; url: string[]; headers: { key: string, value: string }[]; body: string | null; errors: string };
+type Expectation = { method: string; url: string[]; headers: { key: string, value: string }[]; body: string | null; };

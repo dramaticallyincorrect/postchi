@@ -1,10 +1,8 @@
-
 export type HttpRequestAst = {
     method: Method;
     url: (Variable | Literal)[];
     headers: HeaderNode[];
     body: JsonBodyNode | FormBodyNode | TextBodyNode | null;
-    errors: HttpParseError[];
 };
 
 export type HttpNode = Method | Variable | Literal | HeaderNode | FormBodyNode | JsonBodyNode | TextBodyNode | RequestFunction;
@@ -69,16 +67,6 @@ export type HttpParseError = {
     to: number;
 }
 
-export enum HttpErrorMessage {
-    MissingUrl = "Missing URL",
-    MissingKey = "Missing header key",
-    WrongUrlProtocol = "URL should start with / for relative urls or http:// | https:// for absolute urls",
-    MissingValue = "Missing header value",
-    VariableNotDefined = "Variable not defined in the active environment",
-    MalformedVariable = "variables should be in the format <variableName>",
-    UrlEncodedWithAttachedFile = "URL encoded body cannot have files attached to it, consider using multipart form data instead"
-}
-
 
 export type Expression = Variable | RequestFunction | Literal;
 
@@ -92,7 +80,6 @@ export function computeHttpAst(request: string): HttpRequestAst {
         url: [],
         headers: [],
         body: null,
-        errors: []
     }
 
     var hasProccessedRequestLine = false;
@@ -110,22 +97,6 @@ export function computeHttpAst(request: string): HttpRequestAst {
             ast.method = method;
             ast.url = url;
             hasProccessedRequestLine = true;
-            if (ast.url.length === 0) {
-                ast.errors.push({
-                    message: HttpErrorMessage.MissingUrl,
-                    from: line.end,
-                    to: line.end
-                })
-            } else {
-                const urlString = request.slice(url[0].from, url[0].to);
-                if (!urlString.startsWith('/') && !urlString.startsWith("http://") && !urlString.startsWith("https://") && !urlString.startsWith("<")) {
-                    ast.errors.push({
-                        message: HttpErrorMessage.WrongUrlProtocol,
-                        from: url[0].from,
-                        to: url[0].to
-                    })
-                }
-            }
         } else if (!startBody) {
 
             const headerNode = pair(line, request, ":");
@@ -133,23 +104,6 @@ export function computeHttpAst(request: string): HttpRequestAst {
             if (request.slice(headerNode.key.from, headerNode.key.to).toLowerCase() === "@body") {
                 startBody = true;
                 continue
-            }
-
-            if (headerNode.key.from == headerNode.key.to) {
-                ast.errors.push({
-                    message: HttpErrorMessage.MissingKey,
-                    from: headerNode.key.from,
-                    to: headerNode.key.to
-                });
-            }
-
-            if (headerNode.value.from == headerNode.value.to) {
-                const index = Math.max(headerNode.key.to, headerNode.value.from)
-                ast.errors.push({
-                    message: HttpErrorMessage.MissingValue,
-                    from: index,
-                    to: index
-                });
             }
 
             ast.headers.push(headerNode)
@@ -165,7 +119,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
 
             if (computedBodyType === "form") {
                 const keyValuePairs: HeaderNode[] = [];
-                
+
                 let formType = formContentType(explicitContentType);
                 for (const entry of [line, ...linesGenerator]) {
                     const headerNode = pair(entry, request, "=");
@@ -174,14 +128,6 @@ export function computeHttpAst(request: string): HttpRequestAst {
                         if (!explicitContentType) {
                             // if the content type is not explicitly set and there is a file attached, we consider it as multipart form data
                             formType = "multipart";
-                        }
-
-                        if (explicitContentType && formType === "urlencoded") {
-                            ast.errors.push({
-                                message: HttpErrorMessage.UrlEncodedWithAttachedFile,
-                                from: headerNode.value.from,
-                                to: headerNode.value.to
-                            })
                         }
                     }
                 }

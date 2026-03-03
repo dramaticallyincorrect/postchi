@@ -1,22 +1,35 @@
 import { linter, Diagnostic } from "@codemirror/lint"
 import { Text } from "@codemirror/state";
 import { sliceInput } from "@/lib/utils/doc";
-import { computeHttpAst, HttpErrorMessage, HttpNode } from "../parser/http-ast";
+import { computeHttpAst, HeaderNode, HttpNode } from "../parser/http-ast";
 import { Environment } from "@/lib/environments/parser/environments-parser";
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 
 export const httpLinter = (environment?: Environment) => linter(view => {
-  const diagnostics = computeHttpDiagnostics(view.state.doc, environment)
+  const diagnostics = computeHttpDiagnostics(view.state.doc, environment?.variables ?? [])
   return diagnostics
 })
 
-export function computeHttpDiagnostics(doc: string | Text, environment?: Environment): Diagnostic[] {
+export function computeHttpDiagnostics(doc: string | Text, variables: { key: string, value: string }[] = []): Diagnostic[] {
+
+  const slice = (node: HttpNode) => sliceInput(doc, node.from, node.to)
 
   const ast = computeHttpAst(sliceInput(doc, 0, doc.length))
 
-  const diagnostics = ast.errors.map(error => errorDiagnostic(error.message, error.from, error.to))
+  const diagnostics: Diagnostic[] = []
 
-  const variables = environment?.variables ?? []
+  const posOrLength = (pos: number) => Math.min(pos, doc.length)
+
+  if (ast.url.length === 0) {
+    diagnostics.push(errorDiagnostic(HttpErrorMessage.MissingUrl, posOrLength(ast.method.to + 1), posOrLength(ast.method.to + 1)))
+  } else {
+    const first = ast.url[0]
+    const urlString = sliceInput(doc, first.from, first.to);
+    if (!urlString.startsWith('/') && !urlString.startsWith("http://") && !urlString.startsWith("https://") && !urlString.startsWith("<")) {
+      diagnostics.push(errorDiagnostic(HttpErrorMessage.WrongUrlProtocol, first.from, first.from))
+    }
+  }
+
 
   function checkVariable(node: HttpNode) {
     if (node.type === 'variable') {
@@ -34,8 +47,19 @@ export function computeHttpDiagnostics(doc: string | Text, environment?: Environ
     }
   }
 
+  function checkMissingKeyValue(headerNode: HeaderNode) {
+    if (headerNode.key.from == headerNode.key.to) {
+      diagnostics.push(errorDiagnostic(HttpErrorMessage.MissingKey, headerNode.key.from, headerNode.key.to));
+    }
+    if (!slice(headerNode.value).trim()) {
+      const index = Math.max(headerNode.key.to,headerNode.separator ?? 0 , headerNode.value.to)
+      diagnostics.push(errorDiagnostic(HttpErrorMessage.MissingValue, index, index));
+    }
+  }
+
   ast.headers.forEach(header => {
     checkVariable(header.value)
+    checkMissingKeyValue(header)
   })
 
   ast.url.forEach(url => {
@@ -56,7 +80,17 @@ export function computeHttpDiagnostics(doc: string | Text, environment?: Environ
         message: e.message,
       });
     }
+  } else if (body?.type === 'urlencoded') {
+    body.entries.forEach(entry => {
+      if (entry.value.type === 'function') {
+        const name = slice(entry.value.name)
+        if (name === 'readFile') {
+          diagnostics.push(errorDiagnostic(HttpErrorMessage.UrlEncodedWithAttachedFile, entry.value.from, entry.value.to))
+        }
+      }
+    })
   }
+
 
   return diagnostics;
 }
@@ -69,4 +103,14 @@ export function errorDiagnostic(lint: HttpErrorMessage | string, from: number, t
     severity: "error",
     message: lint,
   }
+}
+
+export enum HttpErrorMessage {
+  MissingUrl = "Missing URL",
+  MissingKey = "Missing header key",
+  WrongUrlProtocol = "URL should start with / for relative urls or http:// | https:// for absolute urls",
+  MissingValue = "Missing header value",
+  VariableNotDefined = "Variable not defined in the active environment",
+  MalformedVariable = "variables should be in the format <variableName>",
+  UrlEncodedWithAttachedFile = "URL encoded body cannot have files attached to it, consider using multipart form data instead"
 }

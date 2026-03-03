@@ -1,7 +1,6 @@
 import { test } from 'vitest'
 import { parser } from "./parser.js"
 import { testTree } from "@lezer/generator/test"
-import printTree from '@/lib/lezer-test-utils.js';
 
 test('request line', () => {
   const defaultValue = `
