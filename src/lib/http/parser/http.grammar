@@ -59,7 +59,7 @@ argumentList {
   Comment { "//" ![\n]* }
 
   Method { "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" }
-  Variable { "<<" ![>]+ ">>" }
+  Variable { "<" ![>]+ ">" }
   identifier { $[a-zA-Z0-9-."_]+ $[/@]* $[a-zA-Z0-9-."_]* $[/@]? }
   url { $[a-zA-Z0-9-._~:/?#\[\]@!$&'()*+,;=%]+}
   BodyStart { "@body" }
