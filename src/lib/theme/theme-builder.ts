@@ -24,8 +24,8 @@ export function buildCMTheme(syntaxHighlighting: Extension, colors: EditorColors
     const editorTheme = EditorView.theme({
         '&': {
             background: background,
-            color: getCSSVar('--destructive'),
-            fontSize: '10pt'
+            color: getCSSVar('--muted'),
+            fontSize: '9.8pt'
         },
         "cm-scroller": {
             'border-radius': getCSSVar('--radius-xl'),
