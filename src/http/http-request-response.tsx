@@ -3,7 +3,7 @@ import HttpResponseView, { HttpResponse } from "@/http/http-response-view";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { themes } from "@/lib/theme/themes";
 import { useEffect, useMemo, useRef, useState } from "react";
-import executeHttpTemplate from "@/lib/data/http/http-runner";
+import executeHttpTemplate, { ExecutionError, HttpExecution } from "@/lib/data/http/http-runner";
 import { SendRequestInstructions } from "@/components/send-request-shortcut";
 import { forceLinting, lintGutter } from "@codemirror/lint";
 import { buildCMTheme } from "@/lib/theme/theme-builder";
@@ -11,14 +11,18 @@ import { customHttp, httpSyntaxHighlighting } from "@/lib/http/http-language";
 import { useEnvironment } from '@/active-environment/environment-context';
 import DefaultFileStorage from '@/lib/data/files/file-default';
 import { loadText } from '@/editors/load-text';
+import { Bullet } from '@/components/bullet';
+import { Button } from '@/components/ui/button';
 
 export default function HttpRequestResponse({ path }: { path: string }) {
 
     const viewRef = useRef<EditorView>(null)
 
-    const [response, setResponse] = useState<HttpResponse | null>(null)
+    const [response, setResponse] = useState<HttpExecutionStatus | null>(null)
 
     const { activeEnvironment } = useEnvironment()
+
+    const abort = useRef(new AbortController());
 
     useEffect(() => {
         const handler = async (e: KeyboardEvent) => {
@@ -29,17 +33,21 @@ export default function HttpRequestResponse({ path }: { path: string }) {
                     return;
                 }
 
-                const response = await executeHttpTemplate(text);
+                abort.current = new AbortController();
 
-                if (!response) {
-                    return
+                setResponse(new Loading())
+
+                const response = await executeHttpTemplate(text, abort.current);
+
+                if (response instanceof ExecutionError) {
+                    if (response.type === 'abort') {
+                        setResponse(null)
+                    } else {
+                        setResponse(new Error())
+                    }
+                } else {
+                    setResponse(response)
                 }
-
-                setResponse({
-                    status: response.status,
-                    durationInMillies: 0,
-                    body: await response.text()
-                })
 
             }
         };
@@ -106,8 +114,64 @@ export default function HttpRequestResponse({ path }: { path: string }) {
             <ResizableHandle className='bg-muted/70' />
 
             <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
-                {response ? <HttpResponseView response={response} /> : <SendRequestInstructions />}
+                <ResponsePanel response={response} onCancel={() => {
+                    console.log('cancel')
+                    abort.current.abort()
+                }} />
             </ResizablePanel>
         </ResizablePanelGroup>
     )
 }
+
+const ResponsePanel = ({ response, onCancel }: { response: HttpExecutionStatus | null, onCancel: () => void }) => {
+    if (response == null) {
+        return <SendRequestInstructions />
+    }
+
+    if ('status' in response) {
+        return <HttpResponseView execution={response} />
+    }
+
+    if (response instanceof Loading) {
+        return <LoadingView onCancel={onCancel} />
+    }
+
+    if (response instanceof Error) {
+        return <div className='flex items-center justify-center text-center h-full text-destructive'>An error occurred while sending the request<br />
+            check your network connection</div>
+    }
+}
+
+function LoadingView({ onCancel }: { onCancel: () => void }) {
+    const [ms, setMs] = useState(0);
+
+    useEffect(() => {
+        const start = Date.now();
+        const interval = setInterval(() => {
+            setMs(Date.now() - start);
+        }, 10);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const seconds = Math.floor(ms / 1000);
+    const milliseconds = ms % 1000;
+
+    const display = seconds > 0
+        ? `${seconds}.${String(milliseconds).padStart(3, "0")}s`
+        : `${milliseconds}ms`;
+
+    return (
+        <div className='flex flex-row my-2 mx-6 font-mono w-full'>
+            <span className='text-muted mr-2'>---</span>
+            <span className='text-muted'>--</span>
+            <Bullet className='mx-3' />
+            <span className='text-muted-foreground'>{display}</span>
+            <Button variant='ghost' className='ml-auto mr-8' onClick={onCancel}>Cancel</Button>
+        </div>
+    );
+}
+
+class Loading { };
+class Error { };
+type HttpExecutionStatus = HttpExecution | Loading | Error;

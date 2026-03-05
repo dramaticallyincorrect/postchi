@@ -1,10 +1,11 @@
 # Roadmap
 
-1. syntax highlighting
+1. ~~syntax highlighting~~
 2. response view
    1. request
    2. headers
    3. none json body
+   4. keep state between different editors
 3. json body
    1. auto complete
       1. variables
