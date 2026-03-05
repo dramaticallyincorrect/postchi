@@ -1,7 +1,6 @@
 import CodeMirror, { EditorView, keymap, Prec } from '@uiw/react-codemirror';
-import HttpResponseView, { HttpResponse } from "@/http/http-response-view";
+import HttpResponseView from "@/http/http-response-view";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { themes } from "@/lib/theme/themes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import executeHttpTemplate, { ExecutionError, HttpExecution } from "@/lib/data/http/http-runner";
 import { SendRequestInstructions } from "@/components/send-request-shortcut";
@@ -13,6 +12,7 @@ import DefaultFileStorage from '@/lib/data/files/file-default';
 import { loadText } from '@/editors/load-text';
 import { Bullet } from '@/components/bullet';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/theme-context/theme-context';
 
 export default function HttpRequestResponse({ path }: { path: string }) {
 
@@ -92,6 +92,8 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         }
     }, [path])
 
+    const { theme } = useTheme()
+
 
     return (
         <ResizablePanelGroup
@@ -105,7 +107,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
                         loadText(view, path);
                     }}
                     height='100%'
-                    theme={buildCMTheme(httpSyntaxHighlighting(themes[1]), themes[1].editor)}
+                    theme={buildCMTheme(httpSyntaxHighlighting(theme), theme.editor)}
                     className='height: 100% outline-none'
                     extensions={extensions}
                 />

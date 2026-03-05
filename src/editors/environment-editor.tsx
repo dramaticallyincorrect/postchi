@@ -3,11 +3,11 @@ import { lintGutter } from '@codemirror/lint';
 import { autocompletion } from '@codemirror/autocomplete';
 import { EnvironmentsLanguage, environmentSyntaxHighlighting } from '@/lib/environments/environments-language';
 import { buildCMTheme } from '@/lib/theme/theme-builder';
-import { themes } from '@/lib/theme/themes';
 import { useEnvironment } from '@/active-environment/environment-context';
 import DefaultFileStorage from '@/lib/data/files/file-default';
 import { useEffect, useRef } from 'react';
 import { loadText } from './load-text';
+import { useTheme } from '@/theme-context/theme-context';
 
 export const EnvironmentEditor = ({ path }: { path: string }) => {
 
@@ -27,8 +27,7 @@ export const EnvironmentEditor = ({ path }: { path: string }) => {
         }
     }, [path])
 
-    //TODO: get theme from context
-    const theme = themes[1]
+    const { theme } = useTheme()
 
 
     return <CodeMirror

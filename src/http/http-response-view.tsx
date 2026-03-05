@@ -2,7 +2,6 @@ import { Bullet } from '../components/bullet';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { buildCMTheme } from '@/lib/theme/theme-builder';
-import { themes } from '@/lib/theme/themes';
 import { jsonSyntaxHighlighting } from '../components/json-editor-tokens';
 import { HttpExecution } from '@/lib/data/http/http-runner';
 import { ContentTypeInfo } from '@/lib/data/http/body-classifier/http-body-classifier';
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { HttpRequest } from '@/lib/data/http/http-template-resolver';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/theme-context/theme-context';
 
 export type HttpResponse = {
     status: number,
@@ -62,7 +62,7 @@ const BodyView = ({ body, contentTypeInfo }: { body: string | ArrayBuffer, conte
 }
 
 const ResponseHeaders = ({ headers }: { headers: { key: string, value: string }[] }) => {
-    const theme = themes[1];
+    const { theme } = useTheme();
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4 mb-4'>
@@ -80,7 +80,7 @@ const ResponseHeaders = ({ headers }: { headers: { key: string, value: string }[
 }
 
 const RequestView = ({ request }: { request: HttpRequest }) => {
-    const theme = themes[1];
+    const { theme } = useTheme();
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4'>
@@ -103,10 +103,14 @@ const RequestView = ({ request }: { request: HttpRequest }) => {
 }
 
 const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }) => {
+    if (!body) {
+        return null;
+    }
+    const { theme } = useTheme();
     if (typeof body === 'string') {
         return <CodeMirror
             value={body}
-            theme={buildCMTheme(jsonSyntaxHighlighting(themes[1]), themes[1].editor)}
+            theme={buildCMTheme(jsonSyntaxHighlighting(theme), theme.editor)}
             readOnly={true}
             className='height: 100% outline-none'
             basicSetup={{
@@ -123,8 +127,8 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
             <div className='ml-4'>
                 {entries.map(([key, value], index) => (
                     <div key={index}>
-                        <span style={{ color: themes[1].tokens.attrName }}>{key}: </span>
-                        <span style={{ color: themes[1].tokens.attrValue }}>{value instanceof File ? `File(${value.name})` : String(value)}</span>
+                        <span style={{ color: theme.tokens.attrName }}>{key}: </span>
+                        <span style={{ color: theme.tokens.attrValue }}>{value instanceof File ? `File(${value.name})` : String(value)}</span>
                     </div>
                 ))}
             </div>
@@ -135,8 +139,8 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
             <div className='ml-4'>
                 {entries.map(([key, value], index) => (
                     <div key={index}>
-                        <span style={{ color: themes[1].tokens.attrName }}>{key}: </span>
-                        <span style={{ color: themes[1].tokens.attrValue }}>{value}</span>
+                        <span style={{ color: theme.tokens.attrName }}>{key}: </span>
+                        <span style={{ color: theme.tokens.attrValue }}>{value}</span>
                     </div>
                 ))}
             </div>
@@ -146,10 +150,11 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
 
 
 const JsonView = ({ body }: { body: string }) => {
+    const { theme } = useTheme();
     return (
         <CodeMirror
             value={body}
-            theme={buildCMTheme(jsonSyntaxHighlighting(themes[1]), themes[1].editor)}
+            theme={buildCMTheme(jsonSyntaxHighlighting(theme), theme.editor)}
             readOnly={true}
             className='height: 100% outline-none'
             extensions={[json()]}
