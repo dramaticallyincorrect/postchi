@@ -107,7 +107,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
                         loadText(view, path);
                     }}
                     height='100%'
-                    theme={theme.codemirrorTheme}
+                    theme={theme.codemirror.theme}
                     className='height: 100% outline-none'
                     extensions={extensions}
                 />

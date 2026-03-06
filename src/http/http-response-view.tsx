@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { HttpRequest } from '@/lib/data/http/http-template-resolver';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/theme-context/theme-context';
+import { customHttpLanguage } from '@/lib/http/http-language';
 
 export type HttpResponse = {
     status: number,
@@ -64,11 +65,11 @@ const ResponseHeaders = ({ headers }: { headers: { key: string, value: string }[
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4 mb-4'>
-                <VerticalLine color={theme.tokens.number} />
+                <VerticalLine color='var(--primary)'/>
                 <div className='flex flex-col'>
                     {headers.map((header, index) => (
                         <div key={index}>
-                            <span style={{ color: theme.tokens.attrName }} >{header.key}: </span><span style={{ color: theme.tokens.attrValue }}>{header.value}</span>
+                            <span style={{ color: theme.codemirror.tokens.attributeName }} >{header.key}: </span><span style={{ color: theme.codemirror.tokens.attributeValue }}>{header.value}</span>
                         </div>
                     ))}
                 </div>
@@ -82,16 +83,22 @@ const RequestView = ({ request }: { request: HttpRequest }) => {
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4'>
-                <VerticalLine color={theme.tokens.number} />
+                <VerticalLine color='var(--primary)' />
                 <div className='flex flex-col'>
-                    <div>
-                        <span style={{ color: theme.tokens.keyword }}>{request.method}</span> <span className='ml-2' style={{ color: theme.tokens.url }}>{request.url}</span>
-                    </div>
-                    {request.headers.map(([name, value]) => (
-                        <div key={name}>
-                            <span style={{ color: theme.tokens.attrName }} >{name}: </span><span style={{ color: theme.tokens.attrValue }}>{value}</span>
-                        </div>
-                    ))}
+                    <CodeMirror
+                        value={`${request.method} ${request.url}\n${request.headers.map(([k, v]) => `${k}: ${v}`).join('\n')}`}
+                        height='100%'
+                        theme={theme.codemirror.theme}
+                        className='height: 100% outline-none'
+                        extensions={[customHttpLanguage]}
+                        readOnly={true}
+                        basicSetup={{
+                            lineNumbers: false,
+                            foldGutter: false,
+                            highlightActiveLine: false,
+                            highlightActiveLineGutter: false,
+                        }}
+                    />
                     <RequestBodyView body={request.body} />
                 </div>
             </div>
@@ -108,7 +115,7 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
     if (typeof body === 'string') {
         return <CodeMirror
             value={body}
-            theme={theme.codemirrorTheme}
+            theme={theme.codemirror.theme}
             readOnly={true}
             className='height: 100% outline-none'
             basicSetup={{
@@ -119,26 +126,14 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
             }}
             extensions={[json()]}
         />
-    } else if (body instanceof FormData) {
+    } else if (body instanceof FormData || body instanceof URLSearchParams) {
         const entries = Array.from(body.entries());
         return (
             <div className='ml-4'>
                 {entries.map(([key, value], index) => (
                     <div key={index}>
-                        <span style={{ color: theme.tokens.attrName }}>{key}: </span>
-                        <span style={{ color: theme.tokens.attrValue }}>{value instanceof File ? `File(${value.name})` : String(value)}</span>
-                    </div>
-                ))}
-            </div>
-        );
-    } else if (body instanceof URLSearchParams) {
-        const entries = Array.from(body.entries());
-        return (
-            <div className='ml-4'>
-                {entries.map(([key, value], index) => (
-                    <div key={index}>
-                        <span style={{ color: theme.tokens.attrName }}>{key}: </span>
-                        <span style={{ color: theme.tokens.attrValue }}>{value}</span>
+                        <span style={{ color: theme.codemirror.tokens.attributeName }}>{key}: </span>
+                        <span style={{ color: theme.codemirror.tokens.attributeValue }}>{value instanceof File ? `File(${value.name})` : String(value)}</span>
                     </div>
                 ))}
             </div>
@@ -152,7 +147,7 @@ const JsonView = ({ body }: { body: string }) => {
     return (
         <CodeMirror
             value={body}
-            theme={theme.codemirrorTheme}
+            theme={theme.codemirror.theme}
             readOnly={true}
             className='height: 100% outline-none'
             extensions={[json()]}

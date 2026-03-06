@@ -19,7 +19,7 @@ export const customHttpLanguage = LRLanguage.define({
             styleTags({
                 Method: t.keyword,
                 Path: t.string,
-                Key: t.attributeName,
+                Key: t.propertyName,
                 Value: t.string,
                 'Function/Value': t.string,
                 Variable: t.variableName,

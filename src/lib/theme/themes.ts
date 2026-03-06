@@ -1,5 +1,87 @@
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { PostchiTheme } from "./theme";
+import { tags as t } from "@lezer/highlight";
 import { amy, ayuLight, barf, bespin, birdsOfParadise, boysAndGirls, clouds, cobalt, coolGlow, dracula, espresso, noctisLilac, rosePineDawn, smoothy, solarizedLight, tomorrow } from 'thememirror';
+
+const amyTokens = {
+  attributeName: '#D0D0FF',
+  attributeValue: '#999999',
+};
+
+const ayuLightTokens = {
+  attributeName: '#f2ae49',
+  attributeValue: '#86b300',
+};
+
+const barfTokens = {
+  attributeName: '#708E67',
+  attributeValue: '#5C81B3',
+};
+
+const bespinTokens = {
+  attributeName: '#937121',
+  attributeValue: '#54BE0D',
+};
+
+const birdsOfParadiseTokens = {
+  attributeName: '#EFCB43',
+  attributeValue: '#D9D762',
+};
+
+const boysAndGirlsTokens = {
+  attributeName: '#E62286',
+  attributeValue: '#00D8FF',
+};
+
+const cloudsTokens = {
+  attributeName: '#606060',
+  attributeValue: '#5D90CD',
+};
+
+const cobaltTokens = {
+  attributeName: '#9EFFFF',
+  attributeValue: '#3AD900',
+};
+
+const coolGlowTokens = {
+  attributeName: '#7BACCA',
+  attributeValue: '#8DFF8E',
+};
+
+const draculaTokens = {
+  attributeName: '#50fa7b',
+  attributeValue: '#f1fa8c',
+};
+
+const espressoTokens = {
+  attributeName: '#4F9FD0',
+  attributeValue: '#CF4F5F',
+};
+
+const noctisLilacTokens = {
+  attributeName: '#e64100',
+  attributeValue: '#00b368',
+};
+
+const rosePineDawnTokens = {
+  attributeName: '#907aa9',
+  attributeValue: '#ea9d34',
+};
+
+const smoothyTokens = {
+  attributeName: '#B06520',
+  attributeValue: '#704D3D',
+};
+
+const solarizedLightTokens = {
+  attributeName: '#93A1A1',
+  attributeValue: '#2AA198',
+};
+
+const tomorrowTokens = {
+  attributeName: '#C82829',
+  attributeValue: '#718C00',
+};
 
 export const themes: PostchiTheme[] = [
   {
@@ -15,7 +97,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#C080C0',
       '--destructive': '#FF5060',
     },
-    codemirrorTheme: amy,
+    codemirror: {
+      theme: amy,
+      tokens: {
+        attributeName: amyTokens.attributeName,
+        attributeValue: amyTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'ayu-light',
@@ -30,7 +118,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#8a9199',
       '--destructive': '#e65050',
     },
-    codemirrorTheme: ayuLight,
+    codemirror: {
+      theme: ayuLight,
+      tokens: {
+        attributeName: ayuLightTokens.attributeName,
+        attributeValue: ayuLightTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'barf',
@@ -45,7 +139,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#aaaaaa',
       '--destructive': '#ff4444',
     },
-    codemirrorTheme: barf,
+    codemirror: {
+      theme: barf,
+      tokens: {
+        attributeName: barfTokens.attributeName,
+        attributeValue: barfTokens.attributeValue,
+      },
+    },
   },
   {
     id: 'bespin',
@@ -60,7 +160,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#BAAE9E90',
       '--destructive': '#f07070',
     },
-    codemirrorTheme: bespin,
+    codemirror: {
+      theme: bespin,
+      tokens: {
+        attributeName: bespinTokens.attributeName,
+        attributeValue: bespinTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'birds-of-paradise',
@@ -75,7 +181,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#E6E1C490',
       '--destructive': '#ef5350',
     },
-    codemirrorTheme: birdsOfParadise,
+    codemirror: {
+      theme: birdsOfParadise,
+      tokens: {
+        attributeName: birdsOfParadiseTokens.attributeName,
+        attributeValue: birdsOfParadiseTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'boys-and-girls',
@@ -90,7 +202,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#ffffff90',
       '--destructive': '#ff4455',
     },
-    codemirrorTheme: boysAndGirls,
+    codemirror: {
+      theme: boysAndGirls,
+      tokens: {
+        attributeName: boysAndGirlsTokens.attributeName,
+        attributeValue: boysAndGirlsTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'clouds',
@@ -105,7 +223,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#00000070',
       '--destructive': '#C52727',
     },
-    codemirrorTheme: clouds,
+    codemirror: {
+      theme: clouds,
+      tokens: {
+        attributeName: cloudsTokens.attributeName,
+        attributeValue: cloudsTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'cobalt',
@@ -120,7 +244,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#FFFFFF70',
       '--destructive': '#FF628C',
     },
-    codemirrorTheme: cobalt,
+    codemirror: {
+      theme: cobalt,
+      tokens: {
+        attributeName: cobaltTokens.attributeName,
+        attributeValue: cobaltTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'cool-glow',
@@ -135,7 +265,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#E0E0E090',
       '--destructive': '#ff4455',
     },
-    codemirrorTheme: coolGlow,
+    codemirror: {
+      theme: coolGlow,
+      tokens: {
+        attributeName: coolGlowTokens.attributeName,
+        attributeValue: coolGlowTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'dracula',
@@ -150,7 +286,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': 'rgb(144, 145, 148)',
       '--destructive': '#ff5555',
     },
-    codemirrorTheme: dracula,
+    codemirror: {
+      theme: dracula,
+      tokens: {
+        attributeName: draculaTokens.attributeName,
+        attributeValue: draculaTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'espresso',
@@ -165,7 +307,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#00000070',
       '--destructive': '#CF4F5F',
     },
-    codemirrorTheme: espresso,
+    codemirror: {
+      theme: espresso,
+      tokens: {
+        attributeName: espressoTokens.attributeName,
+        attributeValue: espressoTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'noctis-lilac',
@@ -180,7 +328,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#0c006b70',
       '--destructive': '#ff5792',
     },
-    codemirrorTheme: noctisLilac,
+    codemirror: {
+      theme: noctisLilac,
+      tokens: {
+        attributeName: noctisLilacTokens.attributeName,
+        attributeValue: noctisLilacTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'rose-pine-dawn',
@@ -195,7 +349,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#57527970',
       '--destructive': '#b4637a',
     },
-    codemirrorTheme: rosePineDawn,
+    codemirror: {
+      theme: rosePineDawn,
+      tokens: {
+        attributeName: rosePineDawnTokens.attributeName,
+        attributeValue: rosePineDawnTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'smoothy',
@@ -210,7 +370,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#00000070',
       '--destructive': '#E66C29',
     },
-    codemirrorTheme: smoothy,
+    codemirror: {
+      theme: smoothy,
+      tokens: {
+        attributeName: smoothyTokens.attributeName,
+        attributeValue: smoothyTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'solarized-light',
@@ -225,7 +391,13 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#586E7580',
       '--destructive': '#D30102',
     },
-    codemirrorTheme: solarizedLight,
+    codemirror: {
+      theme: solarizedLight,
+      tokens: {
+        attributeName: solarizedLightTokens.attributeName,
+        attributeValue: solarizedLightTokens.attributeValue,
+      }
+    },
   },
   {
     id: 'tomorrow',
@@ -240,6 +412,69 @@ export const themes: PostchiTheme[] = [
       '--muted-foreground': '#4D4D4C80',
       '--destructive': '#C82829',
     },
-    codemirrorTheme: tomorrow,
+    codemirror: {
+      theme: tomorrow,
+      tokens: {
+        attributeName: tomorrowTokens.attributeName,
+        attributeValue: tomorrowTokens.attributeValue,
+      }
+    },
+  },
+  {
+    id: 'one-dark',
+    name: 'One Dark',
+    vars: {
+      '--primary': '#61afef',
+      '--background': '#1a1d23',
+      '--background-elevated': '#2c313a',
+      '--muted': '#21252b',
+      '--background-panel': '#282c34',
+      '--foreground': '#abb2bf',
+      '--muted-foreground': '#5c6370',
+      '--destructive': '#e06c75',
+    },
+    codemirror: {
+      theme: syntaxHighlighting(HighlightStyle.define([
+        { tag: t.keyword, color: '#c678dd', fontWeight: '500' },
+        { tag: t.controlKeyword, color: '#c678dd', fontWeight: '600' },
+        { tag: t.operatorKeyword, color: '#56b6c2' },
+        { tag: t.definitionKeyword, color: '#c678dd' },
+        { tag: t.moduleKeyword, color: '#c678dd' },
+        { tag: t.operator, color: '#56b6c2' },
+        { tag: t.punctuation, color: '#abb2bf' },
+        { tag: t.bracket, color: '#abb2bf' },
+        { tag: t.string, color: '#98c379' },
+        { tag: t.special(t.string), color: '#98c379' },
+        { tag: t.number, color: '#d19a66' },
+        { tag: t.bool, color: '#d19a66' },
+        { tag: t.null, color: '#d19a66', fontStyle: 'italic' },
+        { tag: t.comment, color: '#5c6370', fontStyle: 'italic' },
+        { tag: t.lineComment, color: '#5c6370', fontStyle: 'italic' },
+        { tag: t.blockComment, color: '#5c6370', fontStyle: 'italic' },
+        { tag: t.variableName, color: '#e06c75' },
+        { tag: t.definition(t.variableName), color: '#e06c75' },
+        { tag: t.function(t.variableName), color: '#61afef', fontWeight: '500' },
+        { tag: t.function(t.propertyName), color: '#61afef' },
+        { tag: t.definition(t.function(t.variableName)), color: '#61afef', fontWeight: '600' },
+        { tag: t.propertyName, color: '#e06c75' },
+        { tag: t.attributeName, color: '#e06c75' },
+        { tag: t.attributeValue, color: '#98c379' },
+        { tag: t.className, color: '#e5c07b', fontWeight: '600' },
+        { tag: t.tagName, color: '#e06c75', fontWeight: '500' },
+        { tag: t.typeName, color: '#e5c07b' },
+        { tag: t.typeOperator, color: '#56b6c2' },
+        { tag: t.namespace, color: '#e5c07b' },
+        { tag: t.regexp, color: '#98c379' },
+        { tag: t.escape, color: '#56b6c2' },
+        { tag: t.url, color: '#61afef', textDecoration: 'underline' },
+        { tag: t.heading, color: '#e06c75', fontWeight: 'bold' },
+        { tag: t.strong, fontWeight: 'bold' },
+        { tag: t.emphasis, fontStyle: 'italic', color: '#c678dd' },
+      ])),
+      tokens: {
+        attributeName: '#e06c75',
+        attributeValue: '#98c379',
+      },
+    }
   },
 ];

@@ -32,7 +32,7 @@ export const EnvironmentEditor = ({ path }: { path: string }) => {
     return <CodeMirror
         onChange={onChange}
         height='100%'
-        theme={theme.codemirrorTheme}
+        theme={theme.codemirror.theme}
         className='height: 100% outline-none'
         extensions={[lintGutter(), EnvironmentsLanguage(), autocompletion()]}
         onCreateEditor={(view) => {

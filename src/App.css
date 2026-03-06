@@ -126,6 +126,10 @@ html body {
   border-radius: var(--radius-xl);
 }
 
+.cm-cursor {
+  border-left-color: var(--color-foreground) !important;
+}
+
 .cm-activeLine {
   background: transparent !important;
 }
