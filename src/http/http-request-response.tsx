@@ -5,8 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import executeHttpTemplate, { ExecutionError, HttpExecution } from "@/lib/data/http/http-runner";
 import { SendRequestInstructions } from "@/components/send-request-shortcut";
 import { forceLinting, lintGutter } from "@codemirror/lint";
-import { buildCMTheme } from "@/lib/theme/theme-builder";
-import { customHttp, httpSyntaxHighlighting } from "@/lib/http/http-language";
+import { customHttp } from "@/lib/http/http-language";
 import { useEnvironment } from '@/active-environment/environment-context';
 import DefaultFileStorage from '@/lib/data/files/file-default';
 import { loadText } from '@/editors/load-text';
@@ -95,6 +94,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     const { theme } = useTheme()
 
 
+    
     return (
         <ResizablePanelGroup
             onBlur={saveOnBlur}
@@ -107,7 +107,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
                         loadText(view, path);
                     }}
                     height='100%'
-                    theme={buildCMTheme(httpSyntaxHighlighting(theme), theme.editor)}
+                    theme={theme.codemirrorTheme}
                     className='height: 100% outline-none'
                     extensions={extensions}
                 />

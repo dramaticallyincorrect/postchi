@@ -33,7 +33,7 @@ export default function App({ project }: { project: Project }) {
         fetchFileTree();
     }, []);
 
-    return <ThemeProvider initialTheme={themes[1]}>
+    return <ThemeProvider initialTheme={themes[0]}>
         <EnvironmentProvider path={project.envPath} >
             <div className='flex-col h-screen w-screen flex'>
                 <div className="titlebar bg-background-panel mt-1.5">

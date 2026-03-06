@@ -1,10 +1,11 @@
+import { Extension } from "@codemirror/state";
 
-type PostchiTheme = {
+
+export type PostchiTheme = {
     id: string;
     name: string;
     vars: VarColors;
-    tokens: ThemeTokens;
-    editor: EditorColors; 
+    codemirrorTheme: Extension;
 };
 
 type SidebarColors = { background: string, activeBg: string, foreground: string, mutedFg: string, sectionLabel: string }
@@ -41,7 +42,7 @@ type ThemeTokens = {
     environment: EnvironmentStyles;
 };
 
-type EditorColors = {
+export type EditorColors = {
     background: string;
     gutterBorder: string;
     gutterBackground: string;

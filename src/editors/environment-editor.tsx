@@ -1,8 +1,7 @@
 import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { lintGutter } from '@codemirror/lint';
 import { autocompletion } from '@codemirror/autocomplete';
-import { EnvironmentsLanguage, environmentSyntaxHighlighting } from '@/lib/environments/environments-language';
-import { buildCMTheme } from '@/lib/theme/theme-builder';
+import { EnvironmentsLanguage } from '@/lib/environments/environments-language';
 import { useEnvironment } from '@/active-environment/environment-context';
 import DefaultFileStorage from '@/lib/data/files/file-default';
 import { useEffect, useRef } from 'react';
@@ -33,7 +32,7 @@ export const EnvironmentEditor = ({ path }: { path: string }) => {
     return <CodeMirror
         onChange={onChange}
         height='100%'
-        theme={buildCMTheme(environmentSyntaxHighlighting(theme), theme.editor)}
+        theme={theme.codemirrorTheme}
         className='height: 100% outline-none'
         extensions={[lintGutter(), EnvironmentsLanguage(), autocompletion()]}
         onCreateEditor={(view) => {

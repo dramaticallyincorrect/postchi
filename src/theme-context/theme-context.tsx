@@ -1,6 +1,7 @@
+import { PostchiTheme } from "@/lib/theme/theme"
 import { applyThemeToCSSVars } from "@/lib/theme/theme-builder"
 import { themes } from "@/lib/theme/themes"
-import { createContext, useContext, useState } from "react"
+import { createContext, useContext, useMemo, useState } from "react"
 
 type ThemeContextType = {
     theme: PostchiTheme
@@ -10,12 +11,17 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType>({ theme: themes[0], setTheme: () => { } })
 
 export const ThemeProvider = ({ initialTheme, children }: { initialTheme: PostchiTheme, children: React.ReactNode }) => {
+
+    useMemo(() => {
+        applyThemeToCSSVars(initialTheme)
+    }, [])
+
     const [theme, setTheme] = useState<PostchiTheme>(initialTheme)
 
 
     const setThemeAndApply = (theme: PostchiTheme) => {
-        setTheme(theme)
         applyThemeToCSSVars(theme)
+        setTheme(theme)
     }
 
     return (

@@ -10,9 +10,6 @@ import { parser } from "./parser/parser";
 import { json } from "@codemirror/lang-json"
 import completeHttp from "./autocomplete/http-autocomplete";
 import { httpLinter } from "./linter/http-linter";
-import { HighlightStyle, syntaxHighlighting, TagStyle } from "@codemirror/language";
-import { Extension } from "@codemirror/state";
-import { jsonTokens } from "@/components/json-editor-tokens";
 import { Environment } from "../environments/parser/environments-parser";
 import { autocompletion } from "@codemirror/autocomplete";
 
@@ -21,10 +18,10 @@ export const customHttpLanguage = LRLanguage.define({
         props: [
             styleTags({
                 Method: t.keyword,
-                Path: t.url,
+                Path: t.string,
                 Key: t.attributeName,
-                Value: t.attributeValue,
-                'Function/Value': t.literal,
+                Value: t.string,
+                'Function/Value': t.string,
                 Variable: t.variableName,
                 FunctionName: t.annotation,
                 Comment: t.comment,
@@ -38,27 +35,6 @@ export const customHttpLanguage = LRLanguage.define({
         })
     }),
 });
-
-export function httpSyntaxHighlighting(theme: PostchiTheme): Extension {
-    const highlightStyle = HighlightStyle.define([
-        ...tokenConfig(theme.tokens),
-    ]);
-
-    return syntaxHighlighting(highlightStyle);
-}
-
-function tokenConfig(tk: ThemeTokens): TagStyle[] {
-    return [
-        { tag: t.comment, color: `${tk.comment}` },
-        { tag: t.keyword, color: `${tk.keyword}` },
-        { tag: t.attributeName, color: `${tk.attrName}` },
-        { tag: t.attributeValue, color: `${tk.attrValue}` },
-        { tag: t.url, color: `${tk.url}` },
-        { tag: t.variableName, color: `${tk.varName}`, backgroundColor: `${tk.varNameBg}` },
-        { tag: t.annotation, color: `${tk.annotation}` },
-        ...jsonTokens(tk)
-    ]
-}
 
 export function customHttp(environment?: Environment): LanguageSupport {
     const httpAutoComplete = autocompletion({ override: [completeHttp(environment?.variables || [])] })

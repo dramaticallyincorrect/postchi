@@ -98,6 +98,9 @@ importers:
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.5.0
+      thememirror:
+        specifier: ^2.0.1
+        version: 2.0.1(@codemirror/language@6.12.2)(@codemirror/state@6.5.4)(@codemirror/view@6.39.16)
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
@@ -3571,6 +3574,13 @@ packages:
   tapable@2.3.0:
     resolution: {integrity: sha512-g9ljZiwki/LfxmQADO3dEY1CbpmXT5Hm2fJ+QaGKwSXUylMybePR7/67YW7jOrrvjEgL1Fmz5kzyAjWVWLlucg==}
     engines: {node: '>=6'}
+
+  thememirror@2.0.1:
+    resolution: {integrity: sha512-d5i6FVvWWPkwrm4cHLI3t9AT1OrkAt7Ig8dtdYSofgF7C/eiyNuq6zQzSTusWTde3jpW9WLvA9J/fzNKMUsd0w==}
+    peerDependencies:
+      '@codemirror/language': ^6.0.0
+      '@codemirror/state': ^6.0.0
+      '@codemirror/view': ^6.0.0
 
   thingies@2.5.0:
     resolution: {integrity: sha512-s+2Bwztg6PhWUD7XMfeYm5qliDdSiZm7M7n8KjTkIsm3l/2lgVRc2/Gx/v+ZX8lT4FMA+i8aQvhcWylldc+ZNw==}
@@ -7512,6 +7522,12 @@ snapshots:
   tailwindcss@4.2.1: {}
 
   tapable@2.3.0: {}
+
+  thememirror@2.0.1(@codemirror/language@6.12.2)(@codemirror/state@6.5.4)(@codemirror/view@6.39.16):
+    dependencies:
+      '@codemirror/language': 6.12.2
+      '@codemirror/state': 6.5.4
+      '@codemirror/view': 6.39.16
 
   thingies@2.5.0(tslib@2.8.1):
     dependencies:

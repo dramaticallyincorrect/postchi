@@ -2,12 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./App.css";
-import { themes } from "./lib/theme/themes";
-import { applyThemeToCSSVars } from "./lib/theme/theme-builder";
 import { createProject } from "./lib/data/project/project";
 import { isTauri } from "@tauri-apps/api/core";
-
-applyThemeToCSSVars(themes[1]);
 
 
 async function getDefaultProjectPath(): Promise<string> {

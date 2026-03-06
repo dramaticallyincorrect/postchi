@@ -1,8 +1,6 @@
 import { Bullet } from '../components/bullet';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
-import { buildCMTheme } from '@/lib/theme/theme-builder';
-import { jsonSyntaxHighlighting } from '../components/json-editor-tokens';
 import { HttpExecution } from '@/lib/data/http/http-runner';
 import { ContentTypeInfo } from '@/lib/data/http/body-classifier/http-body-classifier';
 import { Button } from '@/components/ui/button';
@@ -110,7 +108,7 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
     if (typeof body === 'string') {
         return <CodeMirror
             value={body}
-            theme={buildCMTheme(jsonSyntaxHighlighting(theme), theme.editor)}
+            theme={theme.codemirrorTheme}
             readOnly={true}
             className='height: 100% outline-none'
             basicSetup={{
@@ -154,7 +152,7 @@ const JsonView = ({ body }: { body: string }) => {
     return (
         <CodeMirror
             value={body}
-            theme={buildCMTheme(jsonSyntaxHighlighting(theme), theme.editor)}
+            theme={theme.codemirrorTheme}
             readOnly={true}
             className='height: 100% outline-none'
             extensions={[json()]}
