@@ -26,6 +26,7 @@
         "**"
       ]
     },
-    "os:default"
+    "os:default",
+    "store:default"
   ]
 }

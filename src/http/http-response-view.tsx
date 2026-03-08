@@ -4,11 +4,11 @@ import { json } from '@codemirror/lang-json';
 import { HttpExecution } from '@/lib/data/http/http-runner';
 import { ContentTypeInfo } from '@/lib/data/http/body-classifier/http-body-classifier';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 import { HttpRequest } from '@/lib/data/http/http-template-resolver';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/theme-context/theme-context';
 import { customHttpLanguage } from '@/lib/http/http-language';
+import usePersistentState from '@/lib/hooks/persistent-state';
 
 export type HttpResponse = {
     status: number,
@@ -18,8 +18,8 @@ export type HttpResponse = {
 
 const HttpResponseView = ({ execution }: { execution: HttpExecution }) => {
 
-    const [showRequest, setShowRequest] = useState(false);
-    const [showHeaders, setShowHeaders] = useState(false);
+    const [showRequest, setShowRequest] = usePersistentState('showRequest', false);
+    const [showHeaders, setShowHeaders] = usePersistentState('showHeaders', false);
 
     return (
         <div className='flex-col overflow-y-auto h-full'>

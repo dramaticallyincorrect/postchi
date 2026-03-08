@@ -30,6 +30,7 @@
     "@tauri-apps/plugin-log": "~2",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-os": "~2",
+    "@tauri-apps/plugin-store": "~2",
     "@uiw/codemirror-theme-androidstudio": "^4.25.4",
     "@uiw/react-codemirror": "^4.25.4",
     "class-variance-authority": "^0.7.1",
