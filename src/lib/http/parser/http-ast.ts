@@ -240,7 +240,7 @@ function pair(line: Line, request: string, separator: string): HeaderNode {
         to: keyEnd
     }
 
-    const value = expression(line, request);
+    const value = expression(line);
 
     return {
         type: "header",
@@ -374,7 +374,7 @@ function* lines(input: string): Generator<Line> {
 }
 
 
-function expression(range: Line, input: string): Expression {
+function expression(range: Line): Expression {
     if (range.curr >= range.end) {
         return { type: "literal", from: range.end, to: range.end };
     }

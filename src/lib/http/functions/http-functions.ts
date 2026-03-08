@@ -45,7 +45,7 @@ export const httpFunctions: Map<string, HttpFunction> = new Map([
 export const readFileFunction: HttpFunction = {
     parameters: ['path'],
     isVarArgs: false,
-    execute: async (args: string[]) => {
+    execute: async (_: string[]) => {
         throw new Error("readFile, only here to be recognized by the linter, should not be executed")
     }
 }

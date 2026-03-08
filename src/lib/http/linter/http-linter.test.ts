@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeHttpDiagnostics, errorDiagnostic, HttpErrorMessage } from './http-linter';
-import { endOf, newlines, whitespaces } from '@/lib/utils/test-utils';
+import { endOf, whitespaces } from '@/lib/utils/test-utils';
 import { Diagnostic } from '@codemirror/lint';
 
 
@@ -28,7 +28,7 @@ function expectError(input: string, error: Diagnostic) {
 describe('http lints', () => {
     it('warning non standard method', () => {
 
-        const input = `/api/v1/data`
+        // const input = `/api/v1/data`
 
         // const tree = parser.parse(input)
 
