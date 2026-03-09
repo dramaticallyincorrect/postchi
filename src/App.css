@@ -90,7 +90,7 @@
   }
 
   body {
-    @apply font-sans bg-background text-foreground;
+    @apply font-mono bg-background text-foreground;
   }
 
   html {
