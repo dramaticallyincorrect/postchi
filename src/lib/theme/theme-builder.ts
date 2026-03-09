@@ -33,6 +33,18 @@ export function buildCMTheme(syntaxHighlighting: Extension, color: string): Exte
         "&.cm-focused": {
             outline: "none",
         },
+        '.cm-variable-valid': {
+            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+            borderRadius: '2px',
+            padding: '0 2px',
+            color: '#006400',
+        },
+        '.cm-variable-invalid': {
+            backgroundColor: 'rgba(255, 0, 0, 0.2)',
+            borderRadius: '2px',
+            padding: '0 2px',
+            color: '#8b0000',
+        }
     }, { dark: true });
 
 

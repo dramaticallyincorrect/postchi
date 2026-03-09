@@ -12,7 +12,7 @@
       2. ~~functions~~ post poned
    2. runner
       1. ~~resolve variables~~
-   3. style -> decoration
+   3. ~~style -> decoration~~
 4. file tree
    1. add request
    2. add folder
