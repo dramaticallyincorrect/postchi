@@ -69,7 +69,7 @@ const ResponseHeaders = ({ headers }: { headers: { key: string, value: string }[
                 <div className='flex flex-col'>
                     {headers.map((header, index) => (
                         <div key={index}>
-                            <span style={{ color: theme.codemirror.tokens.attributeName }} >{header.key}: </span><span style={{ color: theme.codemirror.tokens.attributeValue }}>{header.value}</span>
+                            <span style={{ color: theme.codemirror.tokens.attributeName, fontWeight: 'bold' }} >{header.key}: </span><span style={{ color: theme.codemirror.tokens.attributeValue }}>{header.value}</span>
                         </div>
                     ))}
                 </div>

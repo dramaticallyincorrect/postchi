@@ -19,8 +19,8 @@ export const themes: PostchiTheme[] = [
     codemirror: {
       theme: buildCMTheme(coolGlow, '#161622'),
       tokens: {
-        attributeName: '#89B4FA',
-        attributeValue: '#A6E3A1',
+        attributeName: '#60A4F1',
+        attributeValue: '#8DFF8E',
       }
     },
   },

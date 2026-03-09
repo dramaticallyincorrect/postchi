@@ -37,6 +37,10 @@ export default async function resolveHttpTemplate(template: string, context: Exe
             return httpFunctions.get(name)!.execute(args)
         }
 
+        if (node.type === 'json-value') {
+            return `"${await value(node.value)}"`
+        }
+
         return text
     }
 
@@ -75,9 +79,11 @@ export default async function resolveHttpTemplate(template: string, context: Exe
                 formData.append(key, val);
             }))
             return formData;
+        } else if (node.type === 'json') {
+            return (await Promise.all(node.children.map(value))).join("")
         }
 
-        return template.substring(node.from, node.to);
+        return value(node)
     }
 
 

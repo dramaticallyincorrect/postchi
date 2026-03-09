@@ -1,3 +1,6 @@
+import { DocumentNode, iterator, MemberNode, parse, Token } from "@humanwhocodes/momoa";
+import { json } from '@codemirror/lang-json';
+
 export type HttpRequestAst = {
     method: Method;
     url: (Variable | Literal)[];
@@ -5,7 +8,7 @@ export type HttpRequestAst = {
     body: JsonBodyNode | FormBodyNode | TextBodyNode | null;
 };
 
-export type HttpNode = Method | Variable | Literal | HeaderNode | FormBodyNode | JsonBodyNode | TextBodyNode | RequestFunction;
+export type HttpNode = Method | Variable | Literal | HeaderNode | FormBodyNode | JsonBodyNode | TextBodyNode | RequestFunction | JsonValueNode;
 
 type Method = {
     type: "method";
@@ -24,6 +27,14 @@ export type JsonBodyNode = {
     type: "json";
     from: number;
     to: number;
+    children: (Literal | JsonValueNode)[];
+}
+
+export type JsonValueNode = {
+    type: "json-value";
+    from: number;
+    to: number;
+    value: Variable
 }
 
 export type TextBodyNode = {
@@ -85,7 +96,9 @@ export function allNodes(ast: HttpRequestAst): HttpNode[] {
 
     function bodyNodes(node: JsonBodyNode | FormBodyNode | TextBodyNode | null): HttpNode[] {
         if (!node) return [];
-        if (node.type === "json" || node.type === "text") {
+        if (node.type === "json") {
+            return [node, ...node.children.flatMap(child => [child, ...(child.type === 'json-value' ? [child.value] : [])])];
+        } else if (node.type === "text") {
             return [node];
         } else {
             return [node, ...node.entries.flatMap(entry => headerNodes(entry))];
@@ -167,9 +180,58 @@ export function computeHttpAst(request: string): HttpRequestAst {
                     entries: keyValuePairs
                 }
                 break;
+            } else if (computedBodyType === "json") {
+                const children: (Literal | JsonValueNode)[] = [];
+                try {
+                    const offset = bodyStart;
+                    const jsonAst = parse(bodyText, { ranges: true, tokens: true });
+                    jsonAst.tokens?.map(token => {
+                        const type = getTokenKind(jsonAst, token);
+                        if (type === 'string-value') {
+                            const text = bodyText.slice(token.loc.start.offset + 1, token.loc.end.offset - 1);
+                            if (text.startsWith("<")) {
+                                children.push({
+                                    type: 'json-value',
+                                    from: token.loc.start.offset + offset,
+                                    to: token.loc.end.offset + offset,
+                                    value: {
+                                        type: "variable",
+                                        from: token.loc.start.offset + 1 + offset,
+                                        to: token.loc.end.offset - 1 + offset
+                                    }
+                                })
+                            } else {
+                                children.push({
+                                    type: 'literal',
+                                    from: token.loc.start.offset + offset,
+                                    to: token.loc.end.offset + offset
+                                })
+                            }
+                        } else {
+                            children.push({
+                                type: 'literal',
+                                from: token.loc.start.offset + offset,
+                                to: token.loc.end.offset + offset
+                            })
+                        }
+                    })
+                } catch (e) {
+                    children.push({
+                        type: 'literal',
+                        from: bodyStart,
+                        to: bodyEnd
+                    })
+                }
+
+                ast.body = {
+                    type: "json",
+                    from: bodyStart,
+                    to: bodyEnd,
+                    children: children
+                }
             } else {
                 ast.body = {
-                    type: computedBodyType === "json" ? "json" : "text",
+                    type: "text",
                     from: bodyStart,
                     to: bodyEnd,
                 }
@@ -179,6 +241,28 @@ export function computeHttpAst(request: string): HttpRequestAst {
     }
 
     return ast
+}
+
+type TokenKind = 'string-value' | 'other'
+
+function getTokenKind(ast: DocumentNode, token: Token): TokenKind {
+    if (token.type !== 'String') {
+        return 'other';
+    }
+    for (const { node, parent, phase } of iterator(ast)) {
+        if (phase !== 'enter') continue
+        if (node.loc?.start.offset !== token.loc.start.offset || node.loc?.end.offset !== token.loc.end.offset) continue
+
+        switch (node.type) {
+            case 'String': {
+                const parentNode = (parent as MemberNode)
+                const isKey = parentNode?.type === 'Member' && parentNode.name === node
+                return isKey ? 'other' : 'string-value'
+            }
+        }
+    }
+
+    return 'other'
 }
 
 

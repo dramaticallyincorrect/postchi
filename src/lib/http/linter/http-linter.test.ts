@@ -108,6 +108,7 @@ describe('http lints', () => {
                 { label: `url`, request: `GET /${variable}` },
                 { label: `header`, request: `GET / \nContent-Type: ${variable}` },
                 { label: `form body`, request: `GET / \n@body\nkey=${variable}` },
+                { label: `json body`, request: `GET / \n@body\n{"key": "${variable}"}` },
                 { label: `nested`, request: `GET / \n@body\nkey=join(1234, ${variable})` }
             ]
 
@@ -123,7 +124,6 @@ describe('http lints', () => {
         allVariables("malformed variable", '<malformed', HttpErrorMessage.MalformedVariable)
 
         allVariables("undefined variable", '<undefined>', HttpErrorMessage.VariableNotDefined)
-
     })
 
     describe('body', () => {
@@ -160,7 +160,7 @@ describe('http lints', () => {
     `,
             `GET /
     useragent: Postchi/1.0
-    content-type: <<var>>
+    content-type: <var>
     `,
             `GET /
     useragent: Postchi/1.0

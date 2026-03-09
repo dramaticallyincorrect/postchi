@@ -58,6 +58,16 @@ describe('variable', () => {
             ]
         })
     })
+
+    it('json body', async () => {
+        const httpRequest = `GET /\n@body\n {"password": "<"}`
+        const result = await computeHttpCompletions(httpRequest.indexOf('<'), httpRequest, () => 2, vars)
+
+        expect(result).toEqual({
+            from: httpRequest.indexOf('<'),
+            options: variableCompletions(vars)
+        })
+    })
 })
 
 describe('function expressions provide variables and functions', () => {

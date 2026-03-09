@@ -1,6 +1,6 @@
 
 export function getVariableName(variable: string) {
-    return variable.replace(/<|>/g, "")
+    return variable.slice(1, -1)
 }
 
 export function isVariable(variable: string) {

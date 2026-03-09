@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest";
-import { computeHttpAst, Expression, FormBodyNode, HttpRequestAst, JsonBodyNode, RequestFunction, TextBodyNode } from "./http-ast";
+import { computeHttpAst, Expression, FormBodyNode, HttpNode, HttpRequestAst, JsonBodyNode, RequestFunction, TextBodyNode } from "./http-ast";
 import { newlines, whitespaces } from "@/lib/utils/test-utils";
 
 const functions = [
@@ -142,17 +142,28 @@ describe("body", () => {
     })
 
 
-    it('json', () => {
+    describe('json', () => {
 
-        const jsonBodies = ['{sdf', '[sdf']
 
-        for (const jsonBody of jsonBodies) {
+        it('only literals', () => {
+            const jsonBodies = ['{', '[']
 
+            for (const jsonBody of jsonBodies) {
+
+                const httpRequest = body(jsonBody)
+                const expected = expectation("GET", ["/"], [], `json(${jsonBody})`);
+
+                assert(httpRequest, expected);
+            }
+        })
+
+        it('variables in values', () => {
+            const jsonBody = `{ "key": "<value>" }`
             const httpRequest = body(jsonBody)
-            const expected = expectation("GET", ["/"], [], `json(${jsonBody})`);
+            const expected = expectation("GET", ["/"], [], `json({"key":json-value(variable(<value>))})`);
 
             assert(httpRequest, expected);
-        }
+        })
 
     })
 
@@ -280,18 +291,20 @@ function expectation(method: string, url: string[] = [], headers: [string, strin
 
 
 function valuesOf(ast: HttpRequestAst, request: string): Expectation {
-    const value = (node: { type: string; from: number, to: number }) => {
+    const value = (node: HttpNode): string => {
         if (node.type === "variable") {
             return `variable(${request.slice(node.from, node.to)})`
         } else if (node.type === "function") {
             return expressionString(node as RequestFunction, request);
+        } else if (node.type == 'json-value') {
+            return `json-value(${value(node.value)})`
         }
         return request.slice(node.from, node.to);
     };
 
     const bodyValue = (body: JsonBodyNode | FormBodyNode | TextBodyNode | null) => {
         if (!body) return null;
-        if (body.type === "json") return `json(${value(body)})`;
+        if (body.type === "json") return `json(${body.children.map(u => value(u)).join("")})`;
         if (body.type === "text") return `text(${value(body)})`;
         return `${body.type}(${body.entries.map(({ key, value: v }) => `${value(key)}=${expressionString(v, request)}`).join(",")})`;
     }

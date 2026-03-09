@@ -12,9 +12,11 @@ export class ExecutionError {
     }
 }
 
-export default async function executeHttpTemplate(template: string, abort: AbortController): Promise<HttpExecution | ExecutionError> {
+export default async function executeHttpTemplate(template: string, variables: { key: string, value: string }[], abort: AbortController): Promise<HttpExecution | ExecutionError> {
 
-    const request = await resolveHttpTemplate(template)
+    const request = await resolveHttpTemplate(template, {
+        variables: new Map(variables.map(obj => [obj.key, obj.value])),
+    })
 
     if (!request || 'message' in request) {
         return Promise.resolve(new ExecutionError('template', 'Invalid request, fix template and run again'));

@@ -36,7 +36,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
                 setResponse(new Loading())
 
-                const response = await executeHttpTemplate(text, abort.current);
+                const response = await executeHttpTemplate(text, activeEnvironment?.variables ?? [], abort.current);
 
                 if (response instanceof ExecutionError) {
                     if (response.type === 'abort') {
@@ -52,7 +52,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         };
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
-    }, []);
+    }, [activeEnvironment]);
 
     const submitKeymap = keymap.of([{
         key: "Mod-Enter",
@@ -95,7 +95,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     const { theme } = useTheme()
 
 
-    
+
     return (
         <ResizablePanelGroup
             onBlur={saveOnBlur}

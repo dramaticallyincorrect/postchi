@@ -78,6 +78,31 @@ describe('creates http request from ast', () => {
             });
 
         })
+
+        it('in json body', async () => {
+
+            const template = `GET https://getpostchi.com
+            @body
+            {
+                "Authorization": "<id>",
+                "<not_a_variable>": "<api>"
+            }`.trim()
+
+            const httpRequest = await resolveHttpTemplate(template, {
+                variables: new Map([
+                    ["api", "download"],
+                    ["id", "12345"]
+                ])
+            });
+
+            expect(httpRequest, template).toStrictEqual({
+                method: "GET",
+                url: "https://getpostchi.com",
+                headers: [],
+                body: `{"Authorization":"12345","<not_a_variable>":"download"}`
+            });
+
+        })
     })
 
     describe('functions', () => {
@@ -192,7 +217,7 @@ describe('creates http request from ast', () => {
     describe('body', () => {
         it('json is converted to text', async () => {
 
-            const body = '{"client": "postchi", "user": "chi"}'
+            const body = '{"client":"postchi","user":"chi"}'
             const template = `GET https://getpostchi.com/download
                             Authorization: Bearer 12345
                             @body

@@ -4,6 +4,7 @@ import { computeHttpAst, Expression, FormBodyNode, HeaderNode, HttpNode, HttpReq
 import DefaultFileStorage from "@/lib/data/files/file-default"
 import { asVariable } from "@/lib/utils/variable-name"
 import httpFunctions from "../functions/http-functions"
+import { json } from '@codemirror/lang-json';
 
 export const completeHttp = (variables: { key: string, value: string }[]) => (context: CompletionContext) => {
     return computeHttpCompletions(context.pos,
@@ -111,6 +112,18 @@ export async function computeHttpCompletions(position: number, doc: string, line
             if (entry?.separator && position > entry.separator) {
                 return provideFunctionCompletions(entry.value)
             }
+            break;
+        case 'json':
+            const jsonTree = json().language.parser.parse(doc)
+
+            const jsonNode = jsonTree.resolveInner(position, -1)
+            if (jsonNode.name === 'String') {
+                return {
+                    from: jsonNode.from + 1,
+                    options: variableCompletions(variables),
+                }
+            }
+            break;
     }
     return {
         from: 0,
@@ -139,7 +152,7 @@ export async function pathCompletion(path: string, fileStorage: FileStorage = ne
 }
 
 function findNodeAtPosition(position: number, ast: HttpRequestAst): HttpNode | undefined {
-    const nodes = [ast.method, ...ast.url, ...ast.headers, ...ast.body ? [ast.body] : []]
+    const nodes = [ast.method, ...ast.url, ...ast.headers, ...(ast.body ? [ast.body] : [])]
 
     return nodes.find(node => position >= node.from && position <= node.to)
 }
