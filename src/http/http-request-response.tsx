@@ -88,6 +88,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     useEffect(() => {
         if (viewRef.current) {
             loadText(viewRef.current, path)
+            setResponse(null)
         }
     }, [path])
 

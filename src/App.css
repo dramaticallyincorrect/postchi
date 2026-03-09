@@ -150,11 +150,12 @@ html body {
 }
 
 .cm-tooltip {
-  background-color: var(--background) !important;
+  background-color: var(--background-panel) !important;
   border: 1px solid var(--color-muted) !important;
   border-radius: 4px !important;
   padding: 4px 8px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  color: var(--color-foreground) !important;
 }
 
 .cm-tooltip-autocomplete>ul>li {
@@ -163,7 +164,7 @@ html body {
 }
 
 .cm-tooltip-autocomplete>ul>li[aria-selected] {
-  background-color: var(--color-background-panel) !important;
+  background-color: var(--color-muted) !important;
   color: var(--color-foreground) !important;
   border-radius: 3px !important;
 }
