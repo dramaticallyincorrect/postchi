@@ -144,7 +144,6 @@ html body {
 }
 
 .titlebar {
-  height: 30px;
   background: var(--background);
   display: grid;
   grid-template-columns: auto max-content;

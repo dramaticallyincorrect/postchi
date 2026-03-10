@@ -17,6 +17,9 @@ import { EnvironmentEditor } from './editors/environment-editor';
 import { EnvironmentProvider } from './active-environment/environment-context';
 import { ThemeProvider } from './theme-context/theme-context';
 import { themes } from './lib/theme/themes';
+import MsWindowControls from './components/window-controls';
+import { isMac } from './lib/utils/os';
+import { cn } from './lib/utils';
 
 
 export default function App({ project }: { project: Project }) {
@@ -36,12 +39,19 @@ export default function App({ project }: { project: Project }) {
     return <ThemeProvider initialTheme={themes[0]}>
         <EnvironmentProvider path={project.envPath} >
             <div className='flex-col h-screen w-screen flex'>
-                <div className="titlebar bg-background-panel mt-1.5">
-                    <div data-tauri-drag-region>
-                        <PanelLeftIcon className='ms-22 me-1 size-4 inline' />
-                        <Button variant="ghost" className='hover:bg-muted-foreground'>{project.name}</Button>
-                        <span className='text-muted-foreground mx-1 select-none'>•</span>
-                        <ActiveEnvironment />
+                <div className="titlebar bg-background-panel">
+                    <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
+
+                        <div className="flex items-center mt-1.5">
+                            <PanelLeftIcon className={cn(isMac() ? 'ms-22' : 'ms-4') + ' me-1 size-4 inline'} />
+                            <Button variant="ghost" className='hover:bg-muted-foreground'>{project.name}</Button>
+                            <span className='text-muted-foreground mx-1 select-none'>•</span>
+                            <ActiveEnvironment />
+                        </div>
+
+                        <div className="ml-auto" />
+                        <MsWindowControls />
+
                     </div>
                 </div>
                 <Split>
