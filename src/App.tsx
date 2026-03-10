@@ -62,7 +62,7 @@ const TitleBar = ({ projectName }: { projectName: string }) => {
             </div>
 
             <div className="ml-auto" />
-            <MsWindowControls />
+            {!isMac() && <MsWindowControls />}
 
         </div>
     </div>

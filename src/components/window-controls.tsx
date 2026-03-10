@@ -37,7 +37,7 @@ export default function MsWindowControls() {
         title="Minimize"
         className="
           inline-flex items-center justify-center
-          w-[46px] h-8 border-none outline-none cursor-default
+          w-11.5 h-8 border-none outline-none cursor-default
           text-foreground/60
           hover:text-foreground hover:bg-foreground/10
           transition-colors duration-100
@@ -55,7 +55,7 @@ export default function MsWindowControls() {
         title={isMaximized ? "Restore" : "Maximize"}
         className="
           inline-flex items-center justify-center
-          w-[46px] h-8 border-none outline-none cursor-default
+          w-11.5 h-8 border-none outline-none cursor-default
           text-foreground/60
           hover:text-foreground hover:bg-foreground/10
           transition-colors duration-100
@@ -82,7 +82,7 @@ export default function MsWindowControls() {
         title="Close"
         className="
           inline-flex items-center justify-center
-          w-[46px] h-8 border-none outline-none cursor-default
+          w-11.5 h-8 border-none outline-none cursor-default
           text-foreground/60
           hover:text-white hover:bg-destructive
           transition-colors duration-100
