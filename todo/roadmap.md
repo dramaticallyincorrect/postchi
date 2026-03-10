@@ -1,10 +1,10 @@
 # Roadmap
 
 1. file tree
-   1. add request
-   2. add folder
-   3. delete request
-   4. delete folder
+   1. ~~add request~~
+   2. ~~add folder~~
+   3. ~~delete request~~
+   4. ~~delete folder~~
    5. add before script
    6. add after script
    7. add quick action

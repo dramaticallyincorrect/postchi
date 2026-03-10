@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { fs } from 'memfs';
 import { join } from 'path';
 import { BrowserFileStorage } from "./files/file-browser";
-import { FileItem, FileTreeItem, FolderItem, readFileTree } from "./project-files";
+import { FileItem, FileTreeItem, FolderItem, isPathInFileTree, readFileTree } from "./project-files";
 
 const rootPath = '/test-project'
 
@@ -25,6 +25,23 @@ secrets.cenv
 
 
     expect(items).toStrictEqual(expected)
+
+})
+
+test("should return false when file is not in list", async () => {
+    const files = `
+collections
+    assets
+        logo.get
+    login.get
+    users.get
+environments.cenv
+secrets.cenv
+`
+    const initial = parseFileTree(files, rootPath)
+
+    expect(isPathInFileTree(initial, join(rootPath, 'collections', 'assets', 'logo.get'))).toBe(true)
+    expect(isPathInFileTree(initial, join(rootPath, 'collections', 'assets', 'missing.get'))).toBe(false)
 
 })
 

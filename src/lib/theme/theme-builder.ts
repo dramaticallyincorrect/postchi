@@ -10,11 +10,12 @@ export function applyThemeToCSSVars(theme: PostchiTheme) {
         document.head.appendChild(styleEl);
     }
 
-    const declarations = Object.entries(theme.vars)
+    let declarations = Object.entries(theme.vars)
         .map(([k, v]) => `  ${k}: ${v};`)
         .join("\n");
 
-    // Injecting on :root means Tailwind's var() references resolve automatically
+    declarations += '\n --border: var(--muted); \n --input: var(--muted); \n --ring: var(--muted);';
+
     styleEl.textContent = `:root {\n${declarations}\n}`;
 }
 

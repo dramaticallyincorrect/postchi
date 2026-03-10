@@ -1,5 +1,6 @@
 import { fs } from 'memfs';
 import { pathOf } from './join';
+import { FileChangeEvent, FileStorage, FileWatchEventType, StorageEntry, UnWatchFunction } from './file';
 
 type IDirent = {
     name: string
@@ -41,5 +42,33 @@ export class BrowserFileStorage implements FileStorage {
 
     async mkdir(path: string): Promise<void> {
         fs.mkdirSync(path, { recursive: true })
+    }
+
+    delete(path: string): Promise<void> {
+        return fs.promises.rm(path, { recursive: true });
+    }
+
+    async watch(path: string, callback: (event: FileChangeEvent) => void): Promise<UnWatchFunction> {
+        const watcher = fs.watch(path, { recursive: true }, (eventType, filename) => {
+            if (!filename) return;
+
+            const fullPath = pathOf(path, filename.toString());
+            let simplifiedType: FileWatchEventType | null = null;
+            if (eventType === 'change') {
+                simplifiedType = FileWatchEventType.Modified;
+            } else if (eventType === 'rename') {
+                if (fs.existsSync(fullPath)) {
+                    simplifiedType = FileWatchEventType.Created;
+                } else {
+                    simplifiedType = FileWatchEventType.Deleted;
+                }
+            }
+
+            if (simplifiedType) {
+                callback({ type: simplifiedType, path: fullPath });
+            }
+        });
+
+        return () => watcher.close();
     }
 }

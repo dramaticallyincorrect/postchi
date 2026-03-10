@@ -5,9 +5,9 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FileTree } from './components/FileTree';
-import { FileItem, FileTreeItem, readFileTree } from './lib/data/project-files';
+import { FileItem } from './lib/data/project-files';
 import HttpRequestResponse from './http/http-request-response';
 import { ActiveEnvironment } from './active-environment/active-environment';
 import { Project } from './lib/data/project/project';
@@ -20,40 +20,26 @@ import { themes } from './lib/theme/themes';
 import MsWindowControls from './components/window-controls';
 import { isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
-
+import { useFileTree } from './lib/hooks/use-file-tree';
+import { useFileWatch } from './lib/hooks/file-watch';
+import { FileWatchEventType } from './lib/data/files/file';
 
 export default function App({ project }: { project: Project }) {
 
-    const [fileTree, setFileTree] = useState<FileTreeItem[]>([])
-
     const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
 
-    useEffect(() => {
-        const fetchFileTree = async () => {
-            const tree = await readFileTree(project.path);
-            setFileTree(tree);
-        };
-        fetchFileTree();
-    }, []);
+    const { tree: fileTree } = useFileTree(project.path)
+
+    useFileWatch(selectedFile?.path ?? null, (event) => {
+        if (event.type === FileWatchEventType.Deleted) {
+            setSelectedFile(null)
+        }
+    })
 
     return <ThemeProvider initialTheme={themes[0]}>
         <EnvironmentProvider path={project.envPath} >
             <div className='flex-col h-screen w-screen flex'>
-                <div className="titlebar bg-background-panel">
-                    <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
-
-                        <div className="flex items-center mt-1.5">
-                            <PanelLeftIcon className={cn(isMac() ? 'ms-22' : 'ms-4') + ' me-1 size-4 inline'} />
-                            <Button variant="ghost" className='hover:bg-muted-foreground'>{project.name}</Button>
-                            <span className='text-muted-foreground mx-1 select-none'>•</span>
-                            <ActiveEnvironment />
-                        </div>
-
-                        <div className="ml-auto" />
-                        <MsWindowControls />
-
-                    </div>
-                </div>
+                <TitleBar projectName={project.name} />
                 <Split>
                     <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
                     {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
@@ -62,6 +48,24 @@ export default function App({ project }: { project: Project }) {
         </EnvironmentProvider>
     </ThemeProvider>
 
+}
+
+const TitleBar = ({ projectName }: { projectName: string }) => {
+    return <div className="titlebar bg-background-panel">
+        <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
+
+            <div className="flex items-center mt-1.5">
+                <PanelLeftIcon className={cn(isMac() ? 'ms-22' : 'ms-4') + ' me-1 size-4 inline'} />
+                <Button variant="ghost" className='hover:bg-muted-foreground'>{projectName}</Button>
+                <span className='text-muted-foreground mx-1 select-none'>•</span>
+                <ActiveEnvironment />
+            </div>
+
+            <div className="ml-auto" />
+            <MsWindowControls />
+
+        </div>
+    </div>
 }
 
 const Editor = ({ path }: { path: string }) => {

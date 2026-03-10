@@ -1,3 +1,4 @@
+import { FileStorage } from "../files/file"
 import DefaultFileStorage from "../files/file-default"
 import { pathOf } from "../files/join"
 
@@ -9,9 +10,10 @@ export type Project = {
     collectionsPath: string
 }
 
-export async function createProject(path: string, name: string, fileStorage: FileStorage = new DefaultFileStorage()): Promise<Project> {
+export async function createProject(path: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
     await fileStorage.mkdir(path)
     await fileStorage.mkdir(pathOf(path, collectionsDirName))
+    await fileStorage.mkdir(pathOf(path, collectionsDirName, 'top', 'nested', 'deep', 'down'))
     await fileStorage.create(pathOf(path, collectionsDirName, 'users.get'), `POST https://httpbin.org/post
 User-Agent: <user-agent>
 Accept: application/json

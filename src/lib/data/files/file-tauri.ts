@@ -1,5 +1,6 @@
 import * as fs from "@tauri-apps/plugin-fs";
 import * as paths from '@tauri-apps/api/path';
+import { FileChangeEvent, FileStorage, FileWatchEventType, StorageEntry, UnWatchFunction } from "./file";
 
 export class TauriFileStorage implements FileStorage {
 
@@ -36,5 +37,32 @@ export class TauriFileStorage implements FileStorage {
 
     async mkdir(path: string): Promise<void> {
         fs.mkdir(path, { recursive: true })
+    }
+
+    delete(path: string): Promise<void> {
+        return fs.remove(path, { recursive: true })
+    }
+
+    async watch(path: string, callback: (event: FileChangeEvent) => void): Promise<UnWatchFunction> {
+        return await fs.watch(path, (event) => {
+            const { type, paths } = event;
+            let simplifiedType: FileWatchEventType | null = null;
+
+            // 1. Narrow the type to 'object' so TS allows the 'in' operator
+            if (typeof type === 'object' && type !== null) {
+                if ('create' in type) {
+                    simplifiedType = FileWatchEventType.Created;
+                } else if ('modify' in type) {
+                    simplifiedType = FileWatchEventType.Modified;
+                } else if ('remove' in type) {
+                    simplifiedType = FileWatchEventType.Deleted;
+                }
+            }
+
+            if (simplifiedType) {
+                paths.forEach((p) => callback({ type: simplifiedType!, path: p }));
+            }
+
+        }, { recursive: true })
     }
 }
