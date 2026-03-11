@@ -1,0 +1,83 @@
+{
+	"info": {
+		"_postman_id": "ab65214f-35a5-4cdc-8d6c-1e1570b9aca3",
+		"name": "3PP",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25773626",
+		"_collection_link": "https://winter-capsule-380742.postman.co/workspace/Mobile-team~ace44bc4-e64a-49f1-bbf3-b11e61add7c7/collection/28110359-ab65214f-35a5-4cdc-8d6c-1e1570b9aca3?action=share&source=collection_link&creator=25773626"
+	},
+	"item": [
+		{
+			"name": "/student-response",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{    \"student_system_prompt\": \"You are an HRBP fielding employee requests. You are an experienced HR team member who responds to staff needs. You are knowledgeable, helpful, and solution-oriented. You are systematic, ask relevant questions, maintain focus, and seek a positive outcome. You remain calm and professional at all times. In the case of this conversation, an employee believes they are underpaid. Your task is to work through their complaint and help them find a creative solution that allows them to feel better, but you are not permitted to offer them a payrise. Keep your responses under 75 words.\",    \"chat\": [        {            \"role\": \"student\",            \"content\": \"Hi there. Thanks for coming. How can I help?\"        },        {            \"role\": \"actor\",            \"content\": \"I'm here to discuss my salary. It seems I'm being paid less that other colleagues doing the same work.\"        },        {            \"role\": \"student\",            \"content\": \"I understand your concerns about salary discrepancies. Let's review the role, responsibilities and your performance to see if there are discrepancies or areas we can improve in to justify a future raise.\"        },        {            \"role\": \"actor\",            \"content\": \"I appreciate your time, but I've already evaluated those factors. I provide the same results and shoulder the same responsibilities as my peers. I believe equal work deserves equal pay, and currently, that doesn't seem to be the case for me.\"        }    ]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/chat/gen-ai-student-response",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"chat",
+						"gen-ai-student-response"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/actor-response",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{    \"actor_system_prompt\": \"You are an employee who has gone to HR to complain about your pay. You believe you are underpaid relative to colleagues who are doing the same work. You are feeling a little cheated and believe that the company should increase your compensation. Keep your responses under 75 words.\",    \"chat\": [        {            \"role\": \"student\",            \"content\": \"Hi there. Thanks for coming. How can I help?\"        },        {            \"role\": \"actor\",            \"content\": \"I'm here to discuss my salary. It seems I'm being paid less that other colleagues doing the same work.\"        },        {            \"role\": \"student\",            \"content\": \"I understand your concerns about salary discrepancies. Let's review the role, responsibilities and your performance to see if there are discrepancies or areas we can improve in to justify a future raise.\"        }    ],    \"indicator_definitions\": [        {            \"indicator\": \"Happiness\",            \"i_statement\": \"I feel happy with how things our going with this\"        }    ]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/chat/gen-ai-actor-response",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"chat",
+						"gen-ai-actor-response"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
