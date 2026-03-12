@@ -35,13 +35,13 @@ export function buildCMTheme(syntaxHighlighting: Extension, color: string): Exte
             outline: "none",
         },
         '.cm-variable-valid': {
-            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+            backgroundColor: getCSSVar('--success'),
             borderRadius: '2px',
             padding: '0 2px',
             color: '#006400',
         },
         '.cm-variable-invalid': {
-            backgroundColor: 'rgba(255, 0, 0, 0.2)',
+            backgroundColor: getCSSVar('--error'),
             borderRadius: '2px',
             padding: '0 2px',
             color: '#8b0000',

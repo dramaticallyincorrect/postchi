@@ -15,6 +15,9 @@ export const themes: PostchiTheme[] = [
       '--foreground': '#CDD6F4',
       '--muted-foreground': '#7F849C',
       '--destructive': '#F38BA8',
+      '--success': '#A6FFA1',
+      '--warning': '#F9E2AF',
+      '--error': '#DF0000',
     },
     codemirror: {
       theme: buildCMTheme(coolGlow, '#161622'),
@@ -36,6 +39,9 @@ export const themes: PostchiTheme[] = [
       '--foreground': '#1A1A1A',
       '--muted-foreground': '#757575',
       '--destructive': '#C7222A',
+      '--success': '#A6FFA1',
+      '--warning': '#F9E2AF',
+      '--error': '#DF0000',
     },
     codemirror: {
       theme: buildCMTheme(ayuLight, '#FFFFFF'),

@@ -24,4 +24,7 @@ type VarColors = {
     '--foreground': string,
     '--muted-foreground': string,
     '--destructive': string,
+    '--success': string,
+    '--error': string,
+    '--warning': string,
 }
