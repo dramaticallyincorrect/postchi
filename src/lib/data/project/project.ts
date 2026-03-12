@@ -1,6 +1,7 @@
 import { FileStorage } from "../files/file"
 import DefaultFileStorage from "../files/file-default"
 import { pathOf } from "../files/join"
+import { FileType } from "../supported-filetypes"
 
 export type Project = {
     name: string
@@ -32,6 +33,17 @@ Authorization: bearer(<token>)
         secretsPath: pathOf(path, secretsName + envExtension),
         collectionsPath: pathOf(path, collectionsDirName)
     };
+}
+
+export async function createProjectFolder(path: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<void> {
+    return fileStorage.mkdir(path)
+}
+
+export async function createHttpRequest(dir: string, name: string, content?: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
+    const filename = name.endsWith(FileType.HTTP) ? name : name + FileType.HTTP
+    const path = pathOf(dir, filename)
+    await fileStorage.create(path, content)
+    return path
 }
 
 const collectionsDirName = "collections"

@@ -80,7 +80,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         if (!e.currentTarget.contains(e.relatedTarget)) {
             const text = viewRef.current?.state.doc.toString()
             if (text != undefined) {
-                new DefaultFileStorage().writeText(path, text)
+                DefaultFileStorage.getInstance().writeText(path, text)
             }
         }
     }

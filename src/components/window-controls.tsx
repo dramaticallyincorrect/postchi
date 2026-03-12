@@ -1,20 +1,19 @@
+import { isTauri } from "@/lib/utils/os";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useState, useEffect } from "react";
 
-const appWindow = getCurrentWindow();
-
 export default function MsWindowControls() {
+  if (!isTauri()) return null;
+  const appWindow = getCurrentWindow();
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
     let unlisten: UnlistenFn | null;
 
     async function setupListeners() {
-      // Set initial state
       setIsMaximized(await appWindow.isMaximized());
 
-      // Listen for changes
       unlisten = await appWindow.onResized(async () => {
         setIsMaximized(await appWindow.isMaximized());
       });

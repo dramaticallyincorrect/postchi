@@ -15,7 +15,8 @@
         "title": "postchi",
         "hiddenTitle": true,
         "titleBarStyle": "Overlay",
-        "trafficLightPosition": { "x": 14, "y": 24 }
+        "trafficLightPosition": { "x": 14, "y": 24 },
+        "dragDropEnabled": false
       }
     ],
     "security": {

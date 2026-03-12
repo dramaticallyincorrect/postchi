@@ -8,3 +8,5 @@ export const isMac = () => {
         return navigator.platform.toUpperCase().includes('MAC')
     }
 }
+
+export const isDesktopMac = () => isTauri() && type() === 'macos';

@@ -6,6 +6,13 @@ import {
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { useState } from 'react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from './components/ui/dropdown-menu';
 import { FileTree } from './components/FileTree';
 import { FileItem } from './lib/data/project-files';
 import HttpRequestResponse from './http/http-request-response';
@@ -18,11 +25,12 @@ import { EnvironmentProvider } from './active-environment/environment-context';
 import { ThemeProvider } from './theme-context/theme-context';
 import { themes } from './lib/theme/themes';
 import MsWindowControls from './components/window-controls';
-import { isMac } from './lib/utils/os';
+import { isDesktopMac, isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
 import { useFileTree } from './lib/hooks/use-file-tree';
 import { useFileWatch } from './lib/hooks/file-watch';
 import { FileWatchEventType } from './lib/data/files/file';
+import { projectMenuItems } from './lib/menu/project-menu';
 
 export default function App({ project }: { project: Project }) {
 
@@ -55,8 +63,8 @@ const TitleBar = ({ projectName }: { projectName: string }) => {
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
             <div className="flex items-center mt-1.5">
-                <PanelLeftIcon className={cn(isMac() ? 'ms-22' : 'ms-4') + ' me-1 size-4 inline'} />
-                <Button variant="ghost" className='hover:bg-muted-foreground'>{projectName}</Button>
+                <PanelLeftIcon className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1 size-4 inline'} />
+                <FileMenu projectName={projectName} />
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <ActiveEnvironment />
             </div>
@@ -66,6 +74,31 @@ const TitleBar = ({ projectName }: { projectName: string }) => {
 
         </div>
     </div>
+}
+
+const FileMenu = ({ projectName }: { projectName: string }) => {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className='hover:bg-muted-foreground'>{projectName}</Button>
+            </DropdownMenuTrigger>
+            {
+                !isDesktopMac() && <DropdownMenuContent>
+                    {projectMenuItems.map((item, index) =>
+                        'item' in item ? (
+                            <DropdownMenuSeparator key={`separator-${index}`} />
+                        ) : (
+                            <DropdownMenuItem
+                                key={item.id}
+                                onClick={item.action}>
+                                {item.text}
+                            </DropdownMenuItem>
+                        )
+                    )}
+                </DropdownMenuContent>
+            }
+        </DropdownMenu>
+    )
 }
 
 const Editor = ({ path }: { path: string }) => {

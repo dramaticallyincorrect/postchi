@@ -32,10 +32,10 @@ function convertItemToRequest(item: Item, inheritedAuth: RequestAuthDefinition |
 
 export function convertPostmanRequest(request: Request, inheritedAuth: RequestAuthDefinition | undefined = undefined): string {
     const method = request.method;
-    const url = request.url.toString();
+    const url = transformVariables(request.url.toString());
     const auth = request.auth as RequestAuthDefinition | undefined;
 
-    const headers: HeaderDefinition[] = request.headers.map(header => ({ key: header.key, value: header.value }));
+    const headers: HeaderDefinition[] = request.headers.map(header => ({ key: header.key, value: transformVariables(header.value) }));
 
     const authValue = getAuthValue(auth || inheritedAuth);
 
@@ -48,13 +48,35 @@ export function convertPostmanRequest(request: Request, inheritedAuth: RequestAu
     let bodyString = '';
     switch (request.body?.mode) {
         case 'urlencoded':
-            bodyString = request.body.urlencoded?.map(param => `${param.key}=${param.value}`).join('\n') || '';
+            bodyString = request.body.urlencoded?.map(param => `${param.key}=${transformVariables(param.value)}`).join('\n') || '';
+            break;
+        case 'formdata':
+            bodyString = request.body.formdata?.map(param => {
+                let value = transformVariables(param.value);
+                if ('src' in param && param.src) {
+                    value = `readFile(${param.src})`;
+                }
+                return `${param.key}=${value}`;
+            }).join('\n') || '';
+            break;
+        case 'raw':
+            bodyString = request.body.raw || '';
+            break;
+        case 'file':
+            bodyString = `readFile(${request.body.file?.src || ''})`;
             break;
     }
 
     const urlSeparator = headersString || bodyString ? '\n' : '';
+    const bodySeparator = headersString && bodyString ? '\n' : '';
 
-    return `${method} ${url}${urlSeparator}${headersString}${bodyString ? `@body\n${bodyString}` : ''}`.trim();
+    return `${method} ${url}${urlSeparator}${headersString}${bodySeparator}${bodyString ? `@body\n${bodyString}` : ''}`.trim();
+}
+
+function transformVariables(text: string | null): string {
+    // resolve all {{variables}} in the url to <variables>
+    if (!text) return '';
+    return text.replace(/{{(.*?)}}/g, '<$1>');
 }
 
 function getAuthValue(auth: RequestAuthDefinition | undefined): string | undefined {
@@ -64,12 +86,12 @@ function getAuthValue(auth: RequestAuthDefinition | undefined): string | undefin
             case 'basic':
                 const username = auth.basic?.find(param => param.key === 'username')?.value || '';
                 const password = auth.basic?.find(param => param.key === 'password')?.value || '';
-                authValue = `basic(${username},${password})`;
+                authValue = `basic(${transformVariables(username)},${transformVariables(password)})`;
                 break
             case 'bearer':
                 const token = auth.bearer?.find(param => param.key === 'token')?.value || '';
                 if (token.startsWith('{{') && token.endsWith('}}')) {
-                    authValue = `bearer(<${token.slice(2, -2)}>)`;
+                    authValue = `bearer(${transformVariables(token)})`;
                 } else {
                     authValue = `bearer(${token})`;
                 }

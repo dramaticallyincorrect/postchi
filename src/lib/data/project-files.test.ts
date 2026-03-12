@@ -2,7 +2,8 @@ import { expect, test } from "vitest";
 import { fs } from 'memfs';
 import { join } from 'path';
 import { BrowserFileStorage } from "./files/file-browser";
-import { FileItem, FileTreeItem, FolderItem, isPathInFileTree, readFileTree } from "./project-files";
+import { FileTreeItem, isPathInFileTree, readFileTree } from "./project-files";
+import { parseFileTree } from "../utils/test-utils";
 
 const rootPath = '/test-project'
 
@@ -46,55 +47,6 @@ secrets.cenv
 })
 
 
-
-
-function parseFileTree(input: string, basePath: string): FileTreeItem[] {
-    const lines = input.split('\n').filter(line => line.trim())
-
-    const parsed = lines.map(line => {
-        const name = line.trim()
-        const indent = line.match(/^(\s*)/)?.[1].length ?? 0
-        const level = Math.round(indent / 4)
-        return { name, level }
-    })
-
-    function buildTree(items: typeof parsed, startIndex: number, currentLevel: number): [FileTreeItem[], number] {
-        const result: FileTreeItem[] = []
-        let i = startIndex
-
-        while (i < items.length) {
-            const item = items[i]
-
-            if (item.level < currentLevel) break
-
-            const isFolder = i + 1 < items.length && items[i + 1].level > currentLevel
-
-            if (isFolder) {
-                const [children, nextIndex] = buildTree(items, i + 1, currentLevel + 1)
-                result.push(new FolderItem(item.name, item.name, children))
-                i = nextIndex
-            } else {
-                result.push(new FileItem(item.name, item.name))
-                i++
-            }
-        }
-
-        return [result, i]
-    }
-
-    const [tree] = buildTree(parsed, 0, 0)
-
-    function fixPaths(items: FileTreeItem[], parentPath: string): void {
-        for (const item of items) {
-            const fullPath = join(parentPath, item.name)
-            item.path = fullPath
-            if ('items' in item) fixPaths(item.items, fullPath)
-        }
-    }
-
-    fixPaths(tree, basePath)
-    return tree
-}
 
 function createFileTree(items: FileTreeItem[]): void {
     for (const item of items) {

@@ -4,6 +4,10 @@ import App from "./App";
 import "./App.css";
 import { createProject } from "./lib/data/project/project";
 import { isTauri } from "@tauri-apps/api/core";
+import { useImportDialog } from "./lib/hooks/use-import-dialog";
+import { initMenu } from "./lib/menu/project-menu";
+import { ImportDialog } from "./components/import-dialog";
+import { importPostmanCollection } from "./lib/data/import/import-folder";
 
 
 async function getDefaultProjectPath(): Promise<string> {
@@ -17,8 +21,27 @@ async function getDefaultProjectPath(): Promise<string> {
 
 const project = await createProject(await getDefaultProjectPath(), 'Content Service')
 
+await initMenu();
+
+function AppShell({ children }: { children: React.ReactNode }) {
+  const { open, setOpen } = useImportDialog();
+
+  return (
+    <>
+      {children}
+      <ImportDialog open={open} onOpenChange={setOpen} onImport={async (format, file) => {
+        if (format === 'postman') {
+          importPostmanCollection(file, project.collectionsPath)
+        }
+      }} />
+    </>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <App project={project} />
+    <AppShell>
+      <App project={project} />
+    </AppShell>
   </React.StrictMode>,
 );
