@@ -27,6 +27,26 @@ secrets.cenv
 
 })
 
+test("filters out settings.json files from project file tree", async () => {
+    const files = `
+collections
+    assets
+        logo.get
+environments.cenv
+secrets.cenv
+`
+    const expected = parseFileTree(files, rootPath)
+
+    createFileTree(expected)
+    fs.writeFileSync(join(rootPath, 'settings.json'), '{}')
+    const project = await createProject(rootPath, 'Test Project')
+    const items = await readProjectFileTree(project)
+
+
+    expect(items).toStrictEqual(expected)
+
+})
+
 
 test("groups items, files first then folders", async () => {
     const files = `

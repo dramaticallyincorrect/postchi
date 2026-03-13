@@ -38,7 +38,7 @@ export async function readProjectFileTree(project: Project, storage: FileStorage
 
 async function readItems(path: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
     return storage.readDirectory(path).then(entries => {
-        const filtered = entries.filter(entry => !entry.filename.startsWith('.'))
+        const filtered = entries.filter(entry => !entry.filename.startsWith('.') && entry.filename !== 'settings.json')
         const files = filtered.filter(e => !e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
         const folders = filtered.filter(e => e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
 
