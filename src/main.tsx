@@ -2,12 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./App.css";
-import { createProject } from "./lib/data/project/project";
+import { createProject, Project } from "./lib/data/project/project";
 import { isTauri } from "@tauri-apps/api/core";
 import { useImportDialog } from "./lib/hooks/use-import-dialog";
 import { initMenu } from "./lib/menu/project-menu";
 import { ImportDialog } from "./components/import-dialog";
 import { importPostmanCollection } from "./lib/data/import/import-folder";
+import { FileStorage } from "./lib/data/files/file";
+import DefaultFileStorage from "./lib/data/files/file-default";
+import { pathOf } from "./lib/data/files/join";
 
 
 async function getDefaultProjectPath(): Promise<string> {
@@ -19,7 +22,7 @@ async function getDefaultProjectPath(): Promise<string> {
 }
 
 
-const project = await createProject(await getDefaultProjectPath(), 'Content Service')
+const project = await createTestProject(await getDefaultProjectPath(), 'Content Service')
 
 await initMenu();
 
@@ -46,3 +49,20 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     </AppShell>
   </React.StrictMode>,
 );
+
+
+export async function createTestProject(path: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
+  const project = await createProject(path, name)
+  await fileStorage.create(pathOf(project.collectionsPath, 'settings.json'), `{"baseUrl": "https://httpbin.org"}`)
+  await fileStorage.mkdir(pathOf(project.collectionsPath, 'top', 'nested', 'deep', 'down'))
+  await fileStorage.create(pathOf(project.collectionsPath, 'users.get'), `POST https://httpbin.org/post
+User-Agent: <user-agent>
+Accept: application/json
+Authorization: bearer(<token>)
+@body
+{
+  "username": "<username>"
+}`)
+  await fileStorage.create(pathOf(project.collectionsPath, 'auth.get'), 'GET https://httpbin.org/get')
+  return project
+}

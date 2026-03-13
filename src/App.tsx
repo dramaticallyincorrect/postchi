@@ -36,7 +36,7 @@ export default function App({ project }: { project: Project }) {
 
     const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
 
-    const { tree: fileTree } = useFileTree(project.path)
+    const { tree: fileTree } = useFileTree(project)
 
     useFileWatch(selectedFile?.path ?? null, (event) => {
         if (event.type === FileWatchEventType.Deleted) {

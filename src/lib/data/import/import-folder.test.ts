@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ImportedFolder } from "./postman/postman-parser";
 import { parseFileTree } from "@/lib/utils/test-utils";
 import { fs } from "memfs";
-import { readFileTree } from "../project-files";
 import { importFolderInto, importPostmanCollection } from "./import-folder";
 import { Item, ItemGroup } from "postman-collection";
 
@@ -48,9 +47,7 @@ describe('import', () => {
 
         const importResult = await importFolderInto(folder, root)
 
-        const actual = await readFileTree(root)
-
-        expect(actual).toEqual(expectedFileTree)
+        expect(expectedFileTree.every(entry => fs.existsSync(entry.path))).toBe(true)
         expect(importResult).toEqual({ count: 2, skipped: 0 })
 
     })
@@ -90,9 +87,8 @@ describe('import', () => {
         const importResult = await importPostmanCollection(new File([JSON.stringify(postmanData.toJSON())], 'postman.json'), root)
         expect(importResult).toEqual({ count: 2, skipped: 0 })
 
-        const actual = await readFileTree(root)
 
         const expectedFileTree = parseFileTree(expected, root)
-        expect(actual).toEqual(expectedFileTree)
+        expect(expectedFileTree.every(entry => fs.existsSync(entry.path))).toBe(true)
     })
 })

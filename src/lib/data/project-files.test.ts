@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { fs } from 'memfs';
 import { join } from 'path';
-import { BrowserFileStorage } from "./files/file-browser";
-import { isPathInFileTree, readFileTree } from "./project-files";
+import { isPathInFileTree, readProjectFileTree } from "./project-files";
 import { createFileTree, parseFileTree } from "../utils/test-utils";
+import { createProject, Project } from "./project/project";
 
 const rootPath = '/test-project'
 
@@ -12,8 +12,6 @@ test("reads all files in the project directory sorted by name ignoring hiddens",
 collections
     assets
         logo.get
-    login.get
-    users.get
 environments.cenv
 secrets.cenv
 `
@@ -21,8 +19,31 @@ secrets.cenv
 
     createFileTree(expected)
     fs.writeFileSync(join(rootPath, '.hiddenfile'), '')
+    const project = await createProject(rootPath, 'Test Project')
+    const items = await readProjectFileTree(project)
 
-    const items = await readFileTree(rootPath, new BrowserFileStorage())
+
+    expect(items).toStrictEqual(expected)
+
+})
+
+
+test("groups items, files first then folders", async () => {
+    const files = `
+collections
+    login.get
+    users.get
+    assets
+        logo.get
+environments.cenv
+secrets.cenv
+`
+    const expected = parseFileTree(files, rootPath)
+
+    createFileTree(expected)
+
+    const project = await createProject(rootPath, 'Test Project')
+    const items = await readProjectFileTree(project)
 
 
     expect(items).toStrictEqual(expected)

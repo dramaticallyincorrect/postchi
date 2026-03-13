@@ -1,6 +1,7 @@
 
 import { FileStorage } from './files/file';
 import DefaultFileStorage from './files/file-default';
+import { Project } from './project/project';
 
 export class FileItem {
     name: string;
@@ -26,23 +27,25 @@ export class FolderItem {
 
 export type FileTreeItem = FileItem | FolderItem
 
-export async function readFileTree(root: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
-    const items = await readItems(root, storage)
-    return items
+export async function readProjectFileTree(project: Project, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
+    const colllectionItems = await readItems(project.collectionsPath, storage)
+    return [
+        new FolderItem('collections', project.collectionsPath, colllectionItems),
+        new FileItem('environments.cenv', project.envPath),
+        new FileItem('secrets.cenv', project.secretsPath)
+    ]
 }
 
 async function readItems(path: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
     return storage.readDirectory(path).then(entries => {
-        return Promise.all(
-            entries.filter(entry => !entry.filename.startsWith('.'))
-                .sort((a, b) => a.filename.localeCompare(b.filename))
-                .map(async entry => {
-                    if (entry.isDirectory) {
-                        return new FolderItem(entry.filename, entry.path, await readItems(entry.path, storage))
-                    }
+        const filtered = entries.filter(entry => !entry.filename.startsWith('.'))
+        const files = filtered.filter(e => !e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
+        const folders = filtered.filter(e => e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
 
-                    return new FileItem(entry.filename, entry.path)
-                }))
+        return Promise.all([
+            ...files.map(entry => Promise.resolve(new FileItem(entry.filename, entry.path))),
+            ...folders.map(async entry => new FolderItem(entry.filename, entry.path, await readItems(entry.path, storage)))
+        ])
     })
 }
 

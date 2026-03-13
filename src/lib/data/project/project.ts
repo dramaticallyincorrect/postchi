@@ -15,18 +15,7 @@ export type Project = {
 export async function createProject(path: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
     await fileStorage.mkdir(path)
     await fileStorage.mkdir(pathOf(path, collectionsDirName))
-    await fileStorage.create(pathOf(path, collectionsDirName, 'settings.json'), `{"baseUrl": "https://httpbin.org"}`)
-    await fileStorage.mkdir(pathOf(path, collectionsDirName, 'top', 'nested', 'deep', 'down'))
-    await fileStorage.create(pathOf(path, collectionsDirName, 'users.get'), `POST https://httpbin.org/post
-User-Agent: <user-agent>
-Accept: application/json
-Authorization: bearer(<token>)
-@body
-{
-  "username": "<username>"
-}`)
-    await fileStorage.create(pathOf(path, collectionsDirName, 'auth.get'), 'GET https://httpbin.org/get')
-    await fileStorage.create(pathOf(path, environmentsName + envExtension), '# production \n token=1231sdfls\n\n# staging')
+    await fileStorage.create(pathOf(path, environmentsName + envExtension))
     await fileStorage.create(pathOf(path, secretsName + envExtension))
     return {
         name,
