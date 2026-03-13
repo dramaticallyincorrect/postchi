@@ -2,23 +2,35 @@ import { convertPostmanCollectionToPostchi, ImportedFolder, ImportedRequest } fr
 import { pathOf } from "../files/join";
 import { createHttpRequest, createProjectFolder } from "../project/project";
 
-export async function importPostmanCollection(file: File, root: string): Promise<void> {
+// TODO: handle import failure
+export async function importPostmanCollection(file: File, root: string): Promise<ImportResult> {
     const content = await file.text();
     const postmanData = JSON.parse(content);
     const rootFolder = convertPostmanCollectionToPostchi(postmanData);
-    await importFolderInto(rootFolder, root);
+    return importFolderInto(rootFolder, root);
 }
 
-export async function importFolderInto(folder: ImportedFolder, root: string): Promise<void> {
+export async function importFolderInto(folder: ImportedFolder, root: string): Promise<ImportResult> {
     const folderPath = pathOf(root, folder.name);
     await createProjectFolder(folderPath);
+
+    let result: ImportResult = { count: 0, skipped: 0 };
 
     for (const item of folder.items) {
         if ('request' in item) {
             const request = item as ImportedRequest;
             await createHttpRequest(folderPath, request.name, request.request);
+            result.count++;
         } else {
-            await importFolderInto(item as ImportedFolder, folderPath);
+            const subResult = await importFolderInto(item as ImportedFolder, folderPath);
+            result.count += subResult.count;
+            result.skipped += subResult.skipped;
         }
     }
+    return result;
+}
+
+export type ImportResult = {
+    count: number;
+    skipped: number;
 }

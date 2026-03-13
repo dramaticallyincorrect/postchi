@@ -31,8 +31,9 @@ function AppShell({ children }: { children: React.ReactNode }) {
       {children}
       <ImportDialog open={open} onOpenChange={setOpen} onImport={async (format, file) => {
         if (format === 'postman') {
-          importPostmanCollection(file, project.collectionsPath)
+          return importPostmanCollection(file, project.collectionsPath)
         }
+        return { count: 0, skipped: 0 }
       }} />
     </>
   );
