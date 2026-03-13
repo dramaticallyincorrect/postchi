@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
 import resolveHttpTemplate from "./http-template-resolver";
 import { fs } from "memfs";
+import Task from "true-myth/task";
 
 
 describe('creates http request from ast', () => {
+
+    const executionContext = {
+        variables: new Map([
+            ["api", "download"],
+            ["id", "12345"]
+        ]),
+        baseUrl: () => Task.reject({ message: 'base URL is required' })
+    }
 
     it('only literals', async () => {
 
@@ -28,6 +37,39 @@ describe('creates http request from ast', () => {
 
     })
 
+    describe('base path', () => {
+        it('adds base path when url is relative', async () => {
+
+            const template = 'GET /api'
+
+
+            const httpRequest = await resolveHttpTemplate(template, {
+                variables: new Map(),
+                baseUrl: () => Task.resolve('https://getpostchi.com')
+            });
+            expect(httpRequest, template).toStrictEqual({
+                method: "GET",
+                url: "https://getpostchi.com/api",
+                headers: [],
+                body: ''
+            });
+        })
+
+        it('returns error base url is error', async () => {
+
+            const template = 'GET /api'
+
+            const error = { message: 'base URL is not valid' }
+
+            const httpRequest = await resolveHttpTemplate(template, {
+                variables: new Map(),
+                baseUrl: () => Task.reject(error)
+            });
+            expect(httpRequest, template).toStrictEqual(error);
+        })
+
+    })
+
     describe('variables', () => {
         it('in url', async () => {
 
@@ -36,12 +78,7 @@ describe('creates http request from ast', () => {
             const template = `GET https://getpostchi.com/${path}/${id}`.trim()
 
 
-            const httpRequest = await resolveHttpTemplate(template, {
-                variables: new Map([
-                    ["api", "download"],
-                    ["id", "12345"]
-                ])
-            });
+            const httpRequest = await resolveHttpTemplate(template, executionContext);
 
             expect(httpRequest, template).toStrictEqual({
                 method: "GET",
@@ -60,12 +97,7 @@ describe('creates http request from ast', () => {
             `.trim()
 
 
-            const httpRequest = await resolveHttpTemplate(template, {
-                variables: new Map([
-                    ["api", "download"],
-                    ["id", "12345"]
-                ])
-            });
+            const httpRequest = await resolveHttpTemplate(template, executionContext);
 
             expect(httpRequest, template).toStrictEqual({
                 method: "GET",
@@ -88,12 +120,7 @@ describe('creates http request from ast', () => {
                 "<not_a_variable>": "<api>"
             }`.trim()
 
-            const httpRequest = await resolveHttpTemplate(template, {
-                variables: new Map([
-                    ["api", "download"],
-                    ["id", "12345"]
-                ])
-            });
+            const httpRequest = await resolveHttpTemplate(template, executionContext);
 
             expect(httpRequest, template).toStrictEqual({
                 method: "GET",
@@ -115,12 +142,7 @@ describe('creates http request from ast', () => {
             `.trim()
 
 
-            const httpRequest = await resolveHttpTemplate(template, {
-                variables: new Map([
-                    ["api", "download"],
-                    ["id", "12345"]
-                ])
-            });
+            const httpRequest = await resolveHttpTemplate(template, executionContext);
 
             expect(httpRequest, template).toStrictEqual({
                 method: "GET",
@@ -142,12 +164,7 @@ describe('creates http request from ast', () => {
             `.trim()
 
 
-            const httpRequest = await resolveHttpTemplate(template, {
-                variables: new Map([
-                    ["api", "download"],
-                    ["id", "12345"]
-                ])
-            });
+            const httpRequest = await resolveHttpTemplate(template, executionContext);
 
             const params = new URLSearchParams();
             params.append("Authorization", `Bearer ${token}`)
@@ -169,12 +186,7 @@ describe('creates http request from ast', () => {
             `.trim()
 
 
-            const httpRequest = await resolveHttpTemplate(template, {
-                variables: new Map([
-                    ["api", "download"],
-                    ["id", "12345"]
-                ])
-            });
+            const httpRequest = await resolveHttpTemplate(template, executionContext);
 
             expect(httpRequest, template).toStrictEqual({
                 method: "GET",
@@ -188,18 +200,13 @@ describe('creates http request from ast', () => {
 
         it('variable as function argument', async () => {
 
-        
+
             const template = `GET https://getpostchi.com
             Authorization: bearer(<id>)
             `.trim()
 
 
-            const httpRequest = await resolveHttpTemplate(template, {
-                variables: new Map([
-                    ["api", "download"],
-                    ["id", "12345"]
-                ])
-            });
+            const httpRequest = await resolveHttpTemplate(template, executionContext);
 
             expect(httpRequest, template).toStrictEqual({
                 method: "GET",

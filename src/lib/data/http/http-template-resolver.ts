@@ -2,18 +2,28 @@ import httpFunctions from "@/lib/http/functions/http-functions";
 import { computeHttpAst, Expression, FormBodyNode, HttpNode, JsonBodyNode, TextBodyNode } from "@/lib/http/parser/http-ast"
 import DefaultFileStorage from "../files/file-default";
 import { computeHttpDiagnostics } from "@/lib/http/linter/http-linter";
+import Task from "true-myth/task";
+
 
 export type ResolveError = {
     message: string,
 }
 
-export default async function resolveHttpTemplate(template: string, context: ExecutionContext = { variables: new Map() }): Promise<HttpRequest | ResolveError> {
+export default async function resolveHttpTemplate(template: string, context: ExecutionContext = { variables: new Map(), baseUrl: () => Task.reject({ message: 'base URL is required' }) }): Promise<HttpRequest | ResolveError> {
 
     const ast = computeHttpAst(template);
 
     const errors = computeHttpDiagnostics(template, Array.from(context.variables.entries()).map(([key, value]) => ({ key, value })));
     if (errors.length > 0) {
         return { message: 'request contains errors' }
+    }
+
+    const urlNode = ast.url[0]
+    const url = await value(urlNode);
+    const baseUrl = url.startsWith('/') ? await context.baseUrl() : null;
+
+    if (url.startsWith('/') && baseUrl!.isErr) {
+        return { message: baseUrl?.error.message! }
     }
 
     async function value(node: HttpNode | null): Promise<string> {
@@ -50,7 +60,7 @@ export default async function resolveHttpTemplate(template: string, context: Exe
 
             if (name === 'readFile') {
                 const path = await value(node.args[0]);
-                const fileStorage = new DefaultFileStorage()
+                const fileStorage = DefaultFileStorage.getInstance();
                 return fileStorage.readFile(path)
             }
         }
@@ -86,10 +96,25 @@ export default async function resolveHttpTemplate(template: string, context: Exe
         return value(node)
     }
 
+    async function resolveUrl(nodes: HttpNode[]): Promise<string> {
+        return (await Promise.all(nodes.map(async (node, index) => {
+            if (index === 0) {
+                const resolved = await value(node);
+                if (resolved.startsWith('/')) {
+                    return baseUrl!.unwrapOr('') + url;
+                }
+                return resolved;
+            } else {
+                return value(node);
+            }
+
+        }))).join("");
+    }
+
 
     return {
         method: await value(ast.method),
-        url: (await Promise.all(ast.url.map(value))).join(""),
+        url: await resolveUrl(ast.url),
         headers: await Promise.all(ast.headers.map(async h => [await value(h.key), await value(h.value)] as [string, string])),
         body: await bodyValue(ast.body)
     }
@@ -98,7 +123,9 @@ export default async function resolveHttpTemplate(template: string, context: Exe
 
 type ExecutionContext = {
     variables: Map<string, string>
+    baseUrl: () => Task<string, ResolveError>
 }
+
 
 
 export type HttpRequest = {

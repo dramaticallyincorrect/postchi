@@ -10,12 +10,18 @@
    7. add quick action
    8. settings
 2. base path
+   1. ~~resolve~~
+   2. ~~execute~~
 3. scripts
    1. before
    2. after
 4. quick actions
 5. import
    1. postman
+      1. ~~convert to postchi~~
+      2. ~~import into project~~
+      3. open folder after import
+      4. handle errors
    2. insomnia
 6. editor
 7. auto complete

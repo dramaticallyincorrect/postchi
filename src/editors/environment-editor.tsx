@@ -15,7 +15,7 @@ export const EnvironmentEditor = ({ path }: { path: string }) => {
     const { reload } = useEnvironment()
 
     const onChange = (value: string) => {
-        new DefaultFileStorage().writeText(path, value).then(() => {
+        DefaultFileStorage.getInstance().writeText(path, value).then(() => {
             reload()
         })
     }

@@ -36,13 +36,13 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
                 setResponse(new Loading())
 
-                const response = await executeHttpTemplate(text, activeEnvironment?.variables ?? [], abort.current);
+                const response = await executeHttpTemplate(text, path, activeEnvironment?.variables ?? [], abort.current);
 
                 if (response instanceof ExecutionError) {
                     if (response.type === 'abort') {
                         setResponse(null)
                     } else {
-                        setResponse(new Error())
+                        setResponse(new Error(response.message))
                     }
                 } else {
                     setResponse(response)
@@ -140,8 +140,7 @@ const ResponsePanel = ({ response, onCancel }: { response: HttpExecutionStatus |
     }
 
     if (response instanceof Error) {
-        return <div className='flex items-center justify-center text-center h-full text-destructive'>An error occurred while sending the request<br />
-            check your network connection</div>
+        return <div className='flex items-center justify-center text-center h-full text-destructive'>{response.message}</div>
     }
 }
 
@@ -176,5 +175,10 @@ function LoadingView({ onCancel }: { onCancel: () => void }) {
 }
 
 class Loading { };
-class Error { };
+class Error {
+    message: string;
+    constructor(message: string) {
+        this.message = message;
+    }
+};
 type HttpExecutionStatus = HttpExecution | Loading | Error;

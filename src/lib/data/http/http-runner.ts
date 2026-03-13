@@ -1,5 +1,8 @@
+import Task from 'true-myth/task';
 import { classifyResponseBody, ContentTypeInfo } from "./body-classifier/http-body-classifier";
 import resolveHttpTemplate, { HttpRequest } from "./http-template-resolver";
+import { FolderSettings, readSettingsForRequest } from "../project/project";
+import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 // import { fetch } from '@tauri-apps/plugin-http'
 
 export class ExecutionError {
@@ -12,14 +15,17 @@ export class ExecutionError {
     }
 }
 
-export default async function executeHttpTemplate(template: string, variables: { key: string, value: string }[], abort: AbortController): Promise<HttpExecution | ExecutionError> {
+export default async function executeHttpTemplate(template: string, templatePath: string, variables: { key: string, value: string }[], abort: AbortController): Promise<HttpExecution | ExecutionError> {
 
+    const vars = new Map(variables.map(obj => [obj.key, obj.value]))
+    
     const request = await resolveHttpTemplate(template, {
-        variables: new Map(variables.map(obj => [obj.key, obj.value])),
+        variables: vars,
+        baseUrl: () => readBasePath(templatePath, vars)
     })
 
     if (!request || 'message' in request) {
-        return Promise.resolve(new ExecutionError('template', 'Invalid request, fix template and run again'));
+        return Promise.resolve(new ExecutionError('template', request.message));
     }
 
     const start = performance.now()
@@ -55,6 +61,41 @@ export default async function executeHttpTemplate(template: string, variables: {
     }
 
 }
+
+
+export function readBasePath(requestPath: string, variables: Map<string, string> = new Map()): Task<string, { message: string }> {
+    return new Task(async (resolve, reject) => {
+        const settings: FolderSettings = await readSettingsForRequest(requestPath);
+        if (settings && settings.baseUrl) {
+
+            if (isVariable(settings.baseUrl)) {
+                const variableName = getVariableName(settings.baseUrl);
+                const variableValue = variables?.get(variableName);
+
+                if (variableValue === undefined) {
+                    reject({ message: 'variable set as base path is not defined in the active environment' });
+                    return;
+                } else {
+                    resolve(removeTrailingSlash(variableValue));
+                }
+            }
+
+
+            if (!(settings.baseUrl.startsWith('http://') || settings.baseUrl.startsWith('https://'))) {
+                reject({ message: 'base path is not valid' });
+            } else {
+                resolve(removeTrailingSlash(settings.baseUrl));
+            }
+        } else {
+            reject({ message: 'base path is not set' });
+        }
+    })
+}
+
+function removeTrailingSlash(url: string): string {
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+}
+
 
 export type HttpExecution = {
     status: number;

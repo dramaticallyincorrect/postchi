@@ -1,5 +1,6 @@
 import { FileStorage } from "../files/file"
 import DefaultFileStorage from "../files/file-default"
+import { readClosestFile } from "../files/file-utils/file-utils"
 import { pathOf } from "../files/join"
 import { FileType } from "../supported-filetypes"
 
@@ -14,6 +15,7 @@ export type Project = {
 export async function createProject(path: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
     await fileStorage.mkdir(path)
     await fileStorage.mkdir(pathOf(path, collectionsDirName))
+    await fileStorage.create(pathOf(path, collectionsDirName, 'settings.json'), `{"baseUrl": "https://httpbin.org"}`)
     await fileStorage.mkdir(pathOf(path, collectionsDirName, 'top', 'nested', 'deep', 'down'))
     await fileStorage.create(pathOf(path, collectionsDirName, 'users.get'), `POST https://httpbin.org/post
 User-Agent: <user-agent>
@@ -44,6 +46,23 @@ export async function createHttpRequest(dir: string, name: string, content?: str
     const path = pathOf(dir, filename)
     await fileStorage.create(path, content)
     return path
+}
+
+export async function createFolderSettings(folderPath: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
+    const path = pathOf(folderPath, 'settings.json')
+    return fileStorage.create(path, JSON.stringify({ baseUrl: '' })).then(() => path)
+}
+
+export async function readSettingsForRequest(requestPath: string): Promise<FolderSettings> {
+    const content = await readClosestFile('settings.json', requestPath)
+    if (content.isErr) {
+        return { baseUrl: '' }
+    }
+    return JSON.parse(content.value) as FolderSettings
+}
+
+export type FolderSettings = {
+    baseUrl: string
 }
 
 const collectionsDirName = "collections"

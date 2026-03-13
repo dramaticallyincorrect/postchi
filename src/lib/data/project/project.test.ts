@@ -1,12 +1,18 @@
 import { fs } from "memfs";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { FileType } from "../supported-filetypes";
-import { createHttpRequest, createProjectFolder } from "./project";
+import { createFolderSettings, createHttpRequest, createProjectFolder, readSettingsForRequest } from "./project";
 import { pathOf } from "../files/join";
+import { createFileTree, parseFileTree } from "@/lib/utils/test-utils";
 
 
 const root = '/test'
 fs.mkdirSync(root)
+
+beforeEach(() => {
+    fs.rmdirSync(root, { recursive: true })
+    fs.mkdirSync(root)
+})
 
 describe('project file creation', () => {
 
@@ -14,6 +20,12 @@ describe('project file creation', () => {
         await createProjectFolder(root);
         const stats = fs.statSync(root);
         expect(stats.isDirectory()).toBe(true);
+    })
+
+    it('settings file', async () => {
+        await createFolderSettings(root);
+        const stats = fs.statSync(pathOf(root, 'settings.json'));
+        expect(stats.isFile()).toBe(true);
     })
 
     describe('http requests', () => {
@@ -29,6 +41,33 @@ describe('project file creation', () => {
             expect(fs.existsSync(path)).toBe(true)
         })
     })
+})
+
+describe('read project files', () => {
+
+    it('settings.json', async () => {
 
 
+        const expected = {
+            baseUrl: 'https://getpostchi.org'
+        }
+        const tree = parseFileTree(`    
+settings.json
+nested
+    test.get
+`, root)
+        createFileTree(tree)
+
+        fs.writeFileSync(pathOf(root, 'settings.json'), JSON.stringify(expected))
+
+
+        const requestPath = pathOf(root, 'nested', 'test.get')
+
+        const settings = await readSettingsForRequest(requestPath)
+
+        expect(settings).toEqual(expected)
+
+
+
+    })
 })

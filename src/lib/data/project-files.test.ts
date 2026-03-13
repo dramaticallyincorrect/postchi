@@ -2,8 +2,8 @@ import { expect, test } from "vitest";
 import { fs } from 'memfs';
 import { join } from 'path';
 import { BrowserFileStorage } from "./files/file-browser";
-import { FileTreeItem, isPathInFileTree, readFileTree } from "./project-files";
-import { parseFileTree } from "../utils/test-utils";
+import { isPathInFileTree, readFileTree } from "./project-files";
+import { createFileTree, parseFileTree } from "../utils/test-utils";
 
 const rootPath = '/test-project'
 
@@ -45,16 +45,3 @@ secrets.cenv
     expect(isPathInFileTree(initial, join(rootPath, 'collections', 'assets', 'missing.get'))).toBe(false)
 
 })
-
-
-
-function createFileTree(items: FileTreeItem[]): void {
-    for (const item of items) {
-        if ('items' in item) {
-            fs.mkdirSync(item.path, { recursive: true })
-            createFileTree(item.items)
-        } else {
-            fs.writeFileSync(item.path, '')
-        }
-    }
-}

@@ -1,3 +1,4 @@
+import { fs } from "memfs"
 import { pathOf } from "../data/files/join"
 import { FileItem, FileTreeItem, FolderItem } from "../data/project-files"
 
@@ -68,4 +69,15 @@ export function parseFileTree(input: string, basePath: string): FileTreeItem[] {
 
     fixPaths(tree, basePath)
     return tree
+}
+
+export function createFileTree(items: FileTreeItem[]): void {
+    for (const item of items) {
+        if ('items' in item) {
+            fs.mkdirSync(item.path, { recursive: true })
+            createFileTree(item.items)
+        } else {
+            fs.writeFileSync(item.path, '')
+        }
+    }
 }
