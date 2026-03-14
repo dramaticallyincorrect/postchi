@@ -22,7 +22,7 @@ const HttpResponseView = ({ execution }: { execution: HttpExecution }) => {
     const [showHeaders, setShowHeaders] = usePersistentState('showHeaders', false);
 
     return (
-        <div className='flex-col overflow-y-auto h-full'>
+        <div className='flex flex-col overflow-y-auto min-h-0 h-full'>
             <div className='flex flex-row my-2 mx-6 font-mono'>
                 <span className={statusColor(execution.status) + ' mr-2'}>{execution.status}</span>
                 <span className={statusColor(execution.status)}>{status(execution.status)}</span>

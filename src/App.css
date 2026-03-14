@@ -232,14 +232,10 @@ html body {
   border-radius: 3px !important;
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--muted) var(--background-panel);
-}
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -247,7 +243,7 @@ html body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--muted);
+  background: color-mix(in oklch, var(--muted-foreground), black 25%);
   border-radius: var(--radius);
 }
 

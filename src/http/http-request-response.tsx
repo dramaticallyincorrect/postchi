@@ -116,7 +116,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
             <ResizableHandle className='bg-muted/70' />
 
-            <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
+            <ResizablePanel className='m-1 rounded-xl bg-background-panel overflow-hidden'>
                 <ResponsePanel response={response} onCancel={() => {
                     console.log('cancel')
                     abort.current.abort()
