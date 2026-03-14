@@ -37,7 +37,7 @@ export async function createHttpRequest(dir: string, name: string, content?: str
     return path
 }
 
-export async function createFolderSettings(folderPath: string, settings: FolderSettings = { baseUrl: '' }, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
+export async function createOrOverrideFolderSettings(folderPath: string, settings: FolderSettings = { baseUrl: '' }, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
     const path = pathOf(folderPath, 'settings.json')
     return fileStorage.create(path, JSON.stringify(settings)).then(() => path)
 }

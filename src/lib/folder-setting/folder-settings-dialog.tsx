@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { createFolderSettings, FolderSettings, readFolderSettings } from "../data/project/project";
+import { createOrOverrideFolderSettings, FolderSettings, readFolderSettings } from "../data/project/project";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ export const FolderSettingsDialog = ({ folderPath, onClose }: { folderPath: stri
         }
 
         const newSettings: FolderSettings = { baseUrl };
-        await createFolderSettings(folderPath, newSettings);
+        await createOrOverrideFolderSettings(folderPath, newSettings);
         onClose();
     };
 
