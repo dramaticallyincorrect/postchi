@@ -34,8 +34,9 @@ export default class DefaultFileStorage implements FileStorage {
         return this.storage.readDirectory(path)
     }
 
-    create(path: string, text?: string): Promise<void> {
-        return this.storage.create(path, text)
+    async create(path: string, text?: string): Promise<void> {
+        await this.storage.create(path, text)
+        this.emitSynthetic({ type: FileWatchEventType.Created, path })
     }
 
     mkdir(path: string): Promise<void> {
