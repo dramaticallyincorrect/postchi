@@ -80,13 +80,22 @@ const ResponseHeaders = ({ headers }: { headers: { key: string, value: string }[
 
 const RequestView = ({ request }: { request: HttpRequest }) => {
     const { theme } = useTheme();
+
+    const formatRequest = (request: HttpRequest): string => {
+        let result = `${request.method} ${request.url}`;
+        if (request.headers.length > 0) {
+            result += '\n' + request.headers.map(([k, v]) => `${k}: ${v}`).join('\n');
+        }
+        return result;
+    }
+
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4'>
                 <VerticalLine color='var(--primary)' />
                 <div className='flex flex-col'>
                     <CodeMirror
-                        value={`${request.method} ${request.url}\n${request.headers.map(([k, v]) => `${k}: ${v}`).join('\n')}`}
+                        value={formatRequest(request)}
                         height='100%'
                         theme={theme.codemirror.theme}
                         className='height: 100% outline-none'
@@ -129,7 +138,7 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
     } else if (body instanceof FormData || body instanceof URLSearchParams) {
         const entries = Array.from(body.entries());
         return (
-            <div className='ml-4'>
+            <div className='ml-1'>
                 {entries.map(([key, value], index) => (
                     <div key={index}>
                         <span style={{ color: theme.codemirror.tokens.attributeName }}>{key}: </span>

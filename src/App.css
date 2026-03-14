@@ -231,3 +231,26 @@ html body {
   color: var(--color-foreground) !important;
   border-radius: 3px !important;
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--background-panel);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-panel);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: var(--radius);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--background-panel);
+}
