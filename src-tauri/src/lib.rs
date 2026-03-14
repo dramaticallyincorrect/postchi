@@ -13,10 +13,10 @@ pub fn run() {
             let window = app.get_webview_window("main").unwrap();
 
             #[cfg(target_os = "windows")]
-            window.set_decorations(true)?;
+            window.set_decorations(false)?;
 
             #[cfg(target_os = "linux")]
-            window.set_decorations(true)?;
+            window.set_decorations(false)?;
 
             Ok(())
         })
