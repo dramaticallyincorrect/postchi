@@ -65,7 +65,7 @@ const ResponseHeaders = ({ headers }: { headers: { key: string, value: string }[
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4 mb-4'>
-                <VerticalLine color='var(--primary)'/>
+                <VerticalLine color='var(--primary)' />
                 <div className='flex flex-col'>
                     {headers.map((header, index) => (
                         <div key={index}>
@@ -121,9 +121,19 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
         return null;
     }
     const { theme } = useTheme();
+
     if (typeof body === 'string') {
+
+        const formattedBody = () => {
+            try {
+                return JSON.stringify(JSON.parse(body), null, 2);
+            } catch {
+                return body;
+            }
+        }
+
         return <CodeMirror
-            value={body}
+            value={formattedBody()}
             theme={theme.codemirror.theme}
             readOnly={true}
             className='height: 100% outline-none'
