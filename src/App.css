@@ -233,6 +233,7 @@ html body {
 }
 
 
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -243,8 +244,12 @@ html body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in oklch, var(--muted-foreground), black 25%);
+  background: transparent;
   border-radius: var(--radius);
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground), black 25%);
 }
 
 ::-webkit-scrollbar-corner {
