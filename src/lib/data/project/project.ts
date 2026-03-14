@@ -37,9 +37,14 @@ export async function createHttpRequest(dir: string, name: string, content?: str
     return path
 }
 
-export async function createFolderSettings(folderPath: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
+export async function createFolderSettings(folderPath: string, settings: FolderSettings = { baseUrl: '' }, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
     const path = pathOf(folderPath, 'settings.json')
-    return fileStorage.create(path, JSON.stringify({ baseUrl: '' })).then(() => path)
+    return fileStorage.create(path, JSON.stringify(settings)).then(() => path)
+}
+
+export async function readFolderSettings(folderPath: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<FolderSettings> {
+    const content = await fileStorage.readText(pathOf(folderPath, 'settings.json'))
+    return JSON.parse(content) as FolderSettings
 }
 
 export async function readSettingsForRequest(requestPath: string): Promise<FolderSettings> {

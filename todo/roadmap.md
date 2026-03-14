@@ -8,10 +8,11 @@
    5. add before script
    6. add after script
    7. add quick action
-   8. settings
+   8. ~~settings~~
 2. base path
    1. ~~resolve~~
    2. ~~execute~~
+   3. ~~editor dialog~~
 3. scripts
    1. before
    2. after

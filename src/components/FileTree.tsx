@@ -14,6 +14,7 @@ import { Dialog } from "./ui/dialog"
 import DefaultFileStorage from "@/lib/data/files/file-default"
 import { pathOf } from "@/lib/data/files/join"
 import { useMemo, useState } from "react"
+import { FolderSettingsDialog } from "@/lib/folder-setting/folder-settings-dialog"
 
 export const FileTree = ({ items, onItemClick, selectedPath }: {
     items: FileTreeItem[],
@@ -54,6 +55,9 @@ const FolderNode = ({
     selectedPath?: string
 }) => {
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
+
+    const [settingsDialog, setSettingsDialog] = useState<boolean>(false);
+
     const isOpen = isAncestor(folder.path, selectedPath);
 
     const fileStorage = useMemo(() => DefaultFileStorage.getInstance(), []);
@@ -72,6 +76,10 @@ const FolderNode = ({
         }
         setDialogType(null);
     };
+
+    const onSettingsClick = () => {
+        setSettingsDialog(true);
+    }
 
     const deleteItem = () => {
         fileStorage.delete(folder.path)
@@ -110,6 +118,7 @@ const FolderNode = ({
                 <ContextMenuContent>
                     <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}>New Request</ContextMenuItem>
                     <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}>New Folder</ContextMenuItem>
+                    <ContextMenuItem onClick={onSettingsClick}>Settings</ContextMenuItem>
                     <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
@@ -119,6 +128,13 @@ const FolderNode = ({
                     type={dialogType}
                 />
             )}
+            {settingsDialog && (
+                <FolderSettingsDialog
+                    folderPath={folder.path}
+                    onClose={() => setSettingsDialog(false)}
+                />
+            )}
+
         </Dialog>
     );
 };
