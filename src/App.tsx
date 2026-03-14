@@ -31,10 +31,11 @@ import { useFileTree } from './lib/hooks/use-file-tree';
 import { useFileWatch } from './lib/hooks/file-watch';
 import { FileWatchEventType } from './lib/data/files/file';
 import { projectMenuItems } from './lib/menu/project-menu';
+import usePersistentState from './lib/hooks/persistent-state';
 
 export default function App({ project }: { project: Project }) {
 
-    const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
+    const [selectedFile, setSelectedFile] = usePersistentState<FileItem | null>('selectedFile', null)
     const [isFileTreeVisible, setIsFileTreeVisible] = useState(true)
 
     const { tree: fileTree } = useFileTree(project)
