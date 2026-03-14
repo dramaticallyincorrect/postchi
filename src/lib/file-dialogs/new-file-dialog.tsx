@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button"
 import {
     DialogClose,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,

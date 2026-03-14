@@ -15,6 +15,7 @@ import DefaultFileStorage from "@/lib/data/files/file-default"
 import { pathOf } from "@/lib/data/files/join"
 import { useMemo, useState } from "react"
 import { FolderSettingsDialog } from "@/lib/folder-setting/folder-settings-dialog"
+import { createHttpRequest } from "@/lib/data/project/project"
 
 export const FileTree = ({ items, onItemClick, selectedPath }: {
     items: FileTreeItem[],
@@ -69,8 +70,8 @@ const FolderNode = ({
                 fileStorage.mkdir(fullpath);
                 break;
             case FileDialogType.NewHttpRequest:
-                fileStorage.create(fullpath, 'GET http://').then(() => {
-                    onItemClick(new FileItem(name, fullpath));
+                createHttpRequest(folder.path, name).then((path) => {
+                    onItemClick(new FileItem(name, path));
                 });
                 break;
         }
