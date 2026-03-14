@@ -35,6 +35,7 @@ import { projectMenuItems } from './lib/menu/project-menu';
 export default function App({ project }: { project: Project }) {
 
     const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
+    const [isFileTreeVisible, setIsFileTreeVisible] = useState(true)
 
     const { tree: fileTree } = useFileTree(project)
 
@@ -47,8 +48,8 @@ export default function App({ project }: { project: Project }) {
     return <ThemeProvider initialTheme={themes[0]}>
         <EnvironmentProvider path={project.envPath} >
             <div className='flex-col h-screen w-screen flex'>
-                <TitleBar projectName={project.name} />
-                <Split>
+                <TitleBar projectName={project.name} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
+                <Split isFileTreeVisible={isFileTreeVisible}>
                     <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
                     {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
                 </Split>
@@ -58,12 +59,14 @@ export default function App({ project }: { project: Project }) {
 
 }
 
-const TitleBar = ({ projectName }: { projectName: string }) => {
+const TitleBar = ({ projectName, onToggleFileTree }: { projectName: string; onToggleFileTree: () => void }) => {
     return <div className="titlebar bg-background-panel">
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
             <div className="flex items-center mt-1.5">
-                <PanelLeftIcon className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1 size-4 inline'} />
+                <Button variant="ghost" size="icon" className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1'} onClick={onToggleFileTree}>
+                    <PanelLeftIcon />
+                </Button>
                 <FileMenu projectName={projectName} />
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <ActiveEnvironment />
@@ -114,16 +117,26 @@ const Editor = ({ path }: { path: string }) => {
 
 }
 
-function Split(props: { children: React.ReactNode[] }) {
+function Split(props: { children: React.ReactNode[]; isFileTreeVisible: boolean }) {
+    function getDefaultFileTreeSize(screenWidth: number): number {
+        if (screenWidth < 640) return 30
+        if (screenWidth < 1024) return 22
+        if (screenWidth < 1440) return 18
+        return 15
+    }
     return (
         <ResizablePanelGroup
             orientation="horizontal"
             className="w-full h-full" >
-            <ResizablePanel defaultSize="17%" className='m-1 rounded-xl bg-background-panel'>
-                {props.children[0]}
-            </ResizablePanel>
+            {props.isFileTreeVisible && (
+                <>
+                    <ResizablePanel defaultSize={`${getDefaultFileTreeSize(window.innerWidth)}%`} className='m-1 rounded-xl bg-background-panel'>
+                        {props.children[0]}
+                    </ResizablePanel>
 
-            <ResizableHandle className='bg-transparent' />
+                    <ResizableHandle className='bg-transparent' />
+                </>
+            )}
 
             <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
                 {props.children[1]}
