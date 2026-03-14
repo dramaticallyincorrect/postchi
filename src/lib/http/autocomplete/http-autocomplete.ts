@@ -141,7 +141,7 @@ export const methods = [
     { label: 'OPTIONS', type: "keyword" },
 ]
 
-export async function pathCompletion(path: string, fileStorage: FileStorage = new DefaultFileStorage()): Promise<Completion[]> {
+export async function pathCompletion(path: string, fileStorage = DefaultFileStorage.getInstance()): Promise<Completion[]> {
     // TODO: handle Windows file separator
     const parent = path.substring(0, path.lastIndexOf('/')) || '/'
     const entries = await fileStorage.readDirectory(parent)
