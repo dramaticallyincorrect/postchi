@@ -21,6 +21,7 @@ import { Project } from './lib/data/project/project';
 import { getFileTypeFromPath } from './lib/data/file-type-recognizer';
 import { FileType } from './lib/data/supported-filetypes';
 import { EnvironmentEditor } from './editors/environment-editor';
+import { BeforeScriptEditor } from './editors/before-script-editor';
 import { EnvironmentProvider } from './active-environment/environment-context';
 import { ThemeProvider } from './theme-context/theme-context';
 import { themes } from './lib/theme/themes';
@@ -112,6 +113,8 @@ const Editor = ({ path }: { path: string }) => {
     switch (type) {
         case FileType.HTTP:
             return <HttpRequestResponse path={path} />
+        case FileType.BEFORE_SCRIPT:
+            return <BeforeScriptEditor path={path} />
         default:
             return <EnvironmentEditor path={path} />
     }

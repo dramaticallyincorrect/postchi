@@ -18,6 +18,11 @@ describe('get type of file from path', () => {
     })
 
 
+    it('before script', () => {
+        const path = '/test/login.before.js'
+        expect(getFileTypeFromPath(path)).toBe(FileType.BEFORE_SCRIPT)
+    })
+
     it('unknown is undefined', () => {
         const path = '/test/test.unknown'
 
