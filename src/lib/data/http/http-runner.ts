@@ -18,83 +18,86 @@ export class ExecutionError {
     }
 }
 
-export default async function executeHttpTemplate(template: string, templatePath: string, variables: { key: string, value: string }[], abort: AbortController, envPath: string = '', activeEnvironmentName: string = ''): Promise<HttpExecution | ExecutionError> {
+export default function executeHttpTemplate(template: string, templatePath: string, variables: { key: string, value: string }[], abort: AbortController, envPath: string = '', activeEnvironmentName: string = ''):
+    Task<HttpExecution, ExecutionError> {
 
-    const vars = new Map(variables.map(obj => [obj.key, obj.value]))
-    
-    const request = await resolveHttpTemplate(template, {
-        variables: vars,
-        baseUrl: () => readBasePath(templatePath, vars)
-    })
+    return new Task(async (resolve, reject) => {
+        const vars = new Map(variables.map(obj => [obj.key, obj.value]))
 
-    if (!request || 'message' in request) {
-        return Promise.resolve(new ExecutionError('template', request.message));
-    }
+        const request = await resolveHttpTemplate(template, {
+            variables: vars,
+            baseUrl: () => readBasePath(templatePath, vars)
+        })
 
-    let finalRequest: HttpRequest;
-    try {
-        const { request: modifiedRequest, envMutations: beforeMutations } = await executeBeforeScript(templatePath, request, variables);
-        finalRequest = modifiedRequest;
-        for (const { key, value } of beforeMutations) {
-            await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
+        if (!request || 'message' in request) {
+            return reject(new ExecutionError('template', request.message));
         }
-    } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return new ExecutionError('script', `Before script error: ${message}`);
-    }
 
-    const start = performance.now()
-    try {
-        const response = await fetch(finalRequest.url, {
-            method: finalRequest.method,
-            headers: finalRequest.headers,
-            body: finalRequest.body || undefined,
-            signal: abort.signal
-        });
-
-
-        const end = performance.now();
-        const durationInMillies = end - start;
-
-        const contentTypeInfo = await classifyResponseBody(response);
-
-        const body = contentTypeInfo.kind === 'binary' ? await response.arrayBuffer() : await response.text();
-
-        const responseHeaders = Array.from(response.headers.entries()).map(([key, value]) => ({ key, value }));
-
-        const scriptResponse = {
-            status: response.status,
-            headers: Object.fromEntries(response.headers.entries()),
-            body: typeof body === 'string' ? body : null,
-            durationInMillies,
-        };
-
-        let afterScriptError: string | undefined;
+        let finalRequest: HttpRequest;
         try {
-            const afterMutations = await executeAfterScript(templatePath, finalRequest, scriptResponse, variables);
-            for (const { key, value } of afterMutations) {
+            const { request: modifiedRequest, envMutations: beforeMutations } = await executeBeforeScript(templatePath, request, variables);
+            finalRequest = modifiedRequest;
+            for (const { key, value } of beforeMutations) {
                 await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
             }
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            afterScriptError = `After script error: ${message}`;
+            return reject(new ExecutionError('script', `Before script error: ${message}`));
         }
 
-        return {
-            status: response.status,
-            durationInMillies,
-            body: body,
-            contentTypeInfo,
-            headers: responseHeaders,
-            request: finalRequest,
-            afterScriptError,
+        const start = performance.now()
+        try {
+            const response = await fetch(finalRequest.url, {
+                method: finalRequest.method,
+                headers: finalRequest.headers,
+                body: finalRequest.body || undefined,
+                signal: abort.signal
+            });
+
+
+            const end = performance.now();
+            const durationInMillies = end - start;
+
+            const contentTypeInfo = await classifyResponseBody(response);
+
+            const body = contentTypeInfo.kind === 'binary' ? await response.arrayBuffer() : await response.text();
+
+            const responseHeaders = Array.from(response.headers.entries()).map(([key, value]) => ({ key, value }));
+
+            const scriptResponse = {
+                status: response.status,
+                headers: Object.fromEntries(response.headers.entries()),
+                body: typeof body === 'string' ? body : null,
+                durationInMillies,
+            };
+
+            let afterScriptError: string | undefined;
+            try {
+                const afterMutations = await executeAfterScript(templatePath, finalRequest, scriptResponse, variables);
+                for (const { key, value } of afterMutations) {
+                    await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
+                }
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                afterScriptError = `After script error: ${message}`;
+            }
+
+            return resolve({
+                status: response.status,
+                durationInMillies,
+                body: body,
+                contentTypeInfo,
+                headers: responseHeaders,
+                request: finalRequest,
+                afterScriptError,
+            })
+        } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+                return reject(new ExecutionError('abort', 'Request was aborted'));
+            }
+            return reject(new ExecutionError('network', 'could not make the request, check your network connection'));
         }
-    } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            return Promise.resolve(new ExecutionError('abort', 'Request was aborted'));
-        }
-        return Promise.resolve(new ExecutionError('network', 'could not make the request, check your network connection'));
-    }
+    })
 
 }
 

@@ -37,17 +37,16 @@ export default function HttpRequestResponse({ path }: { path: string }) {
                 setResponse(new Loading())
 
                 const response = await executeHttpTemplate(text, path, activeEnvironment?.variables ?? [], abort.current, envPath, activeEnvironment?.name ?? '');
-
-                if (response instanceof ExecutionError) {
-                    if (response.type === 'abort') {
+                if (response.isOk) {
+                    setResponse(response.value);
+                } else {
+                    const error = response.error;
+                    if (error.type === 'abort') {
                         setResponse(null)
                     } else {
-                        setResponse(new Error(response.message))
+                        setResponse(new Error(error.message))
                     }
-                } else {
-                    setResponse(response)
                 }
-
             }
         };
         window.addEventListener("keydown", handler);
