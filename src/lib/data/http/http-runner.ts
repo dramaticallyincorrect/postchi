@@ -62,19 +62,16 @@ export default async function executeHttpTemplate(template: string, templatePath
 
         const responseHeaders = Array.from(response.headers.entries()).map(([key, value]) => ({ key, value }));
 
+        const scriptResponse = {
+            status: response.status,
+            headers: Object.fromEntries(response.headers.entries()),
+            body: typeof body === 'string' ? body : null,
+            durationInMillies,
+        };
+
         let afterScriptError: string | undefined;
         try {
-            const afterMutations = await executeAfterScript(
-                templatePath,
-                finalRequest,
-                {
-                    status: response.status,
-                    headers: Object.fromEntries(response.headers.entries()),
-                    body: typeof body === 'string' ? body : null,
-                    durationInMillies,
-                },
-                variables
-            );
+            const afterMutations = await executeAfterScript(templatePath, finalRequest, scriptResponse, variables);
             for (const { key, value } of afterMutations) {
                 await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
             }

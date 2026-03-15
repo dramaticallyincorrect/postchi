@@ -11,7 +11,7 @@ export default class DefaultFileStorage implements FileStorage {
 
     private constructor() { }
 
-    static getInstance(): DefaultFileStorage {
+    static getInstance(): FileStorage {
         if (!DefaultFileStorage.instance) {
             DefaultFileStorage.instance = new DefaultFileStorage()
         }

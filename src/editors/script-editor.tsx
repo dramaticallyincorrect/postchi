@@ -23,9 +23,9 @@ export const ScriptEditor = ({ path, type }: { path: string, type: FileType }) =
 
     const extensions = useMemo(() => {
         const autoCompleteExtension = () => {
-            if (type === FileType.AFTER_SCRIPT) {
+            if (type === FileType.AFTER_SCRIPT || type === FileType.FOLDER_AFTER_SCRIPT) {
                 return javascriptLanguage.data.of({ autocomplete: afterScriptCompletion })
-            } else if (type === FileType.BEFORE_SCRIPT) {
+            } else if (type === FileType.BEFORE_SCRIPT || type === FileType.FOLDER_BEFORE_SCRIPT) {
                 return javascriptLanguage.data.of({ autocomplete: beforeScriptCompletion })
             } else {
                 throw new Error('Unsupported file type for ScriptEditor: ' + type)

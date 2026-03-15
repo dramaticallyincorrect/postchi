@@ -2,6 +2,7 @@ import { FileStorage } from "../files/file";
 import DefaultFileStorage from "../files/file-default";
 import { FileType } from "../supported-filetypes";
 import { HttpRequest } from "./http-template-resolver";
+import { readClosestFile } from "../files/file-utils/file-utils";
 
 export function afterScriptPath(requestPath: string): string {
     const lastDot = requestPath.lastIndexOf('.');
@@ -25,29 +26,12 @@ export type ScriptResponse = {
 
 import { EnvMutation } from "./before-script-executor";
 
-/**
- * Looks for a .after.js file next to the given .get request file and executes it.
- * The script receives the final (read-only) `request`, the `response`, an `env`
- * record, `fetch`, and `setEnvironmentVariable`. Common uses: assertions, logging,
- * storing response tokens. If no script file exists the function returns without doing anything.
- * Throws if the script itself throws at runtime.
- */
-export async function executeAfterScript(
-    requestPath: string,
+async function runAfterScriptContent(
+    scriptContent: string,
     request: HttpRequest,
     response: ScriptResponse,
     variables: { key: string; value: string }[],
-    storage: FileStorage = DefaultFileStorage.getInstance()
 ): Promise<EnvMutation[]> {
-    const scriptPath = afterScriptPath(requestPath);
-
-    let scriptContent: string;
-    try {
-        scriptContent = await storage.readText(scriptPath);
-    } catch {
-        return [];
-    }
-
     const headersRecord: Record<string, string> = {};
     for (const [key, value] of request.headers) {
         headersRecord[key] = value;
@@ -72,4 +56,41 @@ export async function executeAfterScript(
     await fn(scriptRequest, response, env, globalThis.fetch, setEnvironmentVariable);
 
     return envMutations;
+}
+
+/**
+ * Executes after scripts for a request in order:
+ * 1. Request-level `*.after.js` (if it exists next to the request file)
+ * 2. Closest folder `after.js` (if any ancestor folder has one)
+ * Mutations from both scripts are merged and returned together.
+ * Throws if either script throws at runtime.
+ */
+export async function executeAfterScript(
+    requestPath: string,
+    request: HttpRequest,
+    response: ScriptResponse,
+    variables: { key: string; value: string }[],
+    storage: FileStorage = DefaultFileStorage.getInstance()
+): Promise<EnvMutation[]> {
+    const allMutations: EnvMutation[] = [];
+
+    let requestScriptContent: string | null = null;
+    try {
+        requestScriptContent = await storage.readText(afterScriptPath(requestPath));
+    } catch {
+        // no request-level after script
+    }
+
+    if (requestScriptContent !== null) {
+        const mutations = await runAfterScriptContent(requestScriptContent, request, response, variables);
+        allMutations.push(...mutations);
+    }
+
+    const folderScript = await readClosestFile(FileType.FOLDER_AFTER_SCRIPT, requestPath, undefined, storage);
+    if (folderScript.isOk) {
+        const mutations = await runAfterScriptContent(folderScript.value, request, response, variables);
+        allMutations.push(...mutations);
+    }
+
+    return allMutations;
 }

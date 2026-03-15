@@ -2,6 +2,7 @@ import { FileStorage } from "../files/file";
 import DefaultFileStorage from "../files/file-default";
 import { FileType } from "../supported-filetypes";
 import { HttpRequest } from "./http-template-resolver";
+import { readClosestFile } from "../files/file-utils/file-utils";
 
 export function beforeScriptPath(requestPath: string): string {
     const lastDot = requestPath.lastIndexOf('.');
@@ -18,27 +19,11 @@ type ScriptRequest = {
 
 export type EnvMutation = { key: string; value: string };
 
-/**
- * Looks for a .before.js file next to the given .get request file and executes it.
- * The script receives a mutable `request` object, an `env` record, `fetch`, and
- * `setEnvironmentVariable`. If no script file exists the original request is returned unchanged.
- * Throws if the script itself throws at runtime.
- */
-export async function executeBeforeScript(
-    requestPath: string,
+async function runBeforeScriptContent(
+    scriptContent: string,
     request: HttpRequest,
     variables: { key: string; value: string }[],
-    storage: FileStorage = DefaultFileStorage.getInstance()
 ): Promise<{ request: HttpRequest; envMutations: EnvMutation[] }> {
-    const scriptPath = beforeScriptPath(requestPath);
-
-    let scriptContent: string;
-    try {
-        scriptContent = await storage.readText(scriptPath);
-    } catch {
-        return { request, envMutations: [] };
-    }
-
     const headersRecord: Record<string, string> = {};
     for (const [key, value] of request.headers) {
         headersRecord[key] = value;
@@ -72,4 +57,40 @@ export async function executeBeforeScript(
         },
         envMutations,
     };
+}
+
+/**
+ * Executes before scripts for a request in order:
+ * 1. Closest folder `before.js` (if any ancestor folder has one)
+ * 2. Request-level `*.before.js` (if it exists next to the request file)
+ * Mutations from both scripts are merged and returned together.
+ * Throws if either script throws at runtime.
+ */
+export async function executeBeforeScript(
+    requestPath: string,
+    request: HttpRequest,
+    variables: { key: string; value: string }[],
+    storage: FileStorage = DefaultFileStorage.getInstance()
+): Promise<{ request: HttpRequest; envMutations: EnvMutation[] }> {
+    const allMutations: EnvMutation[] = [];
+    let currentRequest = request;
+
+    const folderScript = await readClosestFile(FileType.FOLDER_BEFORE_SCRIPT, requestPath, undefined, storage);
+    if (folderScript.isOk) {
+        const result = await runBeforeScriptContent(folderScript.value, currentRequest, variables);
+        currentRequest = result.request;
+        allMutations.push(...result.envMutations);
+    }
+
+    let requestScriptContent: string;
+    try {
+        requestScriptContent = await storage.readText(beforeScriptPath(requestPath));
+    } catch {
+        return { request: currentRequest, envMutations: allMutations };
+    }
+
+    const result = await runBeforeScriptContent(requestScriptContent, currentRequest, variables);
+    allMutations.push(...result.envMutations);
+
+    return { request: result.request, envMutations: allMutations };
 }

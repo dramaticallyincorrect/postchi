@@ -5,7 +5,7 @@ export async function readClosestFile(
     filename: string,
     path: string,
     stopAt?: string,
-    storage: DefaultFileStorage = DefaultFileStorage.getInstance()
+    storage = DefaultFileStorage.getInstance()
 ): Promise<Result<string, null>> {
     let currentDir = path.includes('.') ? path.substring(0, path.lastIndexOf('/')) : path
 

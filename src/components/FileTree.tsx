@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, FileCodeIcon, FolderIcon, TimerIcon, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, FileCodeIcon, FolderIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
@@ -19,6 +19,7 @@ import { createHttpRequest } from "@/lib/data/project/project"
 import { beforeScriptPath } from "@/lib/data/http/before-script-executor"
 import { afterScriptPath } from "@/lib/data/http/after-script-executor"
 import { FileType } from "@/lib/data/supported-filetypes"
+import FileJavascriptIcon from "./icons/file-js"
 
 export const FileTree = ({ items, onItemClick, selectedPath }: {
     items: FileTreeItem[],
@@ -85,6 +86,16 @@ const FolderNode = ({
         setSettingsDialog(true);
     }
 
+    const addFolderBeforeScript = () => {
+        const scriptPath = pathOf(folder.path, FileType.FOLDER_BEFORE_SCRIPT);
+        fileStorage.create(scriptPath, '// Folder before script - runs before every request in this folder and subfolders\n// Available: request (method, url, headers, body), env, fetch, setEnvironmentVariable\n');
+    }
+
+    const addFolderAfterScript = () => {
+        const scriptPath = pathOf(folder.path, FileType.FOLDER_AFTER_SCRIPT);
+        fileStorage.create(scriptPath, '// Folder after script - runs after every request in this folder and subfolders\n// Available: response (status, headers, body, durationInMillies), request, env, fetch, setEnvironmentVariable\n');
+    }
+
     const deleteItem = () => {
         fileStorage.delete(folder.path)
     }
@@ -122,6 +133,8 @@ const FolderNode = ({
                 <ContextMenuContent>
                     <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}>New Request</ContextMenuItem>
                     <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}>New Folder</ContextMenuItem>
+                    <ContextMenuItem onClick={addFolderBeforeScript}>Before Script</ContextMenuItem>
+                    <ContextMenuItem onClick={addFolderAfterScript}>After Script</ContextMenuItem>
                     <ContextMenuItem onClick={onSettingsClick}>Settings</ContextMenuItem>
                     <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
                 </ContextMenuContent>
@@ -146,8 +159,8 @@ const FolderNode = ({
 const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onItemClick: any, isSelected: boolean }) => {
     const storage = DefaultFileStorage.getInstance();
     const isHttpRequest = item.name.endsWith(FileType.HTTP);
-    const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT);
-    const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT);
+    const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT) || item.name === FileType.FOLDER_BEFORE_SCRIPT;
+    const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT) || item.name === FileType.FOLDER_AFTER_SCRIPT;
 
     const deleteItem = () => {
         storage.delete(item.path)
@@ -163,7 +176,7 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
         storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
     }
 
-    const icon = isBeforeScript ? <ZapIcon /> : isAfterScript ? <TimerIcon /> : <FileCodeIcon />;
+    const icon = isBeforeScript || isAfterScript ? <FileJavascriptIcon /> : <FileCodeIcon />;
 
     return (
         <ContextMenu>

@@ -115,6 +115,8 @@ const Editor = ({ path }: { path: string }) => {
             return <HttpRequestResponse path={path} />
         case FileType.BEFORE_SCRIPT:
         case FileType.AFTER_SCRIPT:
+        case FileType.FOLDER_BEFORE_SCRIPT:
+        case FileType.FOLDER_AFTER_SCRIPT:
             return <ScriptEditor path={path} type={type} />
         default:
             return <EnvironmentEditor path={path} />
