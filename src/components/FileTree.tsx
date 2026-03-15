@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, FileCodeIcon, FolderIcon, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, FileCodeIcon, FolderIcon, TimerIcon, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
@@ -17,6 +17,7 @@ import { useMemo, useState } from "react"
 import { FolderSettingsDialog } from "@/lib/folder-setting/folder-settings-dialog"
 import { createHttpRequest } from "@/lib/data/project/project"
 import { beforeScriptPath } from "@/lib/data/http/before-script-executor"
+import { afterScriptPath } from "@/lib/data/http/after-script-executor"
 import { FileType } from "@/lib/data/supported-filetypes"
 
 export const FileTree = ({ items, onItemClick, selectedPath }: {
@@ -146,6 +147,7 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
     const storage = DefaultFileStorage.getInstance();
     const isHttpRequest = item.name.endsWith(FileType.HTTP);
     const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT);
+    const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT);
 
     const deleteItem = () => {
         storage.delete(item.path)
@@ -155,6 +157,13 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
         const scriptPath = beforeScriptPath(item.path);
         storage.create(scriptPath, '// Before script\n// Available: request (method, url, headers, body), env, fetch\n');
     }
+
+    const addAfterScript = () => {
+        const scriptPath = afterScriptPath(item.path);
+        storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
+    }
+
+    const icon = isBeforeScript ? <ZapIcon /> : isAfterScript ? <TimerIcon /> : <FileCodeIcon />;
 
     return (
         <ContextMenu>
@@ -168,13 +177,16 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
                         isSelected ? "text-foreground bg-muted" : "text-foreground hover:bg-muted"
                     )}
                 >
-                    {isBeforeScript ? <ZapIcon /> : <FileCodeIcon />}
+                    {icon}
                     <span>{item.name}</span>
                 </Button>
             </ContextMenuTrigger>
             <ContextMenuContent>
                 {isHttpRequest && (
-                    <ContextMenuItem onClick={addBeforeScript}>Add Before Script</ContextMenuItem>
+                    <>
+                        <ContextMenuItem onClick={addBeforeScript}>Add Before Script</ContextMenuItem>
+                        <ContextMenuItem onClick={addAfterScript}>Add After Script</ContextMenuItem>
+                    </>
                 )}
                 <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
             </ContextMenuContent>

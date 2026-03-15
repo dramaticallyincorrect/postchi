@@ -4,6 +4,7 @@ import resolveHttpTemplate, { HttpRequest } from "./http-template-resolver";
 import { FolderSettings, readSettingsForRequest } from "../project/project";
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 import { executeBeforeScript } from "./before-script-executor";
+import { executeAfterScript } from "./after-script-executor";
 // import { fetch } from '@tauri-apps/plugin-http'
 
 export class ExecutionError {
@@ -54,13 +55,34 @@ export default async function executeHttpTemplate(template: string, templatePath
 
         const body = contentTypeInfo.kind === 'binary' ? await response.arrayBuffer() : await response.text();
 
+        const responseHeaders = Array.from(response.headers.entries()).map(([key, value]) => ({ key, value }));
+
+        let afterScriptError: string | undefined;
+        try {
+            await executeAfterScript(
+                templatePath,
+                finalRequest,
+                {
+                    status: response.status,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: typeof body === 'string' ? body : null,
+                    durationInMillies,
+                },
+                variables
+            );
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            afterScriptError = `After script error: ${message}`;
+        }
+
         return {
             status: response.status,
             durationInMillies,
             body: body,
             contentTypeInfo,
-            headers: Array.from(response.headers.entries()).map(([key, value]) => ({ key, value })),
-            request: finalRequest
+            headers: responseHeaders,
+            request: finalRequest,
+            afterScriptError,
         }
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -113,4 +135,5 @@ export type HttpExecution = {
     contentTypeInfo: ContentTypeInfo;
     headers: { key: string, value: string }[];
     request: HttpRequest;
+    afterScriptError?: string;
 }
