@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, FileCodeIcon, FolderIcon } from "lucide-react"
+import { ChevronRightIcon, FileCodeIcon, FolderIcon, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
@@ -16,6 +16,8 @@ import { pathOf } from "@/lib/data/files/join"
 import { useMemo, useState } from "react"
 import { FolderSettingsDialog } from "@/lib/folder-setting/folder-settings-dialog"
 import { createHttpRequest } from "@/lib/data/project/project"
+import { beforeScriptPath } from "@/lib/data/http/before-script-executor"
+import { FileType } from "@/lib/data/supported-filetypes"
 
 export const FileTree = ({ items, onItemClick, selectedPath }: {
     items: FileTreeItem[],
@@ -141,9 +143,19 @@ const FolderNode = ({
 };
 
 const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onItemClick: any, isSelected: boolean }) => {
+    const storage = DefaultFileStorage.getInstance();
+    const isHttpRequest = item.name.endsWith(FileType.HTTP);
+    const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT);
+
     const deleteItem = () => {
-        DefaultFileStorage.getInstance().delete(item.path)
+        storage.delete(item.path)
     }
+
+    const addBeforeScript = () => {
+        const scriptPath = beforeScriptPath(item.path);
+        storage.create(scriptPath, '// Before script\n// Available: request (method, url, headers, body), env, fetch\n');
+    }
+
     return (
         <ContextMenu>
             <ContextMenuTrigger>
@@ -156,11 +168,14 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
                         isSelected ? "text-foreground bg-muted" : "text-foreground hover:bg-muted"
                     )}
                 >
-                    <FileCodeIcon />
+                    {isBeforeScript ? <ZapIcon /> : <FileCodeIcon />}
                     <span>{item.name}</span>
                 </Button>
             </ContextMenuTrigger>
             <ContextMenuContent>
+                {isHttpRequest && (
+                    <ContextMenuItem onClick={addBeforeScript}>Add Before Script</ContextMenuItem>
+                )}
                 <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
             </ContextMenuContent>
         </ContextMenu>

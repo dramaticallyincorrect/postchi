@@ -3,13 +3,14 @@ import { classifyResponseBody, ContentTypeInfo } from "./body-classifier/http-bo
 import resolveHttpTemplate, { HttpRequest } from "./http-template-resolver";
 import { FolderSettings, readSettingsForRequest } from "../project/project";
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
+import { executeBeforeScript } from "./before-script-executor";
 // import { fetch } from '@tauri-apps/plugin-http'
 
 export class ExecutionError {
-    type: 'network' | 'template' | 'abort';
+    type: 'network' | 'template' | 'abort' | 'script';
     message: string;
 
-    constructor(type: 'network' | 'template' | 'abort', message: string) {
+    constructor(type: 'network' | 'template' | 'abort' | 'script', message: string) {
         this.type = type;
         this.message = message;
     }
@@ -28,12 +29,20 @@ export default async function executeHttpTemplate(template: string, templatePath
         return Promise.resolve(new ExecutionError('template', request.message));
     }
 
+    let finalRequest: HttpRequest;
+    try {
+        finalRequest = await executeBeforeScript(templatePath, request, variables);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return new ExecutionError('script', `Before script error: ${message}`);
+    }
+
     const start = performance.now()
     try {
-        const response = await fetch(request.url, {
-            method: request.method,
-            headers: request.headers,
-            body: request.body || undefined,
+        const response = await fetch(finalRequest.url, {
+            method: finalRequest.method,
+            headers: finalRequest.headers,
+            body: finalRequest.body || undefined,
             signal: abort.signal
         });
 
@@ -51,7 +60,7 @@ export default async function executeHttpTemplate(template: string, templatePath
             body: body,
             contentTypeInfo,
             headers: Array.from(response.headers.entries()).map(([key, value]) => ({ key, value })),
-            request
+            request: finalRequest
         }
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
