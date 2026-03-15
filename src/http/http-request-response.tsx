@@ -19,7 +19,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
     const [response, setResponse] = useState<HttpExecutionStatus | null>(null)
 
-    const { activeEnvironment } = useEnvironment()
+    const { activeEnvironment, envPath } = useEnvironment()
 
     const abort = useRef(new AbortController());
 
@@ -36,7 +36,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
                 setResponse(new Loading())
 
-                const response = await executeHttpTemplate(text, path, activeEnvironment?.variables ?? [], abort.current);
+                const response = await executeHttpTemplate(text, path, activeEnvironment?.variables ?? [], abort.current, envPath, activeEnvironment?.name ?? '');
 
                 if (response instanceof ExecutionError) {
                     if (response.type === 'abort') {

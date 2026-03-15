@@ -16,10 +16,12 @@ type ScriptRequest = {
     body: string | null;
 }
 
+export type EnvMutation = { key: string; value: string };
+
 /**
  * Looks for a .before.js file next to the given .get request file and executes it.
- * The script receives a mutable `request` object, an `env` record, and `fetch`.
- * If no script file exists the original request is returned unchanged.
+ * The script receives a mutable `request` object, an `env` record, `fetch`, and
+ * `setEnvironmentVariable`. If no script file exists the original request is returned unchanged.
  * Throws if the script itself throws at runtime.
  */
 export async function executeBeforeScript(
@@ -27,14 +29,14 @@ export async function executeBeforeScript(
     request: HttpRequest,
     variables: { key: string; value: string }[],
     storage: FileStorage = DefaultFileStorage.getInstance()
-): Promise<HttpRequest> {
+): Promise<{ request: HttpRequest; envMutations: EnvMutation[] }> {
     const scriptPath = beforeScriptPath(requestPath);
 
     let scriptContent: string;
     try {
         scriptContent = await storage.readText(scriptPath);
     } catch {
-        return request;
+        return { request, envMutations: [] };
     }
 
     const headersRecord: Record<string, string> = {};
@@ -54,14 +56,20 @@ export async function executeBeforeScript(
         env[key] = value;
     }
 
-    const fn = new Function('request', 'env', 'fetch', `return (async () => { ${scriptContent} })()`);
-    await fn(scriptRequest, env, globalThis.fetch);
+    const envMutations: EnvMutation[] = [];
+    const setEnvironmentVariable = (key: string, value: string) => envMutations.push({ key, value });
+
+    const fn = new Function('request', 'env', 'fetch', 'setEnvironmentVariable', `return (async () => { ${scriptContent} })()`);
+    await fn(scriptRequest, env, globalThis.fetch, setEnvironmentVariable);
 
     return {
-        ...request,
-        method: scriptRequest.method,
-        url: scriptRequest.url,
-        headers: Object.entries(scriptRequest.headers),
-        body: scriptRequest.body !== null ? scriptRequest.body : request.body,
+        request: {
+            ...request,
+            method: scriptRequest.method,
+            url: scriptRequest.url,
+            headers: Object.entries(scriptRequest.headers),
+            body: scriptRequest.body !== null ? scriptRequest.body : request.body,
+        },
+        envMutations,
     };
 }

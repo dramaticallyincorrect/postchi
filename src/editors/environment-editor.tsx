@@ -2,7 +2,6 @@ import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 import { lintGutter } from '@codemirror/lint';
 import { autocompletion } from '@codemirror/autocomplete';
 import { EnvironmentsLanguage } from '@/lib/environments/environments-language';
-import { useEnvironment } from '@/active-environment/environment-context';
 import DefaultFileStorage from '@/lib/data/files/file-default';
 import { useEffect, useRef } from 'react';
 import { loadText } from './load-text';
@@ -12,12 +11,8 @@ export const EnvironmentEditor = ({ path }: { path: string }) => {
 
     const viewRef = useRef<EditorView>(null)
 
-    const { reload } = useEnvironment()
-
     const onChange = (value: string) => {
-        DefaultFileStorage.getInstance().writeText(path, value).then(() => {
-            reload()
-        })
+        DefaultFileStorage.getInstance().writeText(path, value)
     }
 
     useEffect(() => {

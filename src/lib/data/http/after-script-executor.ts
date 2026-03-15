@@ -23,11 +23,13 @@ export type ScriptResponse = {
     durationInMillies: number;
 }
 
+import { EnvMutation } from "./before-script-executor";
+
 /**
  * Looks for a .after.js file next to the given .get request file and executes it.
  * The script receives the final (read-only) `request`, the `response`, an `env`
- * record, and `fetch`.  Common uses: assertions, logging, storing response tokens.
- * If no script file exists the function returns without doing anything.
+ * record, `fetch`, and `setEnvironmentVariable`. Common uses: assertions, logging,
+ * storing response tokens. If no script file exists the function returns without doing anything.
  * Throws if the script itself throws at runtime.
  */
 export async function executeAfterScript(
@@ -36,14 +38,14 @@ export async function executeAfterScript(
     response: ScriptResponse,
     variables: { key: string; value: string }[],
     storage: FileStorage = DefaultFileStorage.getInstance()
-): Promise<void> {
+): Promise<EnvMutation[]> {
     const scriptPath = afterScriptPath(requestPath);
 
     let scriptContent: string;
     try {
         scriptContent = await storage.readText(scriptPath);
     } catch {
-        return;
+        return [];
     }
 
     const headersRecord: Record<string, string> = {};
@@ -63,6 +65,11 @@ export async function executeAfterScript(
         env[key] = value;
     }
 
-    const fn = new Function('request', 'response', 'env', 'fetch', `return (async () => { ${scriptContent} })()`);
-    await fn(scriptRequest, response, env, globalThis.fetch);
+    const envMutations: EnvMutation[] = [];
+    const setEnvironmentVariable = (key: string, value: string) => envMutations.push({ key, value });
+
+    const fn = new Function('request', 'response', 'env', 'fetch', 'setEnvironmentVariable', `return (async () => { ${scriptContent} })()`);
+    await fn(scriptRequest, response, env, globalThis.fetch, setEnvironmentVariable);
+
+    return envMutations;
 }

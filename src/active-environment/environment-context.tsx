@@ -1,12 +1,14 @@
 import readEnvironments from "@/lib/data/project/read-environments"
 import { Environment } from "@/lib/environments/parser/environments-parser"
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState, } from "react"
+import { useFileWatch } from "@/lib/hooks/file-watch"
 
 type VariablesContextType = {
     environments: Environment[]
     activeEnvironment: Environment | null
     setActiveEnvironment: (env: Environment) => void
     reload: () => Promise<void>
+    envPath: string
 }
 
 const EnvironmentContext = createContext<VariablesContextType | null>(null)
@@ -26,8 +28,10 @@ export const EnvironmentProvider = ({ path, children }: { path: string, children
 
     useEffect(() => { reload() }, [path])
 
+    useFileWatch(path, reload, { ignoreModified: false })
+
     return (
-        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload }}>
+        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload, envPath: path }}>
             {children}
         </EnvironmentContext.Provider>
     )

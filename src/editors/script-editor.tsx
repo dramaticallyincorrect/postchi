@@ -4,9 +4,8 @@ import DefaultFileStorage from '@/lib/data/files/file-default';
 import { useEffect, useMemo, useRef } from 'react';
 import { loadText } from './load-text';
 import { useTheme } from '@/theme-context/theme-context';
-import afterScriptCompletion from '@/lib/scripts/language-support/after-script-autocomplete';
+import { afterScriptCompletion, beforeScriptCompletion } from '@/lib/scripts/language-support/script-autocomplete';
 import { FileType } from '@/lib/data/supported-filetypes';
-import beforeScriptCompletion from '@/lib/scripts/language-support/before-script-autocomplete';
 
 export const ScriptEditor = ({ path, type }: { path: string, type: FileType }) => {
     const viewRef = useRef<EditorView>(null);

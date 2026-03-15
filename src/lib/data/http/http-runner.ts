@@ -5,6 +5,7 @@ import { FolderSettings, readSettingsForRequest } from "../project/project";
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 import { executeBeforeScript } from "./before-script-executor";
 import { executeAfterScript } from "./after-script-executor";
+import { updateEnvironmentVariable } from "../project/update-environment-variable";
 // import { fetch } from '@tauri-apps/plugin-http'
 
 export class ExecutionError {
@@ -17,7 +18,7 @@ export class ExecutionError {
     }
 }
 
-export default async function executeHttpTemplate(template: string, templatePath: string, variables: { key: string, value: string }[], abort: AbortController): Promise<HttpExecution | ExecutionError> {
+export default async function executeHttpTemplate(template: string, templatePath: string, variables: { key: string, value: string }[], abort: AbortController, envPath: string = '', activeEnvironmentName: string = ''): Promise<HttpExecution | ExecutionError> {
 
     const vars = new Map(variables.map(obj => [obj.key, obj.value]))
     
@@ -32,7 +33,11 @@ export default async function executeHttpTemplate(template: string, templatePath
 
     let finalRequest: HttpRequest;
     try {
-        finalRequest = await executeBeforeScript(templatePath, request, variables);
+        const { request: modifiedRequest, envMutations: beforeMutations } = await executeBeforeScript(templatePath, request, variables);
+        finalRequest = modifiedRequest;
+        for (const { key, value } of beforeMutations) {
+            await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
+        }
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         return new ExecutionError('script', `Before script error: ${message}`);
@@ -59,7 +64,7 @@ export default async function executeHttpTemplate(template: string, templatePath
 
         let afterScriptError: string | undefined;
         try {
-            await executeAfterScript(
+            const afterMutations = await executeAfterScript(
                 templatePath,
                 finalRequest,
                 {
@@ -70,6 +75,9 @@ export default async function executeHttpTemplate(template: string, templatePath
                 },
                 variables
             );
+            for (const { key, value } of afterMutations) {
+                await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
+            }
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             afterScriptError = `After script error: ${message}`;

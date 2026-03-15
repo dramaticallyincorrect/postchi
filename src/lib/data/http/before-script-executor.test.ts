@@ -31,41 +31,42 @@ describe('executeBeforeScript', () => {
     const requestPath = `${root}/login.get`;
 
     it('returns original request when no before script exists', async () => {
-        const result = await executeBeforeScript(requestPath, baseRequest, []);
-        expect(result).toStrictEqual(baseRequest);
+        const { request, envMutations } = await executeBeforeScript(requestPath, baseRequest, []);
+        expect(request).toStrictEqual(baseRequest);
+        expect(envMutations).toEqual([]);
     });
 
     it('adds a header via the before script', async () => {
         fs.writeFileSync(`${root}/login.before.js`, `request.headers['Authorization'] = 'Bearer token123';`);
 
-        const result = await executeBeforeScript(requestPath, baseRequest, []);
+        const { request } = await executeBeforeScript(requestPath, baseRequest, []);
 
-        expect(result.headers).toContainEqual(['Authorization', 'Bearer token123']);
+        expect(request.headers).toContainEqual(['Authorization', 'Bearer token123']);
     });
 
     it('modifies the URL via the before script', async () => {
         fs.writeFileSync(`${root}/login.before.js`, `request.url += '?debug=true';`);
 
-        const result = await executeBeforeScript(requestPath, baseRequest, []);
+        const { request } = await executeBeforeScript(requestPath, baseRequest, []);
 
-        expect(result.url).toBe('https://example.com/api?debug=true');
+        expect(request.url).toBe('https://example.com/api?debug=true');
     });
 
     it('exposes env variables to the script', async () => {
         fs.writeFileSync(`${root}/login.before.js`, `request.headers['X-Token'] = env.TOKEN;`);
 
-        const result = await executeBeforeScript(requestPath, baseRequest, [{ key: 'TOKEN', value: 'secret' }]);
+        const { request } = await executeBeforeScript(requestPath, baseRequest, [{ key: 'TOKEN', value: 'secret' }]);
 
-        expect(result.headers).toContainEqual(['X-Token', 'secret']);
+        expect(request.headers).toContainEqual(['X-Token', 'secret']);
     });
 
     it('preserves original headers alongside added ones', async () => {
         fs.writeFileSync(`${root}/login.before.js`, `request.headers['X-Extra'] = 'extra';`);
 
-        const result = await executeBeforeScript(requestPath, baseRequest, []);
+        const { request } = await executeBeforeScript(requestPath, baseRequest, []);
 
-        expect(result.headers).toContainEqual(['Content-Type', 'application/json']);
-        expect(result.headers).toContainEqual(['X-Extra', 'extra']);
+        expect(request.headers).toContainEqual(['Content-Type', 'application/json']);
+        expect(request.headers).toContainEqual(['X-Extra', 'extra']);
     });
 
     it('throws when the script throws', async () => {
@@ -81,8 +82,16 @@ describe('executeBeforeScript', () => {
 
         fs.writeFileSync(`${root}/login.before.js`, ``);
 
-        const result = await executeBeforeScript(requestPath, requestWithForm, []);
+        const { request } = await executeBeforeScript(requestPath, requestWithForm, []);
 
-        expect(result.body).toBe(formData);
+        expect(request.body).toBe(formData);
+    });
+
+    it('collects env mutations from setEnvironmentVariable', async () => {
+        fs.writeFileSync(`${root}/login.before.js`, `setEnvironmentVariable('token', 'abc123');`);
+
+        const { envMutations } = await executeBeforeScript(requestPath, baseRequest, []);
+
+        expect(envMutations).toEqual([{ key: 'token', value: 'abc123' }]);
     });
 });

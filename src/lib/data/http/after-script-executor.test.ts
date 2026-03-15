@@ -37,17 +37,16 @@ describe('executeAfterScript', () => {
 
     const requestPath = `${root}/login.get`;
 
-    it('returns without error when no after script exists', async () => {
-        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toBeUndefined();
+    it('returns empty mutations when no after script exists', async () => {
+        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toEqual([]);
     });
 
     it('exposes response status to the script', async () => {
-        let captured: number | undefined;
         // We can't capture values out of the sandbox directly, so we verify
         // that accessing response.status doesn't throw.
         fs.writeFileSync(`${root}/login.after.js`, `if (response.status !== 200) throw new Error('unexpected status');`);
 
-        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toBeUndefined();
+        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toEqual([]);
     });
 
     it('exposes response body to the script', async () => {
@@ -56,7 +55,7 @@ describe('executeAfterScript', () => {
             if (data.token !== 'abc123') throw new Error('wrong token');
         `);
 
-        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toBeUndefined();
+        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toEqual([]);
     });
 
     it('exposes response headers to the script', async () => {
@@ -64,7 +63,7 @@ describe('executeAfterScript', () => {
             if (response.headers['content-type'] !== 'application/json') throw new Error('wrong content-type');
         `);
 
-        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toBeUndefined();
+        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toEqual([]);
     });
 
     it('exposes the final request to the script', async () => {
@@ -73,7 +72,7 @@ describe('executeAfterScript', () => {
             if (request.url !== 'https://example.com/api') throw new Error('wrong url');
         `);
 
-        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toBeUndefined();
+        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toEqual([]);
     });
 
     it('exposes env variables to the script', async () => {
@@ -83,7 +82,7 @@ describe('executeAfterScript', () => {
 
         await expect(
             executeAfterScript(requestPath, baseRequest, baseResponse, [{ key: 'EXPECTED_STATUS', value: '200' }])
-        ).resolves.toBeUndefined();
+        ).resolves.toEqual([]);
     });
 
     it('exposes durationInMillies on the response', async () => {
@@ -91,7 +90,7 @@ describe('executeAfterScript', () => {
             if (typeof response.durationInMillies !== 'number') throw new Error('no duration');
         `);
 
-        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toBeUndefined();
+        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toEqual([]);
     });
 
     it('throws when the script throws', async () => {
@@ -106,6 +105,17 @@ describe('executeAfterScript', () => {
             if (response.body !== null) throw new Error('expected null body');
         `);
 
-        await expect(executeAfterScript(requestPath, baseRequest, binaryResponse, [])).resolves.toBeUndefined();
+        await expect(executeAfterScript(requestPath, baseRequest, binaryResponse, [])).resolves.toEqual([]);
+    });
+
+    it('collects env mutations from setEnvironmentVariable', async () => {
+        fs.writeFileSync(`${root}/login.after.js`, `
+            const data = JSON.parse(response.body);
+            setEnvironmentVariable('token', data.token);
+        `);
+
+        const mutations = await executeAfterScript(requestPath, baseRequest, baseResponse, []);
+
+        expect(mutations).toEqual([{ key: 'token', value: 'abc123' }]);
     });
 });
