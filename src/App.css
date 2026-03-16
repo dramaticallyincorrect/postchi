@@ -234,9 +234,14 @@ html body {
 
 
 
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
+} */
+
+* {
+  scrollbar-width: 6px;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground), black 25%) transparent;
 }
 
 ::-webkit-scrollbar-track {

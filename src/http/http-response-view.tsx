@@ -57,7 +57,7 @@ const BodyView = ({ body, contentTypeInfo }: { body: string | ArrayBuffer, conte
     } else {
         switch (contentTypeInfo.type) {
             case 'json':
-                return <JsonView body={body as string} />
+                return <JsonView body={(body as string).trim()} />
             default:
                 return <div>Text content of type {contentTypeInfo.mimeType}</div>;
         }
