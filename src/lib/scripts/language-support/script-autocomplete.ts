@@ -25,7 +25,6 @@ const STRING_METHODS: Completion[] = [
 const SHARED_GLOBALS: Completion[] = [
     { label: 'env', type: 'variable', detail: 'Record<string, string>', info: 'Resolved environment variables' },
     { label: 'fetch', type: 'function', detail: 'fetch(input, init?)', info: 'Make a sub-request' },
-    { label: 'setEnvironmentVariable', type: 'function', detail: '(key: string, value: string): void', info: 'Set a variable in the active environment and persist it to the .cenv file' },
     { label: 'console', type: 'variable', detail: 'Console', info: 'Browser console for debugging' },
 ];
 
@@ -71,7 +70,6 @@ const RESPONSE_PROPS: Completion[] = [
     { label: 'status', type: 'property', detail: 'number', info: 'HTTP status code, e.g. 200' },
     { label: 'headers', type: 'property', detail: 'Record<string, string>', info: 'Response headers — access with response.headers["content-type"]' },
     { label: 'body', type: 'property', detail: 'string | null', info: 'Response body as text, or null for binary responses' },
-    { label: 'durationInMillies', type: 'property', detail: 'number', info: 'Round-trip time in milliseconds' },
 ];
 
 // Patterns are matched most-specific first to avoid short patterns shadowing
@@ -97,9 +95,10 @@ export function afterScriptCompletion(context: CompletionContext): CompletionRes
         propCompletion(context, /request\.method\.\w*/, 'request.method.', STRING_METHODS) ??
         propCompletion(context, /request\.\w*/, 'request.', AFTER_REQUEST_PROPS) ??
         topLevelCompletion(context, [
-            { label: 'response', type: 'variable', detail: 'ScriptResponse', info: 'The HTTP response — status, headers, body, durationInMillies' },
+            { label: 'response', type: 'variable', detail: 'ScriptResponse', info: 'The HTTP response — status, headers, body' },
             { label: 'request', type: 'variable', detail: 'ScriptRequest', info: 'The request that was sent (read-only at this point)' },
             ...SHARED_GLOBALS,
+            { label: 'setEnvironmentVariable', type: 'function', detail: '(key: string, value: string): void', info: 'Set a variable in the active environment and persist it to the .cenv file' },
         ])
     );
 }

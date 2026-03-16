@@ -2,7 +2,7 @@ import CodeMirror, { EditorView, keymap, Prec } from '@uiw/react-codemirror';
 import HttpResponseView from "@/http/http-response-view";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useEffect, useMemo, useRef, useState } from "react";
-import executeHttpTemplate, { ExecutionError, HttpExecution } from "@/lib/data/http/http-runner";
+import executeHttpTemplate, { HttpExecution } from "@/lib/data/http/http-runner";
 import { SendRequestInstructions } from "@/components/send-request-shortcut";
 import { forceLinting, lintGutter } from "@codemirror/lint";
 import { customHttp } from "@/lib/http/http-language";
@@ -130,7 +130,7 @@ const ResponsePanel = ({ response, onCancel }: { response: HttpExecutionStatus |
         return <SendRequestInstructions />
     }
 
-    if ('status' in response) {
+    if ('response' in response) {
         return <HttpResponseView execution={response} />
     }
 

@@ -3,6 +3,7 @@ import { computeHttpAst, Expression, FormBodyNode, HttpNode, JsonBodyNode, TextB
 import DefaultFileStorage from "../files/file-default";
 import { computeHttpDiagnostics } from "@/lib/http/linter/http-linter";
 import Task from "true-myth/task";
+import { HttpRequest } from "./client/http-client";
 
 
 export type ResolveError = {
@@ -124,13 +125,4 @@ export default async function resolveHttpTemplate(template: string, context: Exe
 type ExecutionContext = {
     variables: Map<string, string>
     baseUrl: () => Task<string, ResolveError>
-}
-
-
-
-export type HttpRequest = {
-    method: string,
-    url: string,
-    headers: [string, string][],
-    body: string | URLSearchParams | FormData
 }

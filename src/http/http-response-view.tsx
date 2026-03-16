@@ -4,11 +4,11 @@ import { json } from '@codemirror/lang-json';
 import { HttpExecution } from '@/lib/data/http/http-runner';
 import { ContentTypeInfo } from '@/lib/data/http/body-classifier/http-body-classifier';
 import { Button } from '@/components/ui/button';
-import { HttpRequest } from '@/lib/data/http/http-template-resolver';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/theme-context/theme-context';
 import { customHttpLanguage } from '@/lib/http/http-language';
 import usePersistentState from '@/lib/hooks/persistent-state';
+import { HttpRequest } from '@/lib/data/http/client/http-client';
 
 export type HttpResponse = {
     status: number,
@@ -21,11 +21,12 @@ const HttpResponseView = ({ execution }: { execution: HttpExecution }) => {
     const [showRequest, setShowRequest] = usePersistentState('showRequest', false);
     const [showHeaders, setShowHeaders] = usePersistentState('showHeaders', false);
 
+    const response = execution.response;
     return (
         <div className='flex flex-col overflow-y-auto min-h-0 h-full'>
             <div className='flex flex-row my-2 mx-6 font-mono'>
-                <span className={statusColor(execution.status) + ' mr-2'}>{execution.status}</span>
-                <span className={statusColor(execution.status)}>{status(execution.status)}</span>
+                <span className={statusColor(response.status) + ' mr-2'}>{response.status}</span>
+                <span className={statusColor(response.status)}>{status(response.status)}</span>
                 <Bullet className='mx-3' />
                 <span className='text-muted-foreground'>{execution.durationInMillies.toFixed(2)} ms</span>
                 <div className='flex flex-row ml-auto'>
@@ -40,9 +41,9 @@ const HttpResponseView = ({ execution }: { execution: HttpExecution }) => {
                     </Button>
                 </div>
             </div>
-            {showRequest && <RequestView request={execution.request} />}
-            {showHeaders && <ResponseHeaders headers={execution.headers} />}
-            <BodyView body={execution.body} contentTypeInfo={execution.contentTypeInfo} />
+            {showRequest && <RequestView request={execution.response.request} />}
+            {showHeaders && <ResponseHeaders headers={execution.response.headers} />}
+            <BodyView body={execution.response.body} contentTypeInfo={execution.response.contentTypeInfo} />
         </div>
     );
 }
@@ -60,16 +61,16 @@ const BodyView = ({ body, contentTypeInfo }: { body: string | ArrayBuffer, conte
     }
 }
 
-const ResponseHeaders = ({ headers }: { headers: { key: string, value: string }[] }) => {
+const ResponseHeaders = ({ headers }: { headers: Headers }) => {
     const { theme } = useTheme();
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4 mb-4'>
                 <VerticalLine color='var(--primary)' />
                 <div className='flex flex-col'>
-                    {headers.map((header, index) => (
+                    {Array.from(headers.entries()).map(([key, value], index) => (
                         <div key={index}>
-                            <span style={{ color: theme.codemirror.tokens.attributeName, fontWeight: 'bold' }} >{header.key}: </span><span style={{ color: theme.codemirror.tokens.attributeValue }}>{header.value}</span>
+                            <span style={{ color: theme.codemirror.tokens.attributeName, fontWeight: 'bold' }} >{key}: </span><span style={{ color: theme.codemirror.tokens.attributeValue }}>{value}</span>
                         </div>
                     ))}
                 </div>

@@ -1,14 +1,16 @@
 import { FileStorage } from "../files/file";
 import DefaultFileStorage from "../files/file-default";
 import { FileType } from "../supported-filetypes";
-import { HttpRequest } from "./http-template-resolver";
 import { readClosestFile } from "../files/file-utils/file-utils";
+import { HttpRequest } from "./client/http-client";
 
 export function afterScriptPath(requestPath: string): string {
     const lastDot = requestPath.lastIndexOf('.');
     const base = lastDot !== -1 ? requestPath.substring(0, lastDot) : requestPath;
     return `${base}${FileType.AFTER_SCRIPT}`;
 }
+
+export type EnvMutation = { key: string; value: string };
 
 type ScriptRequest = {
     method: string;
@@ -21,10 +23,7 @@ export type ScriptResponse = {
     status: number;
     headers: Record<string, string>;
     body: string | null;
-    durationInMillies: number;
 }
-
-import { EnvMutation } from "./before-script-executor";
 
 async function runAfterScriptContent(
     scriptContent: string,

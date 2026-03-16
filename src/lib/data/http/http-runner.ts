@@ -1,11 +1,12 @@
 import Task from 'true-myth/task';
-import { classifyResponseBody, ContentTypeInfo } from "./body-classifier/http-body-classifier";
-import resolveHttpTemplate, { HttpRequest } from "./http-template-resolver";
+import resolveHttpTemplate from "./http-template-resolver";
 import { FolderSettings, readSettingsForRequest } from "../project/project";
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 import { executeBeforeScript } from "./before-script-executor";
 import { executeAfterScript } from "./after-script-executor";
 import { updateEnvironmentVariable } from "../project/update-environment-variable";
+import { HttpRequest, HttpResponse } from './client/http-client';
+import { createHttpClient } from './client/http-client-factory';
 // import { fetch } from '@tauri-apps/plugin-http'
 
 export class ExecutionError {
@@ -18,9 +19,12 @@ export class ExecutionError {
     }
 }
 
-export default function executeHttpTemplate(template: string, templatePath: string, variables: { key: string, value: string }[], abort: AbortController, envPath: string = '', activeEnvironmentName: string = ''):
-    Task<HttpExecution, ExecutionError> {
-
+export default function executeHttpTemplate(template: string,
+    templatePath: string,
+    variables: { key: string, value: string }[],
+    abort: AbortController, envPath: string = '',
+    activeEnvironmentName: string = '',
+    http = createHttpClient()): Task<HttpExecution, ExecutionError> {
     return new Task(async (resolve, reject) => {
         const vars = new Map(variables.map(obj => [obj.key, obj.value]))
 
@@ -35,44 +39,26 @@ export default function executeHttpTemplate(template: string, templatePath: stri
 
         let finalRequest: HttpRequest;
         try {
-            const { request: modifiedRequest, envMutations: beforeMutations } = await executeBeforeScript(templatePath, request, variables);
-            finalRequest = modifiedRequest;
-            for (const { key, value } of beforeMutations) {
-                await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
-            }
+            finalRequest = await executeBeforeScript(templatePath, request, variables);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             return reject(new ExecutionError('script', `Before script error: ${message}`));
         }
 
         const start = performance.now()
-        try {
-            const response = await fetch(finalRequest.url, {
-                method: finalRequest.method,
-                headers: finalRequest.headers,
-                body: finalRequest.body || undefined,
-                signal: abort.signal
-            });
+        const httpResult = await http.fetch(finalRequest, abort.signal);
+        const end = performance.now();
+        const durationInMillies = end - start;
 
-
-            const end = performance.now();
-            const durationInMillies = end - start;
-
-            const contentTypeInfo = await classifyResponseBody(response);
-
-            const body = contentTypeInfo.kind === 'binary' ? await response.arrayBuffer() : await response.text();
-
-            const responseHeaders = Array.from(response.headers.entries()).map(([key, value]) => ({ key, value }));
-
-            const scriptResponse = {
-                status: response.status,
-                headers: Object.fromEntries(response.headers.entries()),
-                body: typeof body === 'string' ? body : null,
-                durationInMillies,
-            };
-
+        if (httpResult.isOk) {
             let afterScriptError: string | undefined;
+            const response = httpResult.value;
             try {
+                const scriptResponse = {
+                    status: response.status,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: typeof response.body === 'string' ? response.body : null,
+                };
                 const afterMutations = await executeAfterScript(templatePath, finalRequest, scriptResponse, variables);
                 for (const { key, value } of afterMutations) {
                     await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
@@ -82,20 +68,13 @@ export default function executeHttpTemplate(template: string, templatePath: stri
                 afterScriptError = `After script error: ${message}`;
             }
 
-            return resolve({
-                status: response.status,
+            resolve({
+                response: response,
                 durationInMillies,
-                body: body,
-                contentTypeInfo,
-                headers: responseHeaders,
-                request: finalRequest,
                 afterScriptError,
             })
-        } catch (error) {
-            if (error instanceof Error && error.name === 'AbortError') {
-                return reject(new ExecutionError('abort', 'Request was aborted'));
-            }
-            return reject(new ExecutionError('network', 'could not make the request, check your network connection'));
+        } else {
+            reject(new ExecutionError(httpResult.error.type, httpResult.error.message));
         }
     })
 
@@ -137,11 +116,7 @@ function removeTrailingSlash(url: string): string {
 
 
 export type HttpExecution = {
-    status: number;
+    response: HttpResponse;
     durationInMillies: number;
-    body: string | ArrayBuffer;
-    contentTypeInfo: ContentTypeInfo;
-    headers: { key: string, value: string }[];
-    request: HttpRequest;
     afterScriptError?: string;
 }

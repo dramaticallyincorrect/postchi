@@ -1,7 +1,7 @@
 import { fs } from 'memfs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { afterScriptPath, executeAfterScript, ScriptResponse } from './after-script-executor';
-import { HttpRequest } from './http-template-resolver';
+import { HttpRequest } from './client/http-client';
 
 const root = '/home/user/collections';
 
@@ -16,7 +16,6 @@ const baseResponse: ScriptResponse = {
     status: 200,
     headers: { 'content-type': 'application/json' },
     body: '{"token":"abc123"}',
-    durationInMillies: 42,
 };
 
 describe('afterScriptPath', () => {
@@ -83,14 +82,6 @@ describe('executeAfterScript', () => {
         await expect(
             executeAfterScript(requestPath, baseRequest, baseResponse, [{ key: 'EXPECTED_STATUS', value: '200' }])
         ).resolves.toEqual([]);
-    });
-
-    it('exposes durationInMillies on the response', async () => {
-        fs.writeFileSync(`${root}/login.after.js`, `
-            if (typeof response.durationInMillies !== 'number') throw new Error('no duration');
-        `);
-
-        await expect(executeAfterScript(requestPath, baseRequest, baseResponse, [])).resolves.toEqual([]);
     });
 
     it('throws when the script throws', async () => {

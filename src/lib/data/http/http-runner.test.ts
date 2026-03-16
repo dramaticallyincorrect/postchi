@@ -5,6 +5,9 @@ import executeHttpTemplate, { readBasePath } from "./http-runner";
 import { err } from "true-myth/result";
 import { beforeScriptPath } from "./before-script-executor";
 import { afterScriptPath } from "./after-script-executor";
+import { serializeEnvironments } from "../project/serialize-environments";
+import { HttpClient, HttpError, HttpRequest, HttpResponse } from "./client/http-client";
+import Task from "true-myth/task";
 
 
 describe('execute http template', () => {
@@ -13,22 +16,48 @@ describe('execute http template', () => {
     const templatePath = pathOf(root, 'template.http');
     const before = beforeScriptPath(templatePath);
     const after = afterScriptPath(templatePath);
+    const envPath = pathOf(root, 'environments.cenv');
+
+    const client = new TestHttpClient();
 
     beforeEach(() => {
         fs.rmSync(root, { recursive: true, force: true });
         fs.mkdirSync(root, { recursive: true });
     });
 
-    it('only template', async () => {
-        const result = await executeHttpTemplate(template, templatePath, [], new AbortController())
+    const executeTemplate = (request = template, abortController = new AbortController()) => {
+        return executeHttpTemplate(request, templatePath, [], abortController, envPath, 'production', client)
+    }
+
+    it('executes template', async () => {
+        const result = await executeTemplate();
         expect(result.isOk).toBe(true);
-        expect(result.unwrapOr(null)!.status).toBe(200);
+        expect(result.unwrapOr(null)!.response.status).toBe(200);
+    })
+
+    describe('scripts', () => {
+        it('sets environment variables', async () => {
+            fs.writeFileSync(after, 'setEnvironmentVariable("testKey", "testValue")');
+            fs.writeFileSync(envPath, serializeEnvironments([{
+                name: 'production', variables: [
+                    { key: 'api', value: 'http://' }
+                ]
+            }]));
+            await executeTemplate();
+            const envContent = fs.readFileSync(envPath, 'utf-8');
+            expect(envContent).toBe(serializeEnvironments([{
+                name: 'production', variables: [
+                    { key: 'api', value: 'http://' },
+                    { key: 'testKey', value: 'testValue' }
+                ]
+            }]));
+        })
     })
 
     it('cancelles request when aborted', async () => {
         const abort = new AbortController()
         abort.abort();
-        const result = await executeHttpTemplate(template, templatePath, [], abort)
+        const result = await executeTemplate(template, abort);
         expect(result.isErr).toBe(true);
         result.isErr && expect(result.error.type).toBe('abort');
     })
@@ -36,21 +65,21 @@ describe('execute http template', () => {
     describe('errors', () => {
         it('template error when resolveHttp fails', async () => {
             fs.writeFileSync(before, 'throw new Error("failed")');
-            const result = await executeHttpTemplate(template + '<api>', templatePath, [], new AbortController())
+            const result = await executeTemplate(template + '<api>');
             expect(result.isErr).toBe(true);
             result.isErr && expect(result.error.type).toBe('template');
         })
 
         it('script error when before script fails', async () => {
             fs.writeFileSync(before, 'throw new Error("failed")');
-            const result = await executeHttpTemplate(template, templatePath, [], new AbortController())
+            const result = await executeTemplate();
             expect(result.isErr).toBe(true);
             result.isErr && expect(result.error.type).toBe('script');
         })
 
         it('has script error when after script fails', async () => {
             fs.writeFileSync(after, 'throw new Error("failed")');
-            const result = await executeHttpTemplate(template, templatePath, [], new AbortController())
+            const result = await executeTemplate();
             expect(result.isOk).toBe(true);
             expect(result.unwrapOr(null)!.afterScriptError).toBeDefined();
         })
@@ -118,3 +147,25 @@ describe('base path provider', () => {
         expect(basePath).toStrictEqual(err({ message: 'variable set as base path is not defined in the active environment' }));
     })
 })
+
+class TestHttpClient implements HttpClient {
+    fetch(request: HttpRequest, abortSignal: AbortSignal): Task<HttpResponse, HttpError> {
+        return new Task((resolve, reject) => {
+            if (abortSignal.aborted) {
+                reject({
+                    type: 'abort',
+                    message: 'Request was aborted'
+                });
+                return;
+            }
+            resolve({
+                request,
+                raw: new Response(),
+                status: 200,
+                headers: new Headers(),
+                body: '',
+                contentTypeInfo: { kind: 'text', mimeType: 'text/plain', type: 'text', parseable: true }
+            })
+        });
+    }
+}

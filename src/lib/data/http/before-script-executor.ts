@@ -1,8 +1,8 @@
 import { FileStorage } from "../files/file";
 import DefaultFileStorage from "../files/file-default";
 import { FileType } from "../supported-filetypes";
-import { HttpRequest } from "./http-template-resolver";
 import { readClosestFile } from "../files/file-utils/file-utils";
+import { HttpRequest } from "./client/http-client";
 
 export function beforeScriptPath(requestPath: string): string {
     const lastDot = requestPath.lastIndexOf('.');
@@ -17,13 +17,11 @@ type ScriptRequest = {
     body: string | null;
 }
 
-export type EnvMutation = { key: string; value: string };
-
 async function runBeforeScriptContent(
     scriptContent: string,
     request: HttpRequest,
     variables: { key: string; value: string }[],
-): Promise<{ request: HttpRequest; envMutations: EnvMutation[] }> {
+): Promise<HttpRequest> {
     const headersRecord: Record<string, string> = {};
     for (const [key, value] of request.headers) {
         headersRecord[key] = value;
@@ -41,21 +39,15 @@ async function runBeforeScriptContent(
         env[key] = value;
     }
 
-    const envMutations: EnvMutation[] = [];
-    const setEnvironmentVariable = (key: string, value: string) => envMutations.push({ key, value });
-
-    const fn = new Function('request', 'env', 'fetch', 'setEnvironmentVariable', `return (async () => { ${scriptContent} })()`);
-    await fn(scriptRequest, env, globalThis.fetch, setEnvironmentVariable);
+    const fn = new Function('request', 'env', 'fetch', `return (async () => { ${scriptContent} })()`);
+    await fn(scriptRequest, env, globalThis.fetch);
 
     return {
-        request: {
-            ...request,
-            method: scriptRequest.method,
-            url: scriptRequest.url,
-            headers: Object.entries(scriptRequest.headers),
-            body: scriptRequest.body !== null ? scriptRequest.body : request.body,
-        },
-        envMutations,
+        ...request,
+        method: scriptRequest.method,
+        url: scriptRequest.url,
+        headers: Object.entries(scriptRequest.headers),
+        body: scriptRequest.body !== null ? scriptRequest.body : request.body,
     };
 }
 
@@ -71,26 +63,24 @@ export async function executeBeforeScript(
     request: HttpRequest,
     variables: { key: string; value: string }[],
     storage: FileStorage = DefaultFileStorage.getInstance()
-): Promise<{ request: HttpRequest; envMutations: EnvMutation[] }> {
-    const allMutations: EnvMutation[] = [];
+): Promise<HttpRequest> {
     let currentRequest = request;
 
     const folderScript = await readClosestFile(FileType.FOLDER_BEFORE_SCRIPT, requestPath, undefined, storage);
     if (folderScript.isOk) {
         const result = await runBeforeScriptContent(folderScript.value, currentRequest, variables);
-        currentRequest = result.request;
-        allMutations.push(...result.envMutations);
+        currentRequest = result;
     }
 
     let requestScriptContent: string;
     try {
         requestScriptContent = await storage.readText(beforeScriptPath(requestPath));
     } catch {
-        return { request: currentRequest, envMutations: allMutations };
+        return currentRequest;
     }
 
     const result = await runBeforeScriptContent(requestScriptContent, currentRequest, variables);
-    allMutations.push(...result.envMutations);
 
-    return { request: result.request, envMutations: allMutations };
+
+    return result;
 }

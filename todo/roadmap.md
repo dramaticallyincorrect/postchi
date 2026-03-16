@@ -17,6 +17,7 @@
 3. scripts
    1. ~~before~~
    2. ~~after~~
+   3. single source to derive execution and auto complete options from
 4. quick actions
 5. import
    1. postman
@@ -47,5 +48,4 @@
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
-    5. after script body auto complete based on actual json body
 11. octet stream body
