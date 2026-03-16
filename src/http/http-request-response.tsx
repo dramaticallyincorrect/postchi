@@ -8,6 +8,7 @@ import { forceLinting, lintGutter } from "@codemirror/lint";
 import { customHttp } from "@/lib/http/http-language";
 import { useEnvironment } from '@/active-environment/environment-context';
 import DefaultFileStorage from '@/lib/data/files/file-default';
+import { getResponseHistory } from '@/lib/data/response-history/default-response-history';
 import { loadText } from '@/editors/load-text';
 import { Bullet } from '@/components/bullet';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
     const viewRef = useRef<EditorView>(null)
 
-    const [response, setResponse] = useState<HttpExecutionStatus | null>(null)
+    const [response, setResponse] = useState<HttpExecutionStatus | null | undefined>(undefined)
 
     const { activeEnvironment, envPath } = useEnvironment()
 
@@ -39,6 +40,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
                 const response = await executeHttpTemplate(text, path, activeEnvironment?.variables ?? [], abort.current, envPath, activeEnvironment?.name ?? '');
                 if (response.isOk) {
                     setResponse(response.value);
+                    getResponseHistory().save(path, response.value);
                 } else {
                     const error = response.error;
                     if (error.type === 'abort') {
@@ -87,8 +89,11 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     useEffect(() => {
         if (viewRef.current) {
             loadText(viewRef.current, path)
-            setResponse(null)
         }
+        setResponse(undefined)
+        getResponseHistory().getLatest(path).then(stored => {
+            setResponse(stored);
+        });
     }, [path])
 
     const { theme } = useTheme()
@@ -125,8 +130,13 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     )
 }
 
-const ResponsePanel = ({ response, onCancel }: { response: HttpExecutionStatus | null, onCancel: () => void }) => {
-    if (response == null) {
+const ResponsePanel = ({ response, onCancel }: { response: HttpExecutionStatus | null | undefined, onCancel: () => void }) => {
+    // response === undefined means it's loading the latest response from the history which might end up being null
+    if (response === undefined) {
+        return null
+    }
+
+    if (response === null) {
         return <SendRequestInstructions />
     }
 

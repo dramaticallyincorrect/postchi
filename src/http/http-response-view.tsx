@@ -18,10 +18,13 @@ export type HttpResponse = {
 
 const HttpResponseView = ({ execution }: { execution: HttpExecution }) => {
 
-    const [showRequest, setShowRequest] = usePersistentState('showRequest', false);
-    const [showHeaders, setShowHeaders] = usePersistentState('showHeaders', false);
+    const [showRequest, setShowRequest, showRequestLoading] = usePersistentState('showRequest', false);
+    const [showHeaders, setShowHeaders, showHeadersLoading] = usePersistentState('showHeaders', false);
 
     const response = execution.response;
+
+    if (showRequestLoading || showHeadersLoading) return null;
+
     return (
         <div className='flex flex-col overflow-y-auto min-h-0 h-full'>
             <div className='flex flex-row my-2 mx-6 font-mono'>

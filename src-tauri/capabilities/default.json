@@ -36,6 +36,19 @@
       ]
     },
     "os:default",
-    "store:default"
+    "store:default",
+    "sql:default",
+    {
+      "identifier": "sql:allow-execute",
+      "allow": ["sqlite:response-history.db"]
+    },
+    {
+      "identifier": "sql:allow-select",
+      "allow": ["sqlite:response-history.db"]
+    },
+    {
+      "identifier": "sql:allow-load",
+      "allow": ["sqlite:response-history.db"]
+    }
   ]
 }

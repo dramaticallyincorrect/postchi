@@ -21,6 +21,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_http::init())
         .plugin(
