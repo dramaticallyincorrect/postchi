@@ -80,8 +80,9 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="sm:max-w-4xl px-32 py-24" aria-describedby={undefined}>
-                <DialogHeader>
-                    <DialogTitle>Postchi Plans</DialogTitle>
+                <DialogHeader className="text-center items-center pb-2">
+                    <DialogTitle className="text-3xl font-bold tracking-tight">Unlock Your Full Potential</DialogTitle>
+                    <p className="text-muted-foreground">Get more out of Postchi with a Pro license.</p>
                 </DialogHeader>
 
                 <div className="grid grid-cols-2 gap-3 mt-1">
