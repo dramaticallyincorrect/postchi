@@ -4,6 +4,10 @@ import { FileChangeEvent, FileStorage, FileWatchEventType, StorageEntry, UnWatch
 
 export class TauriFileStorage implements FileStorage {
 
+    exists(path: string): Promise<boolean> {
+        return fs.exists(path)
+    }
+
     async readText(path: string): Promise<string> {
         return fs.readTextFile(path)
     }

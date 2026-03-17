@@ -1,29 +1,50 @@
 import { Menu } from '@tauri-apps/api/menu';
-import { isDesktopMac } from '../utils/os';
-import { emitMenuEvent, MENU_EVENTS } from './menu-events';
+import { isDesktopMac, isTauri } from '../utils/os';
+import { emitMenuEvent, MenuActions } from './menu-events';
 
-export async function initMenu(): Promise<void> {
+export async function initMenu(isTemp: boolean = true): Promise<void> {
     if (isDesktopMac()) {
-        await setupMacAppMenu();
+        await setupMacAppMenu(isTemp);
     }
 }
 
-export async function setupMacAppMenu(): Promise<void> {
-    const menu = await buildFileMenu();
+export async function setupMacAppMenu(isTemp: boolean): Promise<void> {
+    const menu = await buildFileMenu(isTemp);
     await menu.setAsAppMenu();
 }
 
-async function buildFileMenu(): Promise<Menu> {
-    return Menu.new(fileMenuItems);
+async function buildFileMenu(isTemp: boolean): Promise<Menu> {
+    return Menu.new(fileMenuItems(isTemp));
 }
 
-export const projectMenuItems = [
+export function projectMenuItems(isTemp: boolean) {
+    return [
+        ...((isTemp && isTauri()) ? [{
+            id: 'save_project',
+            text: 'Save Project',
+            action: async () => emitMenuEvent(MenuActions.SAVE_PROJECT),
+        }] : []),
+        {
+            id: 'import_project',
+            text: 'Import',
+            action: async () => emitMenuEvent(MenuActions.IMPORT_PROJECT),
+        },
+        ...(isTauri() ? desktopOnlyMenuItems : []),
+    ];
+}
+
+const desktopOnlyMenuItems = [
     {
-        id: 'import_project',
-        text: 'Import',
-        action: async () => emitMenuEvent(MENU_EVENTS.IMPORT_PROJECT),
+        id: 'new_project',
+        text: 'New Project',
+        action: async () => emitMenuEvent(MenuActions.NEW_PROJECT),
     },
-    { item: "Separator" },
+    {
+        id: 'open_project',
+        text: 'Open Project',
+        action: async () => emitMenuEvent(MenuActions.OPEN_PROJECT),
+    },
+    { item: "Separator" as const },
     {
         id: "quit",
         text: "Quit",
@@ -32,13 +53,15 @@ export const projectMenuItems = [
             // app.exit(0);
         },
     },
-] as const;
+]
 
-const fileMenuItems = {
-    items: [
-        {
-            text: 'File',
-            items: projectMenuItems,
-        },
-    ],
+function fileMenuItems(isTemp: boolean) {
+    return {
+        items: [
+            {
+                text: 'File',
+                items: projectMenuItems(isTemp),
+            },
+        ],
+    }
 }

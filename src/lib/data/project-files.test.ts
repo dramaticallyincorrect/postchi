@@ -3,7 +3,7 @@ import { fs } from 'memfs';
 import { join } from 'path';
 import { isPathInFileTree, readProjectFileTree } from "./project-files";
 import { createFileTree, parseFileTree } from "../utils/test-utils";
-import { createProject, Project } from "./project/project";
+import { createProject } from "./project/project";
 
 const rootPath = '/test-project'
 

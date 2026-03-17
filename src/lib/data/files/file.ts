@@ -1,4 +1,5 @@
 export interface FileStorage {
+    exists(path: string): Promise<boolean>;
     readText(path: string): Promise<string>;
     readFile(path: string): Promise<Blob>;
     writeText(path: string, text: string): Promise<void>;

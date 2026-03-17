@@ -12,7 +12,7 @@ export const httpFunctions: Map<string, HttpFunction> = new Map([
         isVarArgs: false,
         execute: async (args: string[]) => {
             const path = args[0]
-            const fileStorage = new DefaultFileStorage()
+            const fileStorage = DefaultFileStorage.getInstance()
             return fileStorage.readText(path)
         }
     }],

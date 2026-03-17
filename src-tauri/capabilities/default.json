@@ -37,6 +37,7 @@
     },
     "os:default",
     "store:default",
+    "dialog:allow-open",
     "sql:default",
     {
       "identifier": "sql:allow-execute",

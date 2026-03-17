@@ -1,4 +1,5 @@
-import { FileStorage } from "../files/file"
+import { isTauri } from "@tauri-apps/api/core"
+import { FileStorage, StorageEntry } from "../files/file"
 import DefaultFileStorage from "../files/file-default"
 import { readClosestFile } from "../files/file-utils/file-utils"
 import { pathOf } from "../files/join"
@@ -12,11 +13,12 @@ export type Project = {
     collectionsPath: string
 }
 
-export async function createProject(path: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
+export async function createProject(path: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
+    const name = path.split('/').filter(Boolean).pop() ?? path
     await fileStorage.mkdir(path)
     await fileStorage.mkdir(pathOf(path, collectionsDirName))
-    await fileStorage.create(pathOf(path, environmentsName + envExtension))
-    await fileStorage.create(pathOf(path, secretsName + envExtension))
+    await createIfNotExists(pathOf(path, environmentsName + envExtension), fileStorage)
+    await createIfNotExists(pathOf(path, secretsName + envExtension), fileStorage)
     return {
         name,
         path,
@@ -24,6 +26,12 @@ export async function createProject(path: string, name: string, fileStorage: Fil
         secretsPath: pathOf(path, secretsName + envExtension),
         collectionsPath: pathOf(path, collectionsDirName)
     };
+}
+
+async function createIfNotExists(path: string, fileStorage: FileStorage, content?: string): Promise<void> {
+    if (!await fileStorage.exists(path)) {
+        await fileStorage.create(path, content)
+    }
 }
 
 export async function createProjectFolder(path: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<void> {
@@ -63,3 +71,51 @@ const collectionsDirName = "collections"
 const environmentsName = "environments"
 const secretsName = "secrets"
 const envExtension = '.cenv'
+
+export async function getDefaultProjectPath(): Promise<string> {
+    if (isTauri()) {
+        const { appDataDir } = await import('@tauri-apps/api/path')
+        return `${await appDataDir()}/postchi-project`
+    }
+    return '/tmp/postchi-project'
+}
+
+export async function copyProject(
+    source: Project,
+    destPath: string,
+    fileStorage: FileStorage = DefaultFileStorage.getInstance()
+): Promise<Project> {
+    await fileStorage.mkdir(destPath)
+    await copyDirectory(source.path, destPath, fileStorage)
+    return createProject(destPath)
+}
+
+async function copyDirectory(srcDir: string, destDir: string, fileStorage: FileStorage): Promise<void> {
+    const entries: StorageEntry[] = await fileStorage.readDirectory(srcDir)
+    for (const entry of entries) {
+        const destEntryPath = pathOf(destDir, entry.filename)
+        if (entry.isDirectory) {
+            await fileStorage.mkdir(destEntryPath)
+            await copyDirectory(entry.path, destEntryPath, fileStorage)
+        } else {
+            const content = await fileStorage.readText(entry.path)
+            await fileStorage.create(destEntryPath, content)
+        }
+    }
+}
+
+export async function createTestProject(path: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
+    const project = await createProject(path, fileStorage)
+    await createIfNotExists(pathOf(project.collectionsPath, 'settings.json'), fileStorage, `{"baseUrl": "https://httpbin.org"}`)
+    await fileStorage.mkdir(pathOf(project.collectionsPath, 'top', 'nested', 'deep', 'down'))
+    await createIfNotExists(pathOf(project.collectionsPath, 'users.get'), fileStorage, `POST https://httpbin.org/post
+User-Agent: <user-agent>
+Accept: application/json
+Authorization: bearer(<token>)
+@body
+{
+  "username": "<username>"
+}`)
+    await createIfNotExists(pathOf(project.collectionsPath, 'auth.get'), fileStorage, 'GET https://httpbin.org/get')
+    return project
+}

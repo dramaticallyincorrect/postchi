@@ -2,7 +2,7 @@ import DefaultFileStorage from "@/lib/data/files/file-default"
 import { EditorView } from "@uiw/react-codemirror"
 
 export const loadText = async (view: EditorView, path: string) => {
-    const content = await new DefaultFileStorage().readText(path)
+    const content = await DefaultFileStorage.getInstance().readText(path)
     view.dispatch({
         changes: {
             from: 0,

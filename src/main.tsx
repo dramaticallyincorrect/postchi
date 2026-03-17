@@ -1,68 +1,104 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./App.css";
-import { createProject, Project } from "./lib/data/project/project";
+import { copyProject, createProject, getDefaultProjectPath, Project } from "./lib/data/project/project";
 import { isTauri } from "@tauri-apps/api/core";
-import { useImportDialog } from "./lib/hooks/use-import-dialog";
+import { MenuActions, onMenuEvent } from "./lib/menu/menu-events";
 import { initMenu } from "./lib/menu/project-menu";
 import { ImportDialog } from "./components/import-dialog";
+import { NewProjectDialog } from "./components/new-project-dialog";
 import { importPostmanCollection } from "./lib/data/import/import-folder";
-import { FileStorage } from "./lib/data/files/file";
-import DefaultFileStorage from "./lib/data/files/file-default";
 import { pathOf } from "./lib/data/files/join";
+import { loadStore } from "./lib/data/store/store";
 
+const LAST_PROJECT_KEY = 'lastProjectPath'
+const SETTINGS_STORE = 'settings.json'
 
-async function getDefaultProjectPath(): Promise<string> {
-  if (isTauri()) {
-    const { appDataDir } = await import('@tauri-apps/api/path')
-    return `${await appDataDir()}/postchi-project`
-  }
-  return '/tmp/postchi-project'
-}
+const tempPath = await getDefaultProjectPath()
 
+const store = await loadStore(SETTINGS_STORE)
+const lastPath = await store.get<string>(LAST_PROJECT_KEY) ?? tempPath
 
-const project = await createTestProject(await getDefaultProjectPath(), 'Content Service')
+const initialProject = await createProject(lastPath)
 
-await initMenu();
+await initMenu(lastPath === tempPath)
 
-function AppShell({ children }: { children: React.ReactNode }) {
-  const { open, setOpen } = useImportDialog();
+function AppShell() {
+    const [project, setProject] = useState<Project>(initialProject)
+    const [importOpen, setImportOpen] = useState(false)
+    const [newProjectOpen, setNewProjectOpen] = useState(false)
 
-  return (
-    <>
-      {children}
-      <ImportDialog open={open} onOpenChange={setOpen} onImport={async (format, file) => {
-        if (format === 'postman') {
-          return importPostmanCollection(file, project.collectionsPath)
-        }
-        return { count: 0, skipped: 0 }
-      }} />
-    </>
-  );
+    const switchProject = async (newProject: Project) => {
+        const store = await loadStore(SETTINGS_STORE)
+        await store.set(LAST_PROJECT_KEY, newProject.path)
+        await store.save()
+        setProject(newProject)
+        await initMenu(newProject.path === tempPath)
+    }
+
+    useEffect(() => {
+        const isTemp = project.path === tempPath
+
+        const unlisten = onMenuEvent(async (action) => {
+            switch (action) {
+                case MenuActions.IMPORT_PROJECT:
+                    setImportOpen(true)
+                    break
+                case MenuActions.NEW_PROJECT:
+                    setNewProjectOpen(true)
+                    break
+                case MenuActions.OPEN_PROJECT: {
+                    if (!isTauri()) break
+                    const { open } = await import("@tauri-apps/plugin-dialog")
+                    const selected = await open({ directory: true, title: "Open Project" })
+                    if (typeof selected !== "string") break
+                    await switchProject(await createProject(selected))
+                    break
+                }
+                case MenuActions.SAVE_PROJECT: {
+                    if (!isTemp || !isTauri()) break
+                    const { open } = await import("@tauri-apps/plugin-dialog")
+                    const selected = await open({ directory: true, title: "Save Project To…" })
+                    if (typeof selected !== "string") break
+                    await switchProject(await copyProject(project, selected))
+                    break
+                }
+            }
+        })
+
+        return unlisten
+    }, [project])
+
+    return (
+        <>
+            <App key={project.path} project={project} isTemp={project.path === tempPath} />
+            <ImportDialog
+                open={importOpen}
+                onOpenChange={setImportOpen}
+                onImport={async (format, file) => {
+                    if (format === 'postman') {
+                        return importPostmanCollection(file, project.collectionsPath)
+                    }
+                    return { count: 0, skipped: 0 }
+                }}
+            />
+            <NewProjectDialog
+                open={newProjectOpen}
+                onOpenChange={setNewProjectOpen}
+                onConfirm={async (name, parentFolder) => {
+                    setNewProjectOpen(false)
+                    const destPath = pathOf(parentFolder, name)
+                    const newProject = await createProject(destPath)
+                    await switchProject(newProject)
+                }}
+            />
+        </>
+    )
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <AppShell>
-      <App project={project} />
-    </AppShell>
-  </React.StrictMode>,
+    <React.StrictMode>
+        <AppShell />
+    </React.StrictMode>,
 );
-
-
-export async function createTestProject(path: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
-  const project = await createProject(path, name)
-  await fileStorage.create(pathOf(project.collectionsPath, 'settings.json'), `{"baseUrl": "https://httpbin.org"}`)
-  await fileStorage.mkdir(pathOf(project.collectionsPath, 'top', 'nested', 'deep', 'down'))
-  await fileStorage.create(pathOf(project.collectionsPath, 'users.get'), `POST https://httpbin.org/post
-User-Agent: <user-agent>
-Accept: application/json
-Authorization: bearer(<token>)
-@body
-{
-  "username": "<username>"
-}`)
-  await fileStorage.create(pathOf(project.collectionsPath, 'auth.get'), 'GET https://httpbin.org/get')
-  return project
-}

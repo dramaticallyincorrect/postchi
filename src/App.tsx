@@ -31,14 +31,14 @@ import { cn } from './lib/utils';
 import { useFileTree } from './lib/hooks/use-file-tree';
 import { useFileWatch } from './lib/hooks/file-watch';
 import { FileWatchEventType } from './lib/data/files/file';
-import { projectMenuItems } from './lib/menu/project-menu';
+import { projectMenuItems } from './lib/menu/project-menu'
 import usePersistentState from './lib/hooks/persistent-state';
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
 
-export default function App({ project }: { project: Project }) {
+export default function App({ project, isTemp }: { project: Project, isTemp: boolean }) {
 
-    const [selectedFile, setSelectedFile] = usePersistentState<FileItem | null>('selectedFile', null)
+    const [selectedFile, setSelectedFile] = usePersistentState<FileItem | null>(`selectedFile:${project.path}`, null)
     const [isFileTreeVisible, setIsFileTreeVisible] = useState(true)
     const [searchOpen, setSearchOpen] = useState(false)
 
@@ -66,7 +66,7 @@ export default function App({ project }: { project: Project }) {
     return <ThemeProvider initialTheme={themes[0]}>
         <EnvironmentProvider path={project.envPath} >
             <div className='flex-col h-screen w-screen flex'>
-                <TitleBar projectName={project.name} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
+                <TitleBar projectName={project.name} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
                 <Split isFileTreeVisible={isFileTreeVisible}>
                     <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
                     {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
@@ -87,7 +87,7 @@ export default function App({ project }: { project: Project }) {
 
 }
 
-const TitleBar = ({ projectName, onToggleFileTree }: { projectName: string; onToggleFileTree: () => void }) => {
+const TitleBar = ({ projectName, isTemp, onToggleFileTree }: { projectName: string; isTemp: boolean; onToggleFileTree: () => void }) => {
     return <div className="titlebar bg-background-panel">
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
@@ -95,7 +95,7 @@ const TitleBar = ({ projectName, onToggleFileTree }: { projectName: string; onTo
                 <Button variant="ghost" size="icon" className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1'} onClick={onToggleFileTree}>
                     <PanelLeftIcon />
                 </Button>
-                <FileMenu projectName={projectName} />
+                <FileMenu projectName={projectName} isTemp={isTemp} />
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <ActiveEnvironment />
             </div>
@@ -107,7 +107,7 @@ const TitleBar = ({ projectName, onToggleFileTree }: { projectName: string; onTo
     </div>
 }
 
-const FileMenu = ({ projectName }: { projectName: string }) => {
+const FileMenu = ({ projectName, isTemp }: { projectName: string; isTemp: boolean }) => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -115,7 +115,7 @@ const FileMenu = ({ projectName }: { projectName: string }) => {
             </DropdownMenuTrigger>
             {
                 !isDesktopMac() && <DropdownMenuContent>
-                    {projectMenuItems.map((item, index) =>
+                    {projectMenuItems(isTemp).map((item, index) =>
                         'item' in item ? (
                             <DropdownMenuSeparator key={`separator-${index}`} />
                         ) : (

@@ -1,14 +1,20 @@
-export const MENU_EVENTS = {
-  IMPORT_PROJECT: 'menu:import-project',
+const MENU_ACTION_EVENT = 'menu:action';
+
+export const MenuActions = {
+    IMPORT_PROJECT: 'import_project',
+    SAVE_PROJECT: 'save_project',
+    NEW_PROJECT: 'new_project',
+    OPEN_PROJECT: 'open_project',
 } as const;
 
-export type MenuEvent = (typeof MENU_EVENTS)[keyof typeof MENU_EVENTS];
+export type MenuAction = (typeof MenuActions)[keyof typeof MenuActions];
 
-export function emitMenuEvent(event: MenuEvent): void {
-  window.dispatchEvent(new CustomEvent(event));
+export function emitMenuEvent(action: MenuAction): void {
+    window.dispatchEvent(new CustomEvent(MENU_ACTION_EVENT, { detail: action }));
 }
 
-export function onMenuEvent(event: MenuEvent, handler: () => void): () => void {
-  window.addEventListener(event, handler);
-  return () => window.removeEventListener(event, handler);
+export function onMenuEvent(handler: (action: MenuAction) => void): () => void {
+    const listener = (e: Event) => handler((e as CustomEvent<MenuAction>).detail);
+    window.addEventListener(MENU_ACTION_EVENT, listener);
+    return () => window.removeEventListener(MENU_ACTION_EVENT, listener);
 }

@@ -28,6 +28,7 @@
     "@lezer/lr": "^1.4.8",
     "@tailwindcss/vite": "^4.1.18",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
     "@tauri-apps/plugin-fs": "~2",
     "@tauri-apps/plugin-http": "~2",
     "@tauri-apps/plugin-log": "~2",

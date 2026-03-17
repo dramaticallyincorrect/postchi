@@ -11,6 +11,10 @@ export default class DefaultFileStorage implements FileStorage {
 
     private constructor() { }
 
+    exists(path: string): Promise<boolean> {
+        return this.storage.exists(path)
+    }
+
     static getInstance(): FileStorage {
         if (!DefaultFileStorage.instance) {
             DefaultFileStorage.instance = new DefaultFileStorage()

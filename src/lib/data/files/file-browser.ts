@@ -12,6 +12,10 @@ type IDirent = {
 
 export class BrowserFileStorage implements FileStorage {
 
+    async exists(path: string): Promise<boolean> {
+        return fs.existsSync(path)
+    }
+
     async readText(path: string): Promise<string> {
         return fs.promises.readFile(path, 'utf-8').then<string>((data) => data.toString());
     }

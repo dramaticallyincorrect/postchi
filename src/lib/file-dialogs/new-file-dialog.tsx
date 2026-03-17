@@ -22,7 +22,7 @@ export function NewFileDialog({ onConfirm, type }: { onConfirm: (name: string) =
 
     const title = type === FileDialogType.NewHttpRequest ? "New Request" : "New Folder"
     const placeholder = type === FileDialogType.NewHttpRequest ? "Request name" : "Folder name"
-    
+
     return (
         <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
             <DialogHeader>

@@ -1,5 +1,4 @@
 import { DocumentNode, iterator, MemberNode, parse, Token } from "@humanwhocodes/momoa";
-import { json } from '@codemirror/lang-json';
 
 export type HttpRequestAst = {
     method: Method;

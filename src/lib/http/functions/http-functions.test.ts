@@ -10,7 +10,7 @@ test('bearer', async () => {
 })
 
 test('readText', async () => {
-    const fileStorage = new DefaultFileStorage()
+    const fileStorage = DefaultFileStorage.getInstance()
     const path = '/test'
     const expected = 'Hello, world!'
     await fileStorage.writeText(path, expected)
