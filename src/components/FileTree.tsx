@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, FileCodeIcon, FolderIcon } from "lucide-react"
+import { ChevronRightIcon, FileCodeIcon, FolderIcon, LockIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
@@ -14,6 +14,7 @@ import { Dialog } from "./ui/dialog"
 import DefaultFileStorage from "@/lib/data/files/file-default"
 import { pathOf } from "@/lib/data/files/join"
 import { useEffect, useMemo, useState } from "react"
+import { useLicense } from "@/lib/license/license-context"
 import { FolderSettingsDialog } from "@/lib/folder-setting/folder-settings-dialog"
 import { createHttpRequest } from "@/lib/data/project/project"
 import { beforeScriptPath } from "@/lib/data/http/before-script-executor"
@@ -62,6 +63,7 @@ const FolderNode = ({
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
     const [settingsDialog, setSettingsDialog] = useState<boolean>(false);
     const [open, setOpen] = useState(() => isAncestor(folder.path, selectedPath));
+    const { isPro, openLicenseDialog } = useLicense();
 
     useEffect(() => {
         if (isAncestor(folder.path, selectedPath)) {
@@ -87,15 +89,18 @@ const FolderNode = ({
     };
 
     const onSettingsClick = () => {
+        if (!isPro) { openLicenseDialog(); return; }
         setSettingsDialog(true);
     }
 
     const addFolderBeforeScript = () => {
+        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = pathOf(folder.path, FileType.FOLDER_BEFORE_SCRIPT);
         fileStorage.create(scriptPath, '// Folder before script - runs before every request in this folder and subfolders\n// Available: request (method, url, headers, body), env, fetch, setEnvironmentVariable\n');
     }
 
     const addFolderAfterScript = () => {
+        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = pathOf(folder.path, FileType.FOLDER_AFTER_SCRIPT);
         fileStorage.create(scriptPath, '// Folder after script - runs after every request in this folder and subfolders\n// Available: response (status, headers, body, durationInMillies), request, env, fetch, setEnvironmentVariable\n');
     }
@@ -137,9 +142,9 @@ const FolderNode = ({
                 <ContextMenuContent>
                     <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}>New Request</ContextMenuItem>
                     <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}>New Folder</ContextMenuItem>
-                    <ContextMenuItem onClick={addFolderBeforeScript}>Before Script</ContextMenuItem>
-                    <ContextMenuItem onClick={addFolderAfterScript}>After Script</ContextMenuItem>
-                    <ContextMenuItem onClick={onSettingsClick}>Settings</ContextMenuItem>
+                    <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                    <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                    <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4">Settings {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                     <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
@@ -162,6 +167,7 @@ const FolderNode = ({
 
 const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onItemClick: any, isSelected: boolean }) => {
     const storage = DefaultFileStorage.getInstance();
+    const { isPro, openLicenseDialog } = useLicense();
     const isHttpRequest = item.name.endsWith(FileType.HTTP);
     const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT) || item.name === FileType.FOLDER_BEFORE_SCRIPT;
     const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT) || item.name === FileType.FOLDER_AFTER_SCRIPT;
@@ -171,11 +177,13 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
     }
 
     const addBeforeScript = () => {
+        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = beforeScriptPath(item.path);
         storage.create(scriptPath, '// Before script\n// Available: request (method, url, headers, body), env, fetch\n');
     }
 
     const addAfterScript = () => {
+        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = afterScriptPath(item.path);
         storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
     }
@@ -201,8 +209,8 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
             <ContextMenuContent>
                 {isHttpRequest && (
                     <>
-                        <ContextMenuItem onClick={addBeforeScript}>Add Before Script</ContextMenuItem>
-                        <ContextMenuItem onClick={addAfterScript}>Add After Script</ContextMenuItem>
+                        <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4">Add Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                        <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4">Add After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                     </>
                 )}
                 <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>

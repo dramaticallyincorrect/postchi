@@ -14,7 +14,9 @@ import { loadStore } from "./lib/data/store/store";
 import { checkForUpdate } from "./lib/updater/updater";
 import { UpdateDialog } from "./components/update-dialog";
 import { Update } from "@tauri-apps/plugin-updater";
-import { LicenseDialog } from "./components/license-dialog";
+import { LicenseDialog } from "./components/license-dialog"
+import { LicenseContext } from "./lib/license/license-context"
+import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/license";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -25,6 +27,7 @@ const store = await loadStore(SETTINGS_STORE)
 const lastPath = await store.get<string>(LAST_PROJECT_KEY) ?? tempPath
 
 const initialProject = await createProject(lastPath)
+const initialLicenseStatus = await getInitialLicenseStatus()
 
 await initMenu(lastPath === tempPath)
 
@@ -34,12 +37,22 @@ function AppShell() {
     const [newProjectOpen, setNewProjectOpen] = useState(false)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
     const [licenseOpen, setLicenseOpen] = useState(false)
+    const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
+
+    const refreshLicense = async () => {
+        const status = await validateLicenseStatus()
+        setIsPro(status === 'pro')
+    }
 
     useEffect(() => {
         if (!isTauri()) return
         checkForUpdate().then(update => {
             if (update) setAvailableUpdate(update)
         }).catch(() => { })
+    }, [])
+
+    useEffect(() => {
+        refreshLicense().catch(() => {})
     }, [])
 
     const switchProject = async (newProject: Project) => {
@@ -51,8 +64,6 @@ function AppShell() {
     }
 
     useEffect(() => {
-        const isTemp = project.path === tempPath
-
         const unlisten = onMenuEvent(async (action) => {
             switch (action) {
                 case MenuActions.IMPORT_PROJECT:
@@ -94,7 +105,7 @@ function AppShell() {
     }, [project])
 
     return (
-        <>
+        <LicenseContext.Provider value={{ isPro, openLicenseDialog: () => setLicenseOpen(true), refreshLicense }}>
             <App key={project.path} project={project} isTemp={project.path === tempPath} />
             <ImportDialog
                 open={importOpen}
@@ -123,9 +134,12 @@ function AppShell() {
             <LicenseDialog
                 open={licenseOpen}
                 onOpenChange={setLicenseOpen}
-                onActivated={() => setLicenseOpen(false)}
+                onActivated={async () => {
+                    await refreshLicense()
+                    setLicenseOpen(false)
+                }}
             />
-        </>
+        </LicenseContext.Provider>
     )
 }
 

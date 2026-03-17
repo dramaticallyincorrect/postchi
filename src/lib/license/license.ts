@@ -38,6 +38,22 @@ export async function validateLicense(key: string): Promise<{ isValid: boolean; 
 }
 
 
+export async function getInitialLicenseStatus(): Promise<LicenseStatus> {
+    const key = await getStoredLicense()
+    return key && isValidLicenseFormat(key) ? 'pro' : 'free'
+}
+
+export async function validateLicenseStatus(): Promise<LicenseStatus> {
+    const key = await getStoredLicense()
+    if (!key || !isValidLicenseFormat(key)) return 'free'
+    try {
+        const result = await validateLicense(key)
+        return result.isValid ? 'pro' : 'free'
+    } catch {
+        return 'pro'
+    }
+}
+
 export async function checkUpdateEntitlement(key: string): Promise<boolean> {
     const url = `${LICENSE_API_BASE}/verifyLicence?key=${encodeURIComponent(key)}&version=latest`
     const res = await fetch(url)
