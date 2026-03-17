@@ -1,15 +1,21 @@
 
 import { FileStorage } from './files/file';
 import DefaultFileStorage from './files/file-default';
+import { afterScriptPath } from './http/after-script-executor';
 import { Project } from './project/project';
+import { beforeScriptPath } from './http/before-script-executor';
 
 export class FileItem {
     name: string;
     path: string;
+    before: string = '';
+    after: string = '';
 
-    constructor(name: string, path: string) {
+    constructor(name: string, path: string, before: string = '', after: string = '') {
         this.name = name;
         this.path = path;
+        this.before = before;
+        this.after = after;
     }
 }
 
@@ -38,15 +44,34 @@ export async function readProjectFileTree(project: Project, storage: FileStorage
 
 async function readItems(path: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
     return storage.readDirectory(path).then(entries => {
-        const filtered = entries.filter(entry => !entry.filename.startsWith('.') && entry.filename !== 'settings.json')
+        const filtered = entries.filter(entry => !entry.filename.startsWith('.') && entry.filename !== 'settings.json' && !entry.filename.endsWith('.after.js') && !entry.filename.endsWith('.before.js'))
         const files = filtered.filter(e => !e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
         const folders = filtered.filter(e => e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
 
         return Promise.all([
-            ...files.map(entry => Promise.resolve(new FileItem(entry.filename, entry.path))),
+            ...files.map(async entry => {
+                const fileItem = new FileItem(nameWithoutExtension(entry.filename), entry.path)
+
+                // Load before script if it exists
+                const lastDot = entry.path.lastIndexOf('.');
+                const base = lastDot !== -1 ? entry.path.substring(0, lastDot) : entry.path;
+                if (await storage.exists(beforeScriptPath(base))) {
+                    fileItem.before = beforeScriptPath(base);
+                }
+                if (await storage.exists(afterScriptPath(base))) {
+                    fileItem.after = afterScriptPath(base);
+                }
+
+                return fileItem
+            }),
             ...folders.map(async entry => new FolderItem(entry.filename, entry.path, await readItems(entry.path, storage)))
         ])
     })
+}
+
+function nameWithoutExtension(filename: string): string {
+    const lastDot = filename.lastIndexOf('.');
+    return lastDot !== -1 ? filename.substring(0, lastDot) : filename;
 }
 
 

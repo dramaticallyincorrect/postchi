@@ -24,7 +24,7 @@ import FileJavascriptIcon from "./icons/file-js"
 
 export const FileTree = ({ items, onItemClick, selectedPath }: {
     items: FileTreeItem[],
-    onItemClick: (item: FileTreeItem) => void,
+    onItemClick: (item: FileItem) => void,
     selectedPath?: string
 }) => {
 
@@ -46,7 +46,7 @@ const FileTreeEntry = ({ item, onItemClick, selectedPath }: any) => {
     if (item instanceof FolderItem) {
         return <FolderNode folder={item} onItemClick={onItemClick} selectedPath={selectedPath} />;
     }
-    return <FileNode item={item} onItemClick={onItemClick} isSelected={selectedPath === item.path} />;
+    return <FileNode item={item} onItemClick={onItemClick} selectedPath={selectedPath} />;
 };
 
 
@@ -118,7 +118,7 @@ const FolderNode = ({
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="group text-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                                className="group text-muted-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                             >
                                 <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                                 <FolderIcon />
@@ -126,7 +126,7 @@ const FolderNode = ({
                             </Button>
                         </CollapsibleTrigger>
                     </ContextMenuTrigger>
-                    <CollapsibleContent className="ml-5">
+                    <CollapsibleContent className="ml-4.5">
                         <div className="flex flex-col gap-1">
                             {folder.items.map((child) => (
                                 <FileTreeEntry
@@ -165,12 +165,13 @@ const FolderNode = ({
     );
 };
 
-const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onItemClick: any, isSelected: boolean }) => {
+const FileNode = ({ item, onItemClick, selectedPath }: { item: FileTreeItem, onItemClick: any, selectedPath: string }) => {
     const storage = DefaultFileStorage.getInstance();
     const { isPro, openLicenseDialog } = useLicense();
-    const isHttpRequest = item.name.endsWith(FileType.HTTP);
     const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT) || item.name === FileType.FOLDER_BEFORE_SCRIPT;
     const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT) || item.name === FileType.FOLDER_AFTER_SCRIPT;
+
+    const hasScripts = item instanceof FileItem && (item.before || item.after);
 
     const deleteItem = () => {
         storage.delete(item.path)
@@ -191,28 +192,76 @@ const FileNode = ({ item, onItemClick, isSelected }: { item: FileTreeItem, onIte
     const icon = isBeforeScript || isAfterScript ? <FileJavascriptIcon /> : <FileCodeIcon />;
 
     return (
+        <div>
+            <ContextMenu>
+                <ContextMenuTrigger>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onItemClick(item)}
+                        className={cn(
+                            "w-full justify-start gap-2 transition-none",
+                            selectedPath === item.path ? "text-foreground bg-muted" : "text-muted-foreground hover:bg-muted"
+                        )}
+                    >
+                        {icon}
+                        <span>{item.name}</span>
+                    </Button>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                    <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                    <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                    <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
+                </ContextMenuContent>
+            </ContextMenu>
+            {hasScripts && (
+                <div className="ml-4 border-l border-border pl-1">
+                    {item.before && (
+                        <ScriptNode
+                            label="before"
+                            isSelected={selectedPath === item.before}
+                            path={item.before}
+                            onItemClick={onItemClick}
+                        />
+                    )}
+                    {item.after && (
+                        <ScriptNode
+                            label="after"
+                            isSelected={selectedPath === item.after}
+                            path={item.after}
+                            onItemClick={onItemClick}
+                        />
+                    )}
+                </div>
+            )}
+        </div>
+    )
+};
+
+const ScriptNode = ({ label, path, isSelected, onItemClick }: { label: string, path: string, isSelected: boolean, onItemClick: any }) => {
+    const storage = DefaultFileStorage.getInstance();
+
+    const deleteItem = () => {
+        storage.delete(path)
+    }
+
+    return (
         <ContextMenu>
             <ContextMenuTrigger>
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onItemClick(item)}
+                    onClick={() => onItemClick(new FileItem(label, path))}
                     className={cn(
-                        "w-full justify-start gap-2 transition-none",
-                        isSelected ? "text-foreground bg-muted" : "text-foreground hover:bg-muted"
+                        "w-full justify-start gap-1 transition-none",
+                        isSelected ? "text-foreground bg-muted" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     )}
                 >
-                    {icon}
-                    <span>{item.name}</span>
+                    <FileJavascriptIcon />
+                    <span>{label}</span>
                 </Button>
             </ContextMenuTrigger>
             <ContextMenuContent>
-                {isHttpRequest && (
-                    <>
-                        <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4">Add Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                        <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4">Add After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                    </>
-                )}
                 <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
             </ContextMenuContent>
         </ContextMenu>
