@@ -6,6 +6,7 @@ export const MenuActions = {
     NEW_PROJECT: 'new_project',
     OPEN_PROJECT: 'open_project',
     CHECK_FOR_UPDATES: 'check_for_updates',
+    ACTIVATE_LICENSE: 'activate_license',
 } as const;
 
 export type MenuAction = (typeof MenuActions)[keyof typeof MenuActions];

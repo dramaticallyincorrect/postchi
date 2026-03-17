@@ -11,7 +11,7 @@
    1. ask server if it can update
    2. check for updates
 7. licence check
-8. licence activation
+8. ~~licence activation~~
 9. lock pro features
 10. file tree
     1. group files with scripts, showing the request as the item and scripts inside it

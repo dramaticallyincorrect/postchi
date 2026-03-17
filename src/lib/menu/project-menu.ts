@@ -29,9 +29,18 @@ export function projectMenuItems(isTemp: boolean) {
             text: 'Import',
             action: async () => emitMenuEvent(MenuActions.IMPORT_PROJECT),
         },
-        ...(isTauri() ? desktopOnlyMenuItems : []),
+        ...(isTauri() ? desktopOnlyMenuItems : sharedMenuItems),
     ];
 }
+
+const sharedMenuItems = [
+    { item: "Separator" as const },
+    {
+        id: 'activate_license',
+        text: 'Activate License…',
+        action: async () => emitMenuEvent(MenuActions.ACTIVATE_LICENSE),
+    },
+]
 
 const desktopOnlyMenuItems = [
     {
@@ -49,6 +58,12 @@ const desktopOnlyMenuItems = [
         id: 'check_for_updates',
         text: 'Check for Updates…',
         action: async () => emitMenuEvent(MenuActions.CHECK_FOR_UPDATES),
+    },
+    { item: "Separator" as const },
+    {
+        id: 'activate_license',
+        text: 'Activate License…',
+        action: async () => emitMenuEvent(MenuActions.ACTIVATE_LICENSE),
     },
     { item: "Separator" as const },
     {

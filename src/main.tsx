@@ -14,6 +14,7 @@ import { loadStore } from "./lib/data/store/store";
 import { checkForUpdate } from "./lib/updater/updater";
 import { UpdateDialog } from "./components/update-dialog";
 import { Update } from "@tauri-apps/plugin-updater";
+import { LicenseDialog } from "./components/license-dialog";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -32,6 +33,7 @@ function AppShell() {
     const [importOpen, setImportOpen] = useState(false)
     const [newProjectOpen, setNewProjectOpen] = useState(false)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
+    const [licenseOpen, setLicenseOpen] = useState(false)
 
     useEffect(() => {
         if (!isTauri()) return
@@ -75,6 +77,9 @@ function AppShell() {
                     }
                     break
                 }
+                case MenuActions.ACTIVATE_LICENSE:
+                    setLicenseOpen(true)
+                    break
                 case MenuActions.SAVE_PROJECT: {
                     const { open } = await import("@tauri-apps/plugin-dialog")
                     const selected = await open({ directory: true, title: "Save Project To…" })
@@ -114,6 +119,11 @@ function AppShell() {
             <UpdateDialog
                 update={availableUpdate}
                 onClose={() => setAvailableUpdate(null)}
+            />
+            <LicenseDialog
+                open={licenseOpen}
+                onOpenChange={setLicenseOpen}
+                onActivated={() => setLicenseOpen(false)}
             />
         </>
     )
