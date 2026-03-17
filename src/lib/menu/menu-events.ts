@@ -5,6 +5,7 @@ export const MenuActions = {
     SAVE_PROJECT: 'save_project',
     NEW_PROJECT: 'new_project',
     OPEN_PROJECT: 'open_project',
+    CHECK_FOR_UPDATES: 'check_for_updates',
 } as const;
 
 export type MenuAction = (typeof MenuActions)[keyof typeof MenuActions];

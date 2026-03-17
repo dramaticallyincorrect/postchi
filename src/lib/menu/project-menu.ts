@@ -46,6 +46,12 @@ const desktopOnlyMenuItems = [
     },
     { item: "Separator" as const },
     {
+        id: 'check_for_updates',
+        text: 'Check for Updates…',
+        action: async () => emitMenuEvent(MenuActions.CHECK_FOR_UPDATES),
+    },
+    { item: "Separator" as const },
+    {
         id: "quit",
         text: "Quit",
         action: async () => {
@@ -55,12 +61,24 @@ const desktopOnlyMenuItems = [
     },
 ]
 
+const helpMenuItems = [
+    {
+        id: 'check_for_updates',
+        text: 'Check for Updates…',
+        action: async () => emitMenuEvent(MenuActions.CHECK_FOR_UPDATES),
+    },
+]
+
 function fileMenuItems(isTemp: boolean) {
     return {
         items: [
             {
                 text: 'File',
                 items: projectMenuItems(isTemp),
+            },
+            {
+                text: 'Help',
+                items: helpMenuItems,
             },
         ],
     }

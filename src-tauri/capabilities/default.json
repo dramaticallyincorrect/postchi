@@ -38,6 +38,8 @@
     "os:default",
     "store:default",
     "dialog:allow-open",
+    "updater:default",
+    "process:allow-restart",
     "sql:default",
     {
       "identifier": "sql:allow-execute",

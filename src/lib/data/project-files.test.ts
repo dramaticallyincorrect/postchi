@@ -19,7 +19,7 @@ secrets.cenv
 
     createFileTree(expected)
     fs.writeFileSync(join(rootPath, '.hiddenfile'), '')
-    const project = await createProject(rootPath, 'Test Project')
+    const project = await createProject(rootPath)
     const items = await readProjectFileTree(project)
 
 
@@ -39,7 +39,7 @@ secrets.cenv
 
     createFileTree(expected)
     fs.writeFileSync(join(rootPath, 'settings.json'), '{}')
-    const project = await createProject(rootPath, 'Test Project')
+    const project = await createProject(rootPath)
     const items = await readProjectFileTree(project)
 
 
@@ -62,7 +62,7 @@ secrets.cenv
 
     createFileTree(expected)
 
-    const project = await createProject(rootPath, 'Test Project')
+    const project = await createProject(rootPath)
     const items = await readProjectFileTree(project)
 
 

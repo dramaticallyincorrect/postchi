@@ -11,6 +11,9 @@ import { NewProjectDialog } from "./components/new-project-dialog";
 import { importPostmanCollection } from "./lib/data/import/import-folder";
 import { pathOf } from "./lib/data/files/join";
 import { loadStore } from "./lib/data/store/store";
+import { checkForUpdate } from "./lib/updater/updater";
+import { UpdateDialog } from "./components/update-dialog";
+import { Update } from "@tauri-apps/plugin-updater";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -28,6 +31,14 @@ function AppShell() {
     const [project, setProject] = useState<Project>(initialProject)
     const [importOpen, setImportOpen] = useState(false)
     const [newProjectOpen, setNewProjectOpen] = useState(false)
+    const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
+
+    useEffect(() => {
+        if (!isTauri()) return
+        checkForUpdate().then(update => {
+            if (update) setAvailableUpdate(update)
+        }).catch(() => { })
+    }, [])
 
     const switchProject = async (newProject: Project) => {
         const store = await loadStore(SETTINGS_STORE)
@@ -56,8 +67,15 @@ function AppShell() {
                     await switchProject(await createProject(selected))
                     break
                 }
+                case MenuActions.CHECK_FOR_UPDATES: {
+                    if (!isTauri()) break
+                    const update = await checkForUpdate().catch(() => null)
+                    if (update) {
+                        setAvailableUpdate(update)
+                    }
+                    break
+                }
                 case MenuActions.SAVE_PROJECT: {
-                    if (!isTemp || !isTauri()) break
                     const { open } = await import("@tauri-apps/plugin-dialog")
                     const selected = await open({ directory: true, title: "Save Project To…" })
                     if (typeof selected !== "string") break
@@ -93,9 +111,14 @@ function AppShell() {
                     await switchProject(newProject)
                 }}
             />
+            <UpdateDialog
+                update={availableUpdate}
+                onClose={() => setAvailableUpdate(null)}
+            />
         </>
     )
 }
+
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>

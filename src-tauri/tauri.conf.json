@@ -23,9 +23,18 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDkzMzAwMEQ3NjVDREJCRDQKUldUVXU4MWwxd0F3a3pvdkJBYTV4Znk0bUZtaXR5aGZ1SzFxNkpETk1PWmdzNGhmNXJxL1pFQXgK",
+      "endpoints": [
+        "http://localhost:8080/latest.json"
+      ]
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
