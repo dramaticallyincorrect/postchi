@@ -135,7 +135,7 @@ function AppShell() {
                 open={licenseOpen}
                 onOpenChange={setLicenseOpen}
                 onActivated={async () => {
-                    await refreshLicense()
+                    setIsPro(true)
                     setLicenseOpen(false)
                 }}
             />
