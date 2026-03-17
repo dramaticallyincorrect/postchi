@@ -50,6 +50,14 @@ async function readItems(path: string, storage: FileStorage = DefaultFileStorage
 }
 
 
+export function collectHttpFiles(items: FileTreeItem[]): FileItem[] {
+    return items.flatMap(item =>
+        item instanceof FolderItem
+            ? collectHttpFiles(item.items)
+            : item.path.endsWith('.get') ? [item] : []
+    )
+}
+
 export function isPathInFileTree(fileTree: FileTreeItem[], path: string): boolean {
     for (const item of fileTree) {
         if (item.path === path) {

@@ -13,7 +13,7 @@ import { FileDialogType, NewFileDialog } from "@/lib/file-dialogs/new-file-dialo
 import { Dialog } from "./ui/dialog"
 import DefaultFileStorage from "@/lib/data/files/file-default"
 import { pathOf } from "@/lib/data/files/join"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FolderSettingsDialog } from "@/lib/folder-setting/folder-settings-dialog"
 import { createHttpRequest } from "@/lib/data/project/project"
 import { beforeScriptPath } from "@/lib/data/http/before-script-executor"
@@ -60,10 +60,14 @@ const FolderNode = ({
     selectedPath?: string
 }) => {
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
-
     const [settingsDialog, setSettingsDialog] = useState<boolean>(false);
+    const [open, setOpen] = useState(() => isAncestor(folder.path, selectedPath));
 
-    const isOpen = isAncestor(folder.path, selectedPath);
+    useEffect(() => {
+        if (isAncestor(folder.path, selectedPath)) {
+            setOpen(true);
+        }
+    }, [selectedPath, folder.path]);
 
     const fileStorage = useMemo(() => DefaultFileStorage.getInstance(), []);
 
@@ -103,7 +107,7 @@ const FolderNode = ({
     return (
         <Dialog open={dialogType !== null} onOpenChange={(open) => !open && setDialogType(null)}>
             <ContextMenu>
-                <Collapsible defaultOpen={isOpen || undefined}>
+                <Collapsible open={open} onOpenChange={setOpen}>
                     <ContextMenuTrigger>
                         <CollapsibleTrigger asChild>
                             <Button

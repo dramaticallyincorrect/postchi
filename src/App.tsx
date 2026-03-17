@@ -5,7 +5,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -14,7 +14,7 @@ import {
     DropdownMenuTrigger,
 } from './components/ui/dropdown-menu';
 import { FileTree } from './components/FileTree';
-import { FileItem } from './lib/data/project-files';
+import { collectHttpFiles, FileItem } from './lib/data/project-files';
 import HttpRequestResponse from './http/http-request-response';
 import { ActiveEnvironment } from './active-environment/active-environment';
 import { Project } from './lib/data/project/project';
@@ -33,19 +33,35 @@ import { useFileWatch } from './lib/hooks/file-watch';
 import { FileWatchEventType } from './lib/data/files/file';
 import { projectMenuItems } from './lib/menu/project-menu';
 import usePersistentState from './lib/hooks/persistent-state';
+import { SearchDialog } from './components/search-dialog';
+import { isOsCommandKey } from './lib/utils/keyboard-event';
 
 export default function App({ project }: { project: Project }) {
 
     const [selectedFile, setSelectedFile] = usePersistentState<FileItem | null>('selectedFile', null)
     const [isFileTreeVisible, setIsFileTreeVisible] = useState(true)
+    const [searchOpen, setSearchOpen] = useState(false)
 
     const { tree: fileTree } = useFileTree(project)
+
+    const httpFiles = useMemo(() => collectHttpFiles(fileTree), [fileTree])
 
     useFileWatch(selectedFile?.path ?? null, (event) => {
         if (event.type === FileWatchEventType.Deleted) {
             setSelectedFile(null)
         }
     })
+
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if (isOsCommandKey(e) && e.key === 'k') {
+                e.preventDefault()
+                setSearchOpen(open => !open)
+            }
+        }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [])
 
     return <ThemeProvider initialTheme={themes[0]}>
         <EnvironmentProvider path={project.envPath} >
@@ -55,6 +71,16 @@ export default function App({ project }: { project: Project }) {
                     <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
                     {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
                 </Split>
+                <SearchDialog
+                    open={searchOpen}
+                    onOpenChange={setSearchOpen}
+                    files={httpFiles}
+                    collectionsPath={project.collectionsPath}
+                    onSelect={item => {
+                        setSelectedFile(item)
+                        setSearchOpen(false)
+                    }}
+                />
             </div>
         </EnvironmentProvider>
     </ThemeProvider>
