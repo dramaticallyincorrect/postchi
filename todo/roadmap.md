@@ -8,8 +8,8 @@
 4. ~~new project~~
 5. release build sign
 6. auto update
-   1. ask server if it can update
-   2. check for updates
+   1. ~~ask server if it can update~~
+   2. ~~check for updates~~
 7. licence check
 8. ~~licence activation~~
 9. lock pro features

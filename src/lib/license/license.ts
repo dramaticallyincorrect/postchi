@@ -37,6 +37,15 @@ export async function validateLicense(key: string): Promise<{ isValid: boolean; 
     return res.json()
 }
 
+
+export async function checkUpdateEntitlement(key: string): Promise<boolean> {
+    const url = `${LICENSE_API_BASE}/verifyLicence?key=${encodeURIComponent(key)}&version=latest`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('Network error')
+    const data: { isValid: boolean; errorMessage?: string } = await res.json()
+    return data.isValid
+}
+
 export async function openBuyPage(): Promise<void> {
     const url = 'https://getpostchi.com/pricing'
     if (isTauri()) {
