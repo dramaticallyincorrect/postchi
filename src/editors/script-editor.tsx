@@ -4,7 +4,7 @@ import DefaultFileStorage from '@/lib/data/files/file-default';
 import { useEffect, useMemo, useRef } from 'react';
 import { loadText } from './load-text';
 import { useTheme } from '@/theme-context/theme-context';
-import { afterScriptCompletion, beforeScriptCompletion } from '@/lib/scripts/language-support/script-autocomplete';
+import { afterScriptCompletion, beforeScriptCompletion, quickActionCompletion } from '@/lib/scripts/language-support/script-autocomplete';
 import { FileType } from '@/lib/data/supported-filetypes';
 
 export const ScriptEditor = ({ path, type }: { path: string, type: FileType }) => {
@@ -28,7 +28,7 @@ export const ScriptEditor = ({ path, type }: { path: string, type: FileType }) =
             } else if (type === FileType.BEFORE_SCRIPT || type === FileType.FOLDER_BEFORE_SCRIPT) {
                 return javascriptLanguage.data.of({ autocomplete: beforeScriptCompletion })
             } else {
-                throw new Error('Unsupported file type for ScriptEditor: ' + type)
+                return javascriptLanguage.data.of({ autocomplete: quickActionCompletion })
             }
         }
         return [javascript(), autoCompleteExtension()]

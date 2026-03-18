@@ -4,6 +4,8 @@ import DefaultFileStorage from './files/file-default';
 import { afterScriptPath } from './http/after-script-executor';
 import { Project } from './project/project';
 import { beforeScriptPath } from './http/before-script-executor';
+import { FileType } from './supported-filetypes';
+import { trimExtension } from './files/file-utils/file-utils';
 
 export class FileItem {
     name: string;
@@ -35,11 +37,18 @@ export type FileTreeItem = FileItem | FolderItem
 
 export async function readProjectFileTree(project: Project, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
     const colllectionItems = await readItems(project.collectionsPath, storage)
-    return [
+    const actionsItems = await readActionItems(project.actionsPath, storage)
+    const result: FileTreeItem[] = [
         new FolderItem('collections', project.collectionsPath, colllectionItems),
+    ]
+    if (actionsItems.length > 0) {
+        result.push(new FolderItem('actions', project.actionsPath, actionsItems))
+    }
+    result.push(
         new FileItem('environments.cenv', project.envPath),
         new FileItem('secrets.cenv', project.secretsPath)
-    ]
+    )
+    return result
 }
 
 async function readItems(path: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
@@ -50,7 +59,7 @@ async function readItems(path: string, storage: FileStorage = DefaultFileStorage
 
         return Promise.all([
             ...files.map(async entry => {
-                const fileItem = new FileItem(nameWithoutExtension(entry.filename), entry.path)
+                const fileItem = new FileItem(trimExtension(entry.filename), entry.path)
 
                 // Load before script if it exists
                 const lastDot = entry.path.lastIndexOf('.');
@@ -69,9 +78,16 @@ async function readItems(path: string, storage: FileStorage = DefaultFileStorage
     })
 }
 
-function nameWithoutExtension(filename: string): string {
-    const lastDot = filename.lastIndexOf('.');
-    return lastDot !== -1 ? filename.substring(0, lastDot) : filename;
+export async function readActionItems(path: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileItem[]> {
+    try {
+        const entries = await storage.readDirectory(path)
+        return entries
+            .filter(e => !e.isDirectory && e.filename.endsWith(FileType.QUICK_ACTION))
+            .sort((a, b) => a.filename.localeCompare(b.filename))
+            .map(e => new FileItem(e.filename.slice(0, -FileType.QUICK_ACTION.length), e.path))
+    } catch {
+        return []
+    }
 }
 
 

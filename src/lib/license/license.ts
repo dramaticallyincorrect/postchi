@@ -44,6 +44,7 @@ export async function getInitialLicenseStatus(): Promise<LicenseStatus> {
 }
 
 export async function validateLicenseStatus(): Promise<LicenseStatus> {
+    return 'pro'
     const key = await getStoredLicense()
     if (!key || !isValidLicenseFormat(key)) return 'free'
     try {

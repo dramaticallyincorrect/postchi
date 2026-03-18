@@ -11,12 +11,14 @@ export type Project = {
     envPath: string
     secretsPath: string
     collectionsPath: string
+    actionsPath: string
 }
 
 export async function createProject(path: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
     const name = path.split('/').filter(Boolean).pop() ?? path
     await fileStorage.mkdir(path)
     await fileStorage.mkdir(pathOf(path, collectionsDirName))
+    await fileStorage.mkdir(pathOf(path, actionsDirName))
     await createIfNotExists(pathOf(path, environmentsName + envExtension), fileStorage)
     await createIfNotExists(pathOf(path, secretsName + envExtension), fileStorage)
     return {
@@ -24,7 +26,8 @@ export async function createProject(path: string, fileStorage: FileStorage = Def
         path,
         envPath: pathOf(path, environmentsName + envExtension),
         secretsPath: pathOf(path, secretsName + envExtension),
-        collectionsPath: pathOf(path, collectionsDirName)
+        collectionsPath: pathOf(path, collectionsDirName),
+        actionsPath: pathOf(path, actionsDirName),
     };
 }
 
@@ -67,7 +70,15 @@ export type FolderSettings = {
     baseUrl: string
 }
 
+export async function createQuickAction(actionsPath: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
+    const filename = name.endsWith(FileType.QUICK_ACTION) ? name : name + FileType.QUICK_ACTION
+    const path = pathOf(actionsPath, filename)
+    await fileStorage.create(path, '// Quick Action\n// Available: env, fetch, setEnvironmentVariable(key, value)\n')
+    return path
+}
+
 const collectionsDirName = "collections"
+const actionsDirName = "actions"
 const environmentsName = "environments"
 const secretsName = "secrets"
 const envExtension = '.cenv'

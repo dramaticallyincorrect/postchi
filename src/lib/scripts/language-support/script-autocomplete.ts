@@ -87,6 +87,13 @@ export function beforeScriptCompletion(context: CompletionContext): CompletionRe
     );
 }
 
+export function quickActionCompletion(context: CompletionContext): CompletionResult | null {
+    return topLevelCompletion(context, [
+        ...SHARED_GLOBALS,
+        { label: 'setEnvironmentVariable', type: 'function', detail: '(key: string, value: string): void', info: 'Set a variable in the active environment and persist it to the .cenv file' },
+    ]);
+}
+
 export function afterScriptCompletion(context: CompletionContext): CompletionResult | null {
     return (
         nullableBodyCompletion(context, /response\.body\.\w*/, 'response.body.') ??

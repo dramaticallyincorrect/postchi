@@ -16,14 +16,16 @@ import { pathOf } from "@/lib/data/files/join"
 import { useEffect, useMemo, useState } from "react"
 import { useLicense } from "@/lib/license/license-context"
 import { FolderSettingsDialog } from "@/lib/folder-setting/folder-settings-dialog"
-import { createHttpRequest } from "@/lib/data/project/project"
+import { createHttpRequest, createQuickAction } from "@/lib/data/project/project"
+import { NewQuickActionDialog } from "./new-quick-action-dialog"
 import { beforeScriptPath } from "@/lib/data/http/before-script-executor"
 import { afterScriptPath } from "@/lib/data/http/after-script-executor"
 import { FileType } from "@/lib/data/supported-filetypes"
 import FileJavascriptIcon from "./icons/file-js"
 
-export const FileTree = ({ items, onItemClick, selectedPath }: {
+export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
     items: FileTreeItem[],
+    actionsPath: string,
     onItemClick: (item: FileItem) => void,
     selectedPath?: string
 }) => {
@@ -34,6 +36,7 @@ export const FileTree = ({ items, onItemClick, selectedPath }: {
                 <FileTreeEntry
                     key={item.path}
                     item={item}
+                    actionsPath={actionsPath}
                     onItemClick={onItemClick}
                     selectedPath={selectedPath}
                 />
@@ -42,24 +45,27 @@ export const FileTree = ({ items, onItemClick, selectedPath }: {
     );
 };
 
-const FileTreeEntry = ({ item, onItemClick, selectedPath }: any) => {
+const FileTreeEntry = ({ item, actionsPath, onItemClick, selectedPath }: any) => {
     if (item instanceof FolderItem) {
-        return <FolderNode folder={item} onItemClick={onItemClick} selectedPath={selectedPath} />;
+        return <FolderNode folder={item} actionsPath={actionsPath} onItemClick={onItemClick} selectedPath={selectedPath} />;
     }
-    return <FileNode item={item} onItemClick={onItemClick} selectedPath={selectedPath} />;
+    return <FileNode item={item} isInActionsFolder={item.path.startsWith(actionsPath + '/')} onItemClick={onItemClick} selectedPath={selectedPath} />;
 };
 
 
 
 const FolderNode = ({
     folder,
+    actionsPath,
     onItemClick,
     selectedPath,
 }: {
     folder: FolderItem,
+    actionsPath: string,
     onItemClick: (item: FileTreeItem) => void,
     selectedPath?: string
 }) => {
+    const isActionsFolder = folder.path === actionsPath;
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
     const [settingsDialog, setSettingsDialog] = useState<boolean>(false);
     const [open, setOpen] = useState(() => isAncestor(folder.path, selectedPath));
@@ -109,63 +115,92 @@ const FolderNode = ({
         fileStorage.delete(folder.path)
     }
 
-    return (
-        <Dialog open={dialogType !== null} onOpenChange={(open) => !open && setDialogType(null)}>
-            <ContextMenu>
-                <Collapsible open={open} onOpenChange={setOpen}>
-                    <ContextMenuTrigger>
-                        <CollapsibleTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="group text-muted-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
-                            >
-                                <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
-                                <FolderIcon />
-                                {folder.name}
-                            </Button>
-                        </CollapsibleTrigger>
-                    </ContextMenuTrigger>
-                    <CollapsibleContent className="ml-4.5">
-                        <div className="flex flex-col gap-1">
-                            {folder.items.map((child) => (
-                                <FileTreeEntry
-                                    key={child.path}
-                                    item={child}
-                                    onItemClick={onItemClick}
-                                    selectedPath={selectedPath}
-                                />
-                            ))}
-                        </div>
-                    </CollapsibleContent>
-                </Collapsible>
-                <ContextMenuContent>
-                    <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}>New Request</ContextMenuItem>
-                    <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}>New Folder</ContextMenuItem>
-                    <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                    <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                    <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4">Settings {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                    <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
-                </ContextMenuContent>
-            </ContextMenu>
-            {dialogType !== null && (
-                <NewFileDialog
-                    onConfirm={(name) => onNewFile(name, dialogType)}
-                    type={dialogType}
-                />
-            )}
-            {settingsDialog && (
-                <FolderSettingsDialog
-                    folderPath={folder.path}
-                    onClose={() => setSettingsDialog(false)}
-                />
-            )}
+    const [quickActionDialogOpen, setQuickActionDialogOpen] = useState(false)
 
-        </Dialog>
+    const addQuickAction = () => {
+        if (!isPro) { openLicenseDialog(); return; }
+        setQuickActionDialogOpen(true)
+    }
+
+    const onNewQuickAction = (name: string) => {
+        createQuickAction(folder.path, name).then((path) => {
+            onItemClick(new FileItem(name, path));
+        });
+    }
+
+    return (
+        <>
+            <Dialog open={dialogType !== null} onOpenChange={(open) => !open && setDialogType(null)}>
+                <ContextMenu>
+                    <Collapsible open={open} onOpenChange={setOpen}>
+                        <ContextMenuTrigger>
+                            <CollapsibleTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="group text-muted-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                                >
+                                    <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
+                                    <FolderIcon />
+                                    {folder.name}
+                                </Button>
+                            </CollapsibleTrigger>
+                        </ContextMenuTrigger>
+                        <CollapsibleContent className="ml-4.5">
+                            <div className="flex flex-col gap-1">
+                                {folder.items.map((child) => (
+                                    <FileTreeEntry
+                                        key={child.path}
+                                        item={child}
+                                        actionsPath={actionsPath}
+                                        onItemClick={onItemClick}
+                                        selectedPath={selectedPath}
+                                    />
+                                ))}
+                            </div>
+                        </CollapsibleContent>
+                    </Collapsible>
+                    <ContextMenuContent>
+                        {isActionsFolder ? (
+                            <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4">New Action {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                        ) : (
+                            <>
+                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}>New Request</ContextMenuItem>
+                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}>New Folder</ContextMenuItem>
+                                <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4">Settings {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
+                            </>
+                        )}
+                    </ContextMenuContent>
+                </ContextMenu>
+                {dialogType !== null && (
+                    <NewFileDialog
+                        onConfirm={(name) => onNewFile(name, dialogType)}
+                        type={dialogType}
+                    />
+                )}
+                {settingsDialog && (
+                    <FolderSettingsDialog
+                        folderPath={folder.path}
+                        onClose={() => setSettingsDialog(false)}
+                    />
+                )}
+            </Dialog>
+            {isActionsFolder && (
+                <NewQuickActionDialog
+                    open={quickActionDialogOpen}
+                    hasActions={folder.items.length > 0}
+                    onClose={() => setQuickActionDialogOpen(false)}
+                    onCreate={onNewQuickAction}
+                />
+            )}
+        </>
     );
 };
 
-const FileNode = ({ item, onItemClick, selectedPath }: { item: FileTreeItem, onItemClick: any, selectedPath: string }) => {
+const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item: FileTreeItem, isInActionsFolder?: boolean, onItemClick: any, selectedPath: string }) => {
     const storage = DefaultFileStorage.getInstance();
     const { isPro, openLicenseDialog } = useLicense();
     const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT) || item.name === FileType.FOLDER_BEFORE_SCRIPT;
@@ -209,8 +244,12 @@ const FileNode = ({ item, onItemClick, selectedPath }: { item: FileTreeItem, onI
                     </Button>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                    <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                    <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                    {!isInActionsFolder && (
+                        <>
+                            <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                        </>
+                    )}
                     <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>

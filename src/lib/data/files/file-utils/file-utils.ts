@@ -30,3 +30,17 @@ export async function readClosestFile(
 
     return Result.err(null)
 }
+
+export function filename(path: string): string {
+    const parts = path.split('/')
+    return parts[parts.length - 1]
+}
+
+export function filenameWithoutExtension(path: string): string {
+    return trimExtension(filename(path))
+}
+
+export function trimExtension(filename: string): string {
+    const lastDot = filename.lastIndexOf('.')
+    return lastDot !== -1 ? filename.substring(0, lastDot) : filename;
+}

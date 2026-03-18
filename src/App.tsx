@@ -35,6 +35,7 @@ import { projectMenuItems } from './lib/menu/project-menu'
 import usePersistentState from './lib/hooks/persistent-state';
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
+import { QuickActionsButton } from './lib/quick-actions/quick-action';
 
 export default function App({ project, isTemp }: { project: Project, isTemp: boolean }) {
 
@@ -66,9 +67,9 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
     return <ThemeProvider initialTheme={themes[0]}>
         <EnvironmentProvider path={project.envPath} >
             <div className='flex-col h-screen w-screen flex'>
-                <TitleBar projectName={project.name} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
+                <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
                 <Split isFileTreeVisible={isFileTreeVisible}>
-                    <FileTree items={fileTree} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
+                    <FileTree items={fileTree} actionsPath={project.actionsPath} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
                     {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
                 </Split>
                 <SearchDialog
@@ -87,7 +88,7 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
 
 }
 
-const TitleBar = ({ projectName, isTemp, onToggleFileTree }: { projectName: string; isTemp: boolean; onToggleFileTree: () => void }) => {
+const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isTemp: boolean; onToggleFileTree: () => void }) => {
     return <div className="titlebar bg-background-panel">
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
@@ -95,12 +96,13 @@ const TitleBar = ({ projectName, isTemp, onToggleFileTree }: { projectName: stri
                 <Button variant="ghost" size="icon" className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1'} onClick={onToggleFileTree}>
                     <PanelLeftIcon />
                 </Button>
-                <FileMenu projectName={projectName} isTemp={isTemp} />
+                <FileMenu projectName={project.name} isTemp={isTemp} />
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <ActiveEnvironment />
             </div>
 
             <div className="ml-auto" />
+            <QuickActionsButton project={project} />
             {!isMac() && <MsWindowControls />}
 
         </div>
@@ -143,12 +145,14 @@ const Editor = ({ path }: { path: string }) => {
         case FileType.AFTER_SCRIPT:
         case FileType.FOLDER_BEFORE_SCRIPT:
         case FileType.FOLDER_AFTER_SCRIPT:
+        case FileType.QUICK_ACTION:
             return <ScriptEditor path={path} type={type} />
         default:
             return <EnvironmentEditor path={path} />
     }
 
 }
+
 
 function Split(props: { children: React.ReactNode[]; isFileTreeVisible: boolean }) {
     function getDefaultFileTreeSize(screenWidth: number): number {

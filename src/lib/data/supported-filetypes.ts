@@ -5,4 +5,5 @@ export enum FileType {
     AFTER_SCRIPT = '.after.js',
     FOLDER_BEFORE_SCRIPT = 'before.js',
     FOLDER_AFTER_SCRIPT = 'after.js',
+    QUICK_ACTION = '.action.js',
 }
