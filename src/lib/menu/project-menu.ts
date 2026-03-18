@@ -84,12 +84,27 @@ const helpMenuItems = [
     },
 ]
 
+const editMenuItems = [
+    { item: 'Undo' as const },
+    { item: 'Redo' as const },
+    { item: 'Separator' as const },
+    { item: 'Cut' as const },
+    { item: 'Copy' as const },
+    { item: 'Paste' as const },
+    { item: 'Separator' as const },
+    { item: 'SelectAll' as const },
+]
+
 function fileMenuItems(isTemp: boolean) {
     return {
         items: [
             {
                 text: 'File',
                 items: projectMenuItems(isTemp),
+            },
+            {
+                text: 'Edit',
+                items: editMenuItems,
             },
             {
                 text: 'Help',
