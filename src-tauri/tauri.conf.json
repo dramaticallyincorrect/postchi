@@ -15,7 +15,10 @@
         "title": "postchi",
         "hiddenTitle": true,
         "titleBarStyle": "Overlay",
-        "trafficLightPosition": { "x": 14, "y": 24 },
+        "trafficLightPosition": {
+          "x": 14,
+          "y": 24
+        },
         "dragDropEnabled": false
       }
     ],
@@ -27,7 +30,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDkzMzAwMEQ3NjVDREJCRDQKUldUVXU4MWwxd0F3a3pvdkJBYTV4Znk0bUZtaXR5aGZ1SzFxNkpETk1PWmdzNGhmNXJxL1pFQXgK",
       "endpoints": [
-        "http://localhost:8080/latest.json"
+        "https://github.com/dramaticallyincorrect/Postchi/releases/latest/download/latest.json"
       ]
     }
   },
