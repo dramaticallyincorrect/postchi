@@ -7,12 +7,12 @@ export const themes: PostchiTheme[] = [
     id: 'dark',
     name: 'Dark',
     vars: {
-      '--primary': '#7B8CDE',
-      '--background': '#0D0D0D',
+      '--primary': '#F00',
+      '--background': '#111111',
       '--background-elevated': '#1A1A2E',
       '--muted': '#1E1E2E',
-      '--background-panel': '#161622',
-      '--foreground': '#CDD6F4',
+      '--background-panel': '#0D0D0D',
+      '--foreground': '#ECECEC',
       '--muted-foreground': '#7F849C',
       '--destructive': '#F38BA8',
       '--success': '#A6FFA1',
@@ -20,7 +20,7 @@ export const themes: PostchiTheme[] = [
       '--error': '#DF0000',
     },
     codemirror: {
-      theme: buildCMTheme(coolGlow, '#161622'),
+      theme: buildCMTheme(coolGlow, '#0D0D0D'),
       tokens: {
         attributeName: '#60A4F1',
         attributeValue: '#8DFF8E',

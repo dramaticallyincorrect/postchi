@@ -17,6 +17,7 @@ import { Update } from "@tauri-apps/plugin-updater";
 import { LicenseDialog } from "./components/license-dialog"
 import { LicenseContext } from "./lib/license/license-context"
 import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/license";
+import { AboutDialog } from "./about/about-dialog";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -34,6 +35,7 @@ await initMenu(lastPath === tempPath)
 function AppShell() {
     const [project, setProject] = useState<Project>(initialProject)
     const [importOpen, setImportOpen] = useState(false)
+    const [aboutOpen, setAboutOpen] = useState(false)
     const [newProjectOpen, setNewProjectOpen] = useState(false)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
     const [licenseOpen, setLicenseOpen] = useState(false)
@@ -52,7 +54,7 @@ function AppShell() {
     }, [])
 
     useEffect(() => {
-        refreshLicense().catch(() => {})
+        refreshLicense().catch(() => { })
     }, [])
 
     const switchProject = async (newProject: Project) => {
@@ -98,6 +100,9 @@ function AppShell() {
                     await switchProject(await copyProject(project, selected))
                     break
                 }
+                case MenuActions.ABOUT_POSTCHI:
+                    setAboutOpen(true)
+                    break
             }
         })
 
@@ -138,6 +143,10 @@ function AppShell() {
                     setIsPro(true)
                     setLicenseOpen(false)
                 }}
+            />
+            <AboutDialog
+                open={aboutOpen}
+                onOpenChange={setAboutOpen}
             />
         </LicenseContext.Provider>
     )

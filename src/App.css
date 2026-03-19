@@ -181,7 +181,7 @@ html body {
 }
 
 .cm-tooltip-autocomplete>ul>li>span.cm-completionDetail {
-  color: var(--color-muted) !important;
+  color: var(--color-muted-foreground) !important;
   font-style: italic !important;
 }
 

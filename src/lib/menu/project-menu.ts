@@ -67,6 +67,11 @@ const desktopOnlyMenuItems = [
     },
     { item: "Separator" as const },
     {
+        id: 'about_postchi',
+        text: 'About Postchi',
+        action: async () => emitMenuEvent(MenuActions.ABOUT_POSTCHI),
+    },
+    {
         id: "quit",
         text: "Quit",
         action: async () => {
