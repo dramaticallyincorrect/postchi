@@ -2,7 +2,7 @@
 
 1. release checks
    1. test auto updates
-   2. create and configure app icon
+   2. ~~create and configure app icon~~
    3. set prod url for license
    4. test license validation/activation
    5. finish remaining lint errors
