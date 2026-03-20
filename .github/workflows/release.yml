@@ -84,7 +84,7 @@ jobs:
             -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
           # Extract and export the signing identity for use in the build step
           CERT_ID=$(security find-identity -v -p codesigning build.keychain \
-            | grep "Developer ID Application" | awk '{print $2}')
+            | grep "Developer ID Application" | awk -F'"' '{print $2}')
           echo "CERT_ID=$CERT_ID" >> "$GITHUB_ENV"
 
       - name: Write Apple notarization API key
