@@ -224,7 +224,7 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
         storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
     }
 
-    const icon = isBeforeScript || isAfterScript ? <FileJavascriptIcon /> : <FileCodeIcon />;
+    const icon = isBeforeScript || isAfterScript || isInActionsFolder ? <FileJavascriptIcon /> : <FileCodeIcon />;
 
     return (
         <div>
