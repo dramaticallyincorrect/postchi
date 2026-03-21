@@ -53,7 +53,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         };
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
-    }, [activeEnvironment]);
+    }, [activeEnvironment, path]);
 
     const submitKeymap = keymap.of([{
         key: "Mod-Enter",
