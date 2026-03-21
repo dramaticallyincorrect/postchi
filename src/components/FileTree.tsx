@@ -138,7 +138,7 @@ const FolderNode = ({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="group text-muted-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                                    className="group text-muted-foreground data-[state=open]:hover:text-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                                 >
                                     <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                                     <FolderIcon />

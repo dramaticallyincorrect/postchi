@@ -69,7 +69,7 @@ const ResponseHeaders = ({ headers }: { headers: Headers }) => {
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4 mb-4'>
-                <VerticalLine color='var(--primary)' />
+                <VerticalLine color='var(--secondary)' />
                 <div className='flex flex-col'>
                     {Array.from(headers.entries()).map(([key, value], index) => (
                         <div key={index}>
@@ -96,7 +96,7 @@ const RequestView = ({ request }: { request: HttpRequest }) => {
     return (
         <div className='flex flex-col'>
             <div className='text-sm flex flex-row ml-4'>
-                <VerticalLine color='var(--primary)' />
+                <VerticalLine color='var(--secondary)' />
                 <div className='flex flex-col'>
                     <CodeMirror
                         value={formatRequest(request)}
