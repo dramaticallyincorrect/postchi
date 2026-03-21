@@ -3,12 +3,13 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import tailwindcss from "@tailwindcss/vite";
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react(), tailwindcss() as any, nodePolyfills()],
+  plugins: [react(), tailwindcss() as any, nodePolyfills(), visualizer({ open: true, filename: 'bundle-stats.html', gzipSize: true })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
