@@ -18,6 +18,7 @@ import { LicenseDialog } from "./components/license-dialog"
 import { LicenseContext } from "./lib/license/license-context"
 import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/license";
 import { AboutDialog } from "./about/about-dialog";
+import { Toaster } from "@/components/ui/sonner";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -148,6 +149,7 @@ function AppShell() {
                 open={aboutOpen}
                 onOpenChange={setAboutOpen}
             />
+            <Toaster />
         </LicenseContext.Provider>
     )
 }

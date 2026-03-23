@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { CheckIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -57,6 +58,7 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
             if (result.isValid) {
                 await saveLicense(trimmed)
                 setStatus('success')
+                toast.success('License activated', { description: 'You now have access to all Pro features.' })
                 onActivated()
             } else {
                 setStatus('error')
@@ -126,12 +128,9 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
                             {status === 'validating' ? 'Activating…' : status === 'success' ? 'Activated!' : 'Activate'}
                         </Button>
                     </div>
-                    {status === 'error' && errorMessage && (
-                        <p className="text-sm text-destructive mt-1.5">{errorMessage}</p>
-                    )}
-                    {status === 'success' && (
-                        <p className="text-sm text-green-600 mt-1.5">License activated successfully.</p>
-                    )}
+                    <p className={`text-sm text-destructive mt-1.5 h-8 ${status === 'error' && errorMessage ? 'visible' : 'invisible'}`}>
+                        {errorMessage ?? ' '}
+                    </p>
                 </div>
             </DialogContent>
         </Dialog>

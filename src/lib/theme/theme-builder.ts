@@ -14,7 +14,7 @@ export function applyThemeToCSSVars(theme: PostchiTheme) {
         .map(([k, v]) => `  ${k}: ${v};`)
         .join("\n");
 
-    declarations += '\n --border: var(--muted); \n --input: var(--muted); \n --ring: var(--muted);';
+    declarations += '\n --border: var(--muted); \n --input: var(--muted); \n --ring: var(--muted);--popover: var(--background);--popover-foreground: var(--foreground);';
 
     styleEl.textContent = `:root {\n${declarations}\n}`;
 }
