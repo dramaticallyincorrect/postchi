@@ -1,7 +1,9 @@
-# Tauri + React + Typescript
+![alt text](screenshots/postchi.png)
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+# Postchi is an api client aimed at being focused, clean, light weight and feature rich
 
-## Recommended IDE Setup
+Postchi is a paid software but a free version is also available, checkout [getpostchi.com](https://getpostchi.com)
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Stack
+
+Postchi is built using [Tauri](https://tauri.app) and [react](https://react.dev) and is written in typescript.
