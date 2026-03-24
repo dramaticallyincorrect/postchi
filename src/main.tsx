@@ -20,9 +20,16 @@ import { LicenseContext } from "./lib/license/license-context"
 import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/license";
 import { AboutDialog } from "./about/about-dialog";
 import { Toaster } from "@/components/ui/sonner";
+import { PostHogProvider } from "posthog-js/react";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
+
+const options = {
+    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+    defaults: '2026-01-30',
+    autocapture: false,
+} as const
 
 const tempPath = await getDefaultProjectPath()
 
@@ -161,6 +168,8 @@ function AppShell() {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <AppShell />
+        <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
+            <AppShell />
+        </PostHogProvider>
     </React.StrictMode>,
 );
