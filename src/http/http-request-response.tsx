@@ -37,7 +37,12 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
                 setResponse(new Loading())
 
-                const response = await executeHttpTemplate(text, path, activeEnvironment?.variables ?? [], abort.current, envPath, activeEnvironment?.name ?? '');
+                const vars = [
+                    activeEnvironment?.variables ?? [],
+                    activeEnvironment?.secrets ?? []
+                ].flat()
+                
+                const response = await executeHttpTemplate(text, path, vars, abort.current, envPath, activeEnvironment?.name ?? '');
                 if (response.isOk) {
                     setResponse(response.value);
                     getResponseHistory().save(path, response.value);

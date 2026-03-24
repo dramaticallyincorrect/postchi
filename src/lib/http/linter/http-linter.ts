@@ -2,12 +2,12 @@ import { linter, Diagnostic } from "@codemirror/lint"
 import { Text } from "@codemirror/state";
 import { sliceInput } from "@/lib/utils/doc";
 import { allNodes, computeHttpAst, Expression, HeaderNode, HttpNode } from "../parser/http-ast";
-import { Environment } from "@/lib/environments/parser/environments-parser";
+
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 import httpFunctions, { readFileFunction } from "../functions/http-functions";
 
-export const httpLinter = (environment?: Environment) => linter(view => {
-  const diagnostics = computeHttpDiagnostics(view.state.doc, environment?.variables ?? [])
+export const httpLinter = (variables: { key: string, value: string }[] = []) => linter(view => {
+  const diagnostics = computeHttpDiagnostics(view.state.doc, variables)
   return diagnostics
 })
 

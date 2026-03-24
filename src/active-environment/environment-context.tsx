@@ -1,37 +1,44 @@
 import readEnvironments from "@/lib/data/project/read-environments"
-import { Environment } from "@/lib/environments/parser/environments-parser"
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState, } from "react"
 import { useFileWatch } from "@/lib/hooks/file-watch"
+import { Project } from "@/lib/data/project/project"
 
 type VariablesContextType = {
-    environments: Environment[]
-    activeEnvironment: Environment | null
-    setActiveEnvironment: (env: Environment) => void
+    environments: ProjectEnvironment[]
+    activeEnvironment: ProjectEnvironment | null
+    setActiveEnvironment: (env: ProjectEnvironment) => void
     reload: () => Promise<void>
     envPath: string
 }
 
 const EnvironmentContext = createContext<VariablesContextType | null>(null)
 
-export const EnvironmentProvider = ({ path, children }: { path: string, children: ReactNode }) => {
-    const [environments, setEnvironments] = useState<Environment[]>([])
-    const [activeEnvironment, setActiveEnvironment] = useState<Environment | null>(null)
+export const EnvironmentProvider = ({ project, children }: { project: Project, children: ReactNode }) => {
+    const [environments, setEnvironments] = useState<ProjectEnvironment[]>([])
+    const [activeEnvironment, setActiveEnvironment] = useState<ProjectEnvironment | null>(null)
 
     const reload = useCallback(async () => {
-        const envs = await readEnvironments(path)
-        setEnvironments(envs)
+        const envs = await readEnvironments(project.envPath)
+        const secrets = await readEnvironments(project.secretsPath)
+        const projectEnvs = envs.map(e => ({
+            name: e.name,
+            variables: e.variables,
+            secrets: secrets.find(s => s.name === e.name)?.variables ?? []
+        }))
+        setEnvironments(projectEnvs)
         setActiveEnvironment(prev =>
             // keep the active one if it still exists, otherwise use first
-            envs.find(e => e.name === prev?.name) ?? envs[0] ?? null
+            projectEnvs.find(e => e.name === prev?.name) ?? projectEnvs[0] ?? null
         )
-    }, [path])
+    }, [project])
 
-    useEffect(() => { reload() }, [path])
+    useEffect(() => { reload() }, [project])
 
-    useFileWatch(path, reload, { ignoreModified: false })
+    useFileWatch(project.envPath, reload, { ignoreModified: false })
+    useFileWatch(project.secretsPath, reload, { ignoreModified: false })
 
     return (
-        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload, envPath: path }}>
+        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload, envPath: project.envPath }}>
             {children}
         </EnvironmentContext.Provider>
     )
@@ -41,4 +48,10 @@ export const useEnvironment = () => {
     const ctx = useContext(EnvironmentContext)
     if (!ctx) throw new Error('useEnvironment must be used within EnvironmentProvider')
     return ctx
+}
+
+export type ProjectEnvironment = {
+    name: string
+    variables: { key: string, value: string }[]
+    secrets: { key: string, value: string }[]
 }

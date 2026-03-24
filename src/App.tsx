@@ -65,7 +65,7 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
     }, [])
 
     return <ThemeProvider initialTheme={themes[0]}>
-        <EnvironmentProvider path={project.envPath} >
+        <EnvironmentProvider project={project} >
             <div className='flex-col h-screen w-screen flex'>
                 <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
                 <Split isFileTreeVisible={isFileTreeVisible}>

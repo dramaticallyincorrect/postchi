@@ -10,9 +10,10 @@ import { parser } from "./parser/parser";
 import { json } from "@codemirror/lang-json"
 import completeHttp from "./autocomplete/http-autocomplete";
 import { httpLinter } from "./linter/http-linter";
-import { Environment } from "../environments/parser/environments-parser";
+
 import { autocompletion } from "@codemirror/autocomplete";
 import { variableValidatorDecoration } from "./decoration/json-variable-decoration";
+import { ProjectEnvironment } from "@/active-environment/environment-context";
 
 export const customHttpLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -37,7 +38,11 @@ export const customHttpLanguage = LRLanguage.define({
     }),
 });
 
-export function customHttp(environment?: Environment): LanguageSupport {
-    const httpAutoComplete = autocompletion({ override: [completeHttp(environment?.variables || [])] })
-    return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(environment), variableValidatorDecoration(new Set(environment?.variables.map(v => v.key)))]);
+export function customHttp(environment?: ProjectEnvironment): LanguageSupport {
+    const vars = [
+        environment?.variables || [],
+        environment?.secrets || []
+    ].flat()
+    const httpAutoComplete = autocompletion({ override: [completeHttp(vars)] })
+    return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(vars), variableValidatorDecoration(new Set(vars.map(v => v.key)))]);
 }
