@@ -176,7 +176,7 @@ export const functionCompletions = Array.from(httpFunctions.entries()).map(([nam
     })
 })
 
-export const headerCompletions = httpHeaders.map(header => ({ label: header, type: "keyword" }))
+export const headerCompletions = httpHeaders.map(header => ({ label: `${header}:`, type: "keyword" }))
 
 export const contentTypeCompletions = [
     // Text

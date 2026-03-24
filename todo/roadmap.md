@@ -37,8 +37,8 @@ shows wrong syntax highlighting for secrets
          2. handle errors
     2. open api
 7. auto complete
-      1. args with spaces or trailing spaces
-      2. include colon in headername autocomplete
+      1. ~~args with spaces or trailing spaces~~
+      2. ~~include colon in headername autocomplete~~
       3. context aware values
       4. body snippet
          1. body
