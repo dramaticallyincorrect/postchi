@@ -1,7 +1,7 @@
 import { fs } from "memfs"
 import { pathOf } from "../data/files/join"
 import { FileItem, FileTreeItem, FolderItem } from "../data/project-files"
-import { filename, filenameWithoutExtension } from "../data/files/file-utils/file-utils"
+import { filenameWithoutExtension } from "../data/files/file-utils/file-utils"
 
 export const whitespaces = [' ', '  ', '   ', '\t', ' \t\t']
 export const newlines = ['\n', '\n\n', '\n\n\n']
