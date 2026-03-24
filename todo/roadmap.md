@@ -41,8 +41,7 @@ shows wrong syntax highlighting for secrets
       2. ~~include colon in headername autocomplete~~
       3. context aware values
       4. body snippet
-         1. body
-         2. json
+         1. ~~json~~
 8. save file  
     1. when closing the app
 9. errors

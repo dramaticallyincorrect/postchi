@@ -69,15 +69,6 @@ export async function computeHttpCompletions(position: number, doc: string, line
         }
     }
 
-    if (!node) {
-        if (position > ast.url[ast.url.length - 1].to && (ast.body == null || position < ast.body.from)) {
-            return {
-                from: position,
-                options: headerCompletions,
-            }
-        }
-    }
-
     switch (node?.type) {
         case "method":
             return {
@@ -95,7 +86,10 @@ export async function computeHttpCompletions(position: number, doc: string, line
             if (position <= headerNode.key.to) {
                 return {
                     from: headerNode.key.from,
-                    options: headerCompletions,
+                    options: [
+                        bodySnippet,
+                        ...headerCompletions
+                    ],
                 }
             } else {
                 return provideFunctionCompletions(headerNode.value).then(result => {
@@ -177,6 +171,11 @@ export const functionCompletions = Array.from(httpFunctions.entries()).map(([nam
 })
 
 export const headerCompletions = httpHeaders.map(header => ({ label: `${header}:`, type: "keyword" }))
+
+export const bodySnippet = snippetCompletion('@body\n\n{\n\t"${1}": ""\n}', {
+    label: 'json body',
+    type: 'text'
+})
 
 export const contentTypeCompletions = [
     // Text

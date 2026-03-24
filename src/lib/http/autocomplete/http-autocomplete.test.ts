@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest"
-import { computeHttpCompletions, contentTypeCompletions, functionCompletions, headerCompletions, methods, pathCompletion, variableCompletions } from "./http-autocomplete"
+import { bodySnippet, computeHttpCompletions, contentTypeCompletions, functionCompletions, headerCompletions, methods, pathCompletion, variableCompletions } from "./http-autocomplete"
 
 const vars = [
     { key: 'var1', value: 'value1' },
@@ -110,6 +110,7 @@ describe('header', () => {
         expect(result).toEqual({
             from: httpRequest.length - 1,
             options: [
+                bodySnippet,
                 ...headerCompletions
             ]
         })
@@ -123,6 +124,7 @@ describe('header', () => {
         expect(result).toEqual({
             from: httpRequest.length - 1,
             options: [
+                bodySnippet,
                 ...headerCompletions
             ]
         })
