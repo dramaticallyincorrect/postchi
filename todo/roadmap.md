@@ -7,7 +7,6 @@
 User-Agent: Postchi
 Authorization: readText(/Users/hamedmonji/secrets.env)
 shows wrong syntax highlighting for secrets
-   1. release v0.1.0
    2. setup usage/diagnostic tracking
    3. add end to end tests
    4. test

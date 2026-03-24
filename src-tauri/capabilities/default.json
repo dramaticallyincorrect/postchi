@@ -12,7 +12,11 @@
     "opener:allow-reveal-item-in-dir",
     {
       "identifier": "opener:allow-reveal-item-in-dir",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     "core:window:default",
     "core:window:allow-start-dragging",
@@ -49,15 +53,22 @@
     "sql:default",
     {
       "identifier": "sql:allow-execute",
-      "allow": ["sqlite:response-history.db"]
+      "allow": [
+        "sqlite:response-history.db"
+      ]
     },
     {
       "identifier": "sql:allow-select",
-      "allow": ["sqlite:response-history.db"]
+      "allow": [
+        "sqlite:response-history.db"
+      ]
     },
     {
       "identifier": "sql:allow-load",
-      "allow": ["sqlite:response-history.db"]
-    }
+      "allow": [
+        "sqlite:response-history.db"
+      ]
+    },
+    "sentry:default"
   ]
 }

@@ -41,6 +41,9 @@ tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+tauri-plugin-sentry = "0.5"
 [target."cfg(target_os = \"macos\")".dependencies]
 cocoa = "0.26"
+sentry = "0.42"
+tauri-plugin-sentry = "0.5"
 
