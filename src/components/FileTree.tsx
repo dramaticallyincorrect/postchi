@@ -8,7 +8,7 @@ import { ChevronRightIcon, FileCodeIcon, FolderIcon, LockIcon } from "lucide-rea
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "./ui/context-menu"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "./ui/context-menu"
 import { FileDialogType, NewFileDialog } from "@/lib/file-dialogs/new-file-dialog"
 import { Dialog } from "./ui/dialog"
 import DefaultFileStorage from "@/lib/data/files/file-default"
@@ -22,6 +22,18 @@ import { beforeScriptPath } from "@/lib/data/http/before-script-executor"
 import { afterScriptPath } from "@/lib/data/http/after-script-executor"
 import { FileType } from "@/lib/data/supported-filetypes"
 import FileJavascriptIcon from "./icons/file-js"
+import { isTauri } from "@tauri-apps/api/core"
+import { isMac } from "@/lib/utils/os"
+
+const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
+
+const revealInFinder = async (path: string) => {
+    if (!isTauri()) return;
+    const { revealItemInDir } = await import('@tauri-apps/plugin-opener');
+    await revealItemInDir(path);
+};
+
+
 
 export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
     items: FileTreeItem[],
@@ -162,7 +174,11 @@ const FolderNode = ({
                     </Collapsible>
                     <ContextMenuContent>
                         {isActionsFolder ? (
-                            <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4">New Action {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <>
+                                <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4">New Action {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}>{revealLabel}</ContextMenuItem>
+                            </>
                         ) : (
                             <>
                                 <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}>New Request</ContextMenuItem>
@@ -170,6 +186,8 @@ const FolderNode = ({
                                 <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                                 <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                                 <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4">Settings {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}>{revealLabel}</ContextMenuItem>
                                 <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
                             </>
                         )}
@@ -250,6 +268,8 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                             <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                         </>
                     )}
+                    <ContextMenuSeparator />
+                    <ContextMenuItem onClick={() => revealInFinder(item.path)}>{revealLabel}</ContextMenuItem>
                     <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
@@ -301,6 +321,8 @@ const ScriptNode = ({ label, path, isSelected, onItemClick }: { label: string, p
                 </Button>
             </ContextMenuTrigger>
             <ContextMenuContent>
+                <ContextMenuItem onClick={() => revealInFinder(path)}>{revealLabel}</ContextMenuItem>
+                <ContextMenuSeparator />
                 <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
             </ContextMenuContent>
         </ContextMenu>
