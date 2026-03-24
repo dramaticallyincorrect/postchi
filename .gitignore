@@ -23,3 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 scripts/set_envs.sh
+bundle-stats.html
