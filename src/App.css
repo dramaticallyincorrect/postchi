@@ -76,7 +76,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--color-foreground);
-  --color-popover: var(--background-elevated);
+  --color-popover: var(--background);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-foreground: var(--foreground);
