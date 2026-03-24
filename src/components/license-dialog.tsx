@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { toast } from 'sonner'
 import { CheckIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,20 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
     const [key, setKey] = useState('')
     const [status, setStatus] = useState<ActivationStatus>('idle')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [buyLabel, setBuyLabel] = useState<'default' | 'tease' | 'relief'>('default')
+    const revertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const handleFreeHoverIn = () => {
+        if (revertTimerRef.current) clearTimeout(revertTimerRef.current)
+        setBuyLabel('tease')
+    }
+
+    const handleFreeHoverOut = () => {
+        setBuyLabel('relief')
+        revertTimerRef.current = setTimeout(() => setBuyLabel('default'), 3000)
+    }
+// "Buy Pro ${if (enabled) "(Oh come on!)" else if (phew) "(phew \uD83D\uDE2E\u200D\uD83D\uDCA8)" else ""}",
+    const buyLabelText = buyLabel === 'tease' ? 'Oh come on!' : buyLabel === 'relief' ? 'phew \uD83D\uDE2E\u200D\uD83D\uDCA8' : 'Buy Pro'
 
     const handleActivate = async () => {
         const trimmed = key.trim()
@@ -93,7 +107,13 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
                         features={FREE_FEATURES}
                         missingFeatures={PRO_ONLY_FEATURES}
                         action={
-                            <Button variant="outline" className="w-full" onClick={() => handleOpenChange(false)}>
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => handleOpenChange(false)}
+                                onMouseEnter={handleFreeHoverIn}
+                                onMouseLeave={handleFreeHoverOut}
+                            >
                                 Continue with Free
                             </Button>
                         }
@@ -103,8 +123,8 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
                         highlighted
                         features={[...FREE_FEATURES, ...PRO_ONLY_FEATURES]}
                         action={
-                            <Button className="w-full" onClick={openBuyPage}>
-                                Buy Pro
+                            <Button className="w-full min-w-0 transition-none" onClick={openBuyPage}>
+                                {buyLabelText}
                             </Button>
                         }
                     />
