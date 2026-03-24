@@ -45,8 +45,8 @@ export async function readProjectFileTree(project: Project, storage: FileStorage
         result.push(new FolderItem('actions', project.actionsPath, actionsItems))
     }
     result.push(
-        new FileItem('environments.cenv', project.envPath),
-        new FileItem('secrets.cenv', project.secretsPath)
+        new FileItem('environments', project.envPath),
+        new FileItem('secrets', project.secretsPath)
     )
     return result
 }
