@@ -34,6 +34,7 @@ type FormatInfo = {
     acceptedExtensions: string[];
     supportedVersions: string;
     icon: React.ReactNode;
+    comingSoon?: boolean;
 }
 
 type ImportFormat = 'postman' | 'openapi';
@@ -42,7 +43,7 @@ const FORMAT_INFO: FormatInfo[] = [
     {
         format: 'postman',
         label: 'Postman',
-        hint: 'v2.0 & v2.1 · .json / .zip',
+        hint: '.json / .zip',
         accept: { 'application/json': ['.json'], 'application/zip': ['.zip'] },
         acceptedExtensions: ['.json', '.zip'],
         supportedVersions: 'Supports Postman Collection v2.0/v2.1 (.json) or Data Export (.zip)',
@@ -55,7 +56,8 @@ const FORMAT_INFO: FormatInfo[] = [
         accept: { 'application/json': ['.json'], 'application/x-yaml': ['.yaml'] },
         acceptedExtensions: ['.json', '.yaml'],
         supportedVersions: 'Supports OpenAPI v3.0 (.json, .yaml)',
-        icon: <OpenApiIcon />
+        icon: <OpenApiIcon />,
+        comingSoon: true,
     }
 ]
 
@@ -153,29 +155,31 @@ export function ImportDialog({ open, onOpenChange, onImport }: ImportDialogProps
                                     <button
                                         key={format.format}
                                         type="button"
-                                        disabled={loading}
+                                        disabled={loading || format.comingSoon}
                                         onClick={() => handleFormatChange(format)}
                                         className={cn(
-                                            'flex flex-1 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all duration-100 disabled:pointer-events-none disabled:opacity-50',
-                                            active
-                                                ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/20'
-                                                : 'border-border/60 hover:border-border hover:bg-muted/40',
+                                            'relative flex flex-1 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all duration-100 disabled:pointer-events-none',
+                                            format.comingSoon
+                                                ? 'border-border/40 opacity-60 cursor-not-allowed'
+                                                : active
+                                                    ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/20'
+                                                    : 'border-border/60 hover:border-border hover:bg-muted/40',
                                         )}
                                     >
                                         <div className={cn(
                                             'flex h-7 w-7 shrink-0 items-center justify-center rounded-md border transition-colors',
-                                            active
+                                            active && !format.comingSoon
                                                 ? 'border-primary/30 bg-primary/10 text-primary'
                                                 : 'border-border/60 bg-muted/60 text-muted-foreground',
                                         )}>
                                             {format.icon}
                                         </div>
-                                        <div>
+                                        <div className="flex-1 min-w-0">
                                             <p className="text-[13px] font-medium leading-none mb-1 text-foreground">
                                                 {format.label}
                                             </p>
                                             <p className="text-[11px] leading-none text-muted-foreground">
-                                                {format.hint}
+                                                {format.comingSoon ? 'Coming soon' : format.hint}
                                             </p>
                                         </div>
                                     </button>
