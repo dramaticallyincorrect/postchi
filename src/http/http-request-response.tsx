@@ -13,6 +13,7 @@ import { loadText } from '@/editors/load-text';
 import { Bullet } from '@/components/bullet';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/theme-context/theme-context';
+import { toggleLineCommentAtStart } from '@/editors/toggle-line-comment';
 
 export default function HttpRequestResponse({ path }: { path: string }) {
 
@@ -60,12 +61,16 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         return () => window.removeEventListener("keydown", handler);
     }, [activeEnvironment, path]);
 
-    const submitKeymap = keymap.of([{
-        key: "Mod-Enter",
-        run: () => {
-            return true;
+    const submitKeymap = keymap.of([
+        {
+            key: "Mod-Enter",
+            run: () => { return true; }
+        },
+        {
+            key: "Mod-/",
+            run: toggleLineCommentAtStart
         }
-    }]);
+    ]);
 
 
     useEffect(() => {
