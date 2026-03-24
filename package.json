@@ -43,6 +43,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.564.0",
     "memfs": "^4.56.10",
     "next-themes": "^0.4.6",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@types/jszip": "^3.4.1",
     "@types/node": "^25.2.3",
     "@types/postman-collection": "^3.5.11",
     "@types/react": "^19.1.8",

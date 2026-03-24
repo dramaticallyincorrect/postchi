@@ -1,15 +1,9 @@
 # Roadmap
 
 1. release checks
-   1. ~~test auto updates~~
-   2. ~~create and configure app icon~~
-   3. ~~set prod url for license~~
-   4. ~~test license validation/activation~~
    5. finish remaining lint errors
    6. fix bugs
-      1. ~~secrets not being applied~~
-      2. ~~create folder and env change not synced immediatley~~
-      3. GET /todos
+      1. GET /todos
 User-Agent: Postchi
 Authorization: readText(/Users/hamedmonji/secrets.env)
 shows wrong syntax highlighting for secrets
@@ -37,11 +31,7 @@ shows wrong syntax highlighting for secrets
          2. handle errors
     2. open api
 7. auto complete
-      1. ~~args with spaces or trailing spaces~~
-      2. ~~include colon in headername autocomplete~~
-      3. context aware values
-      4. body snippet
-         1. ~~json~~
+      1. context aware values
 8. save file  
     1. when closing the app
 9. errors
@@ -51,9 +41,7 @@ shows wrong syntax highlighting for secrets
     4. MissingValue
     5. FilePathNotExist
     6. PathIsDirectory
-    7. ~~RelativeUrlShouldStartWithSlash~~
     8. InvalidContentType
-    9. ~~JsonBodyError~~
     10. Invalid Environment (empty name)
 10. last
     1. read file

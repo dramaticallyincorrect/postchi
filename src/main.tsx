@@ -9,6 +9,7 @@ import { initMenu } from "./lib/menu/project-menu";
 import { ImportDialog } from "./components/import-dialog";
 import { NewProjectDialog } from "./components/new-project-dialog";
 import { importPostmanCollection } from "./lib/data/import/import-folder";
+import { importPostmanZip } from "./lib/data/import/import-postman-zip";
 import { pathOf } from "./lib/data/files/join";
 import { loadStore } from "./lib/data/store/store";
 import { checkForUpdate } from "./lib/updater/updater";
@@ -118,6 +119,9 @@ function AppShell() {
                 onOpenChange={setImportOpen}
                 onImport={async (format, file) => {
                     if (format === 'postman') {
+                        if (file.name.endsWith('.zip')) {
+                            return importPostmanZip(file, project.collectionsPath)
+                        }
                         return importPostmanCollection(file, project.collectionsPath)
                     }
                     return { count: 0, skipped: 0 }

@@ -42,10 +42,10 @@ const FORMAT_INFO: FormatInfo[] = [
     {
         format: 'postman',
         label: 'Postman',
-        hint: 'v2.0 & v2.1 · .json',
-        accept: { 'application/json': ['.json'] },
-        acceptedExtensions: ['.json'],
-        supportedVersions: 'Supports Postman Collection v2.0 and v2.1 (.json)',
+        hint: 'v2.0 & v2.1 · .json / .zip',
+        accept: { 'application/json': ['.json'], 'application/zip': ['.zip'] },
+        acceptedExtensions: ['.json', '.zip'],
+        supportedVersions: 'Supports Postman Collection v2.0/v2.1 (.json) or Data Export (.zip)',
         icon: <PostmanIcon />,
     },
     {
@@ -256,7 +256,7 @@ export function ImportDialog({ open, onOpenChange, onImport }: ImportDialogProps
                                 </div>
                                 <div>
                                     <p className="text-[13px] font-medium text-foreground">
-                                        Drop your .json file here
+                                        Drop your .json or .zip file here
                                     </p>
                                     <p className="mt-0.5 text-xs text-muted-foreground">
                                         or <span className="text-primary">browse files</span>
@@ -302,7 +302,7 @@ const ImportStats = ({ importResult }: { importResult: ImportResult | null }) =>
                     </p>
                     <p className="text-xs opacity-80">
                         {importResult.skipped > 0
-                            ? `${importResult.skipped} requests already exist and were skipped`
+                            ? `${importResult.skipped} requests were skipped`
                             : `${importResult.count} requests imported`}
                     </p>
                 </div>

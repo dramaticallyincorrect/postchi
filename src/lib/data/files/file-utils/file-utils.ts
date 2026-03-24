@@ -44,3 +44,8 @@ export function trimExtension(filename: string): string {
     const lastDot = filename.lastIndexOf('.')
     return lastDot !== -1 ? filename.substring(0, lastDot) : filename;
 }
+
+export function parentDir(filePath: string): string {
+    const sep = filePath.includes('\\') ? '\\' : '/';
+    return filePath.substring(0, filePath.lastIndexOf(sep));
+};

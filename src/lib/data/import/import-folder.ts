@@ -19,8 +19,13 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
     for (const item of folder.items) {
         if ('request' in item) {
             const request = item as ImportedRequest;
-            await createHttpRequest(folderPath, request.name, request.request);
-            result.count++;
+            try {
+                await createHttpRequest(folderPath, request.name, request.request);
+                result.count++;
+            } catch (e) {
+                console.error(`Failed to import request ${request.name}:`, e);
+                result.skipped++;
+            }
         } else {
             const subResult = await importFolderInto(item as ImportedFolder, folderPath);
             result.count += subResult.count;
