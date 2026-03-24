@@ -8,7 +8,7 @@
    5. finish remaining lint errors
    6. fix bugs
       1. ~~secrets not being applied~~
-      2. create folder and env change not synced immediatley
+      2. ~~create folder and env change not synced immediatley~~
       3. GET /todos
 User-Agent: Postchi
 Authorization: readText(/Users/hamedmonji/secrets.env)
@@ -51,9 +51,9 @@ shows wrong syntax highlighting for secrets
     4. MissingValue
     5. FilePathNotExist
     6. PathIsDirectory
-    7. RelativeUrlShouldStartWithSlash
+    7. ~~RelativeUrlShouldStartWithSlash~~
     8. InvalidContentType
-    9. JsonBodyError
+    9. ~~JsonBodyError~~
     10. Invalid Environment (empty name)
 10. last
     1. read file

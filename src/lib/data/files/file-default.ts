@@ -30,8 +30,10 @@ export default class DefaultFileStorage implements FileStorage {
         return this.storage.readFile(path)
     }
 
-    writeText(path: string, text: string): Promise<void> {
-        return this.storage.writeText(path, text)
+    async writeText(path: string, text: string): Promise<void> {
+        await this.storage.writeText(path, text)
+        this.pendingSyntheticDeletes.add(path)
+        this.emitSynthetic({ type: FileWatchEventType.Modified, path })
     }
 
     readDirectory(path: string): Promise<StorageEntry[]> {
@@ -43,8 +45,10 @@ export default class DefaultFileStorage implements FileStorage {
         this.emitSynthetic({ type: FileWatchEventType.Created, path })
     }
 
-    mkdir(path: string): Promise<void> {
-        return this.storage.mkdir(path)
+    async mkdir(path: string): Promise<void> {
+        await this.storage.mkdir(path)
+        this.pendingSyntheticDeletes.add(path)
+        this.emitSynthetic({ type: FileWatchEventType.Created, path })
     }
 
     async delete(path: string): Promise<void> {
