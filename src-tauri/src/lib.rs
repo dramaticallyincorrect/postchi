@@ -9,10 +9,11 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let client = sentry::init((
-        "https://1ca53a6d8bc940089420d80b8757ed7c@o471819.ingest.us.sentry.io/5504342",
+        "https://eeb2055eabeb182e16c97d41ac9cad4a@o4511105523449856.ingest.de.sentry.io/4511105526202448",
         sentry::ClientOptions {
             release: sentry::release_name!(),
             auto_session_tracking: true,
+            send_default_pii: false,
             ..Default::default()
         },
     ));
