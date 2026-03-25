@@ -60,7 +60,7 @@ argumentList {
 
   Method { "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" }
   Variable { "<" ![>]+ ">" }
-  identifier { $[a-zA-Z0-9-."_]+ $[/@]* $[a-zA-Z0-9-."_]* $[/@]? }
+  identifier { $[a-zA-Z0-9-."_]+ ($[/@]+ $[a-zA-Z0-9-."_]*)* }
   url { $[a-zA-Z0-9-._~:/?#\[\]@!$&'()*+,;=%]+}
   BodyStart { "@body" }
   slash { "/" }
