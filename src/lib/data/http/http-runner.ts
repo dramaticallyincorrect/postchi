@@ -7,7 +7,6 @@ import { executeAfterScript } from "./after-script-executor";
 import { updateEnvironmentVariable } from "../project/update-environment-variable";
 import { HttpRequest, HttpResponse } from './client/http-client';
 import { createHttpClient } from './client/http-client-factory';
-// import { fetch } from '@tauri-apps/plugin-http'
 
 export class ExecutionError {
     type: 'network' | 'template' | 'abort' | 'script';
