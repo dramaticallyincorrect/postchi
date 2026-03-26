@@ -29,7 +29,7 @@ Value {
     Comment { "//" ![\n]* }
     Pound { "#" }
     identifier { $[a-zA-Z0-9_]+ }
-    value { $[a-zA-Z0-9?_&/:#.-]+ }
+    value { ![\n]+ }
     equal { "=" }
     newline { "\n" }
 
