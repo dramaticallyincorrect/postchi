@@ -10,7 +10,7 @@ import { themes } from "@/lib/theme/themes"
 import { useTheme } from "@/theme-context/theme-context"
 
 export const Preferences = () => {
-    return <Dialog>
+    return <Dialog defaultOpen={true}>
         <DialogTrigger asChild>
             <Button variant="outline">Preferences</Button>
         </DialogTrigger>
@@ -25,12 +25,18 @@ export const Preferences = () => {
 const ThemeSelector = () => {
     const { theme, setTheme } = useTheme()
 
+    const darkThemes = themes.filter(t => t.type === 'dark')
+    const lightThemes = themes.filter(t => t.type === 'light')
+
+    const findAndApply = (id: string) => {
+        const found = themes.find(t => t.id === id)
+        if (found) setTheme(found)
+    }
+
     return (
         <Select
-            onValueChange={(value) => {
-                const found = themes.find(t => t.name === value)
-                if (found) setTheme(found)
-            }}
+            value={theme.id}
+            onValueChange={findAndApply}
         >
             <SelectTrigger className="w-full max-w-48">
                 <SelectValue placeholder={theme.name} />
@@ -39,20 +45,24 @@ const ThemeSelector = () => {
                 className="bg-background-panel"
                 onKeyDown={(e) => {
                     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                        // Radix focuses the next item after this event
                         setTimeout(() => {
                             const focused = document.querySelector('[data-slot="select-item"]:focus')
-                            const value = focused?.textContent?.trim()
-                            const found = themes.find(t => t.name === value)
-                            if (found) setTheme(found)
+                            const id = focused?.getAttribute('data-value')
+                            if (id) findAndApply(id)
                         }, 10)
                     }
                 }}
             >
                 <SelectGroup>
-                    <SelectLabel>{theme.name}</SelectLabel>
-                    {themes.map((t, i) => (
-                        <SelectItem key={i} value={t.name}>{t.name}</SelectItem>
+                    <SelectLabel>Dark</SelectLabel>
+                    {darkThemes.map(t => (
+                        <SelectItem key={t.id} value={t.id} data-value={t.id}>{t.name}</SelectItem>
+                    ))}
+                </SelectGroup>
+                <SelectGroup>
+                    <SelectLabel>Light</SelectLabel>
+                    {lightThemes.map(t => (
+                        <SelectItem key={t.id} value={t.id} data-value={t.id}>{t.name}</SelectItem>
                     ))}
                 </SelectGroup>
             </SelectContent>

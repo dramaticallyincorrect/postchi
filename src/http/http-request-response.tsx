@@ -106,31 +106,30 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         });
     }, [path])
 
-    const { theme } = useTheme()
-
-
+    const { theme, gapless } = useTheme()
+    const g = gapless
 
     return (
         <ResizablePanelGroup
             onBlur={saveOnBlur}
             orientation="horizontal"
             className="w-full h-full">
-            <ResizablePanel defaultSize="50%" className='rounded-xl bg-background-panel'>
+            <ResizablePanel defaultSize="50%" className={g ? 'bg-background-panel' : 'rounded-xl bg-background-panel'}>
                 <CodeMirror
                     onCreateEditor={(view) => {
                         viewRef.current = view;
                         loadText(view, path);
                     }}
                     height='100%'
-                    theme={theme.codemirror.theme}
+                    theme={[theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]}
                     className='height: 100% outline-none'
                     extensions={extensions}
                 />
             </ResizablePanel>
 
-            <ResizableHandle className='bg-muted/70' />
+            <ResizableHandle className={g ? 'w-px bg-muted' : 'bg-muted/70'} />
 
-            <ResizablePanel className='m-1 rounded-xl bg-background-panel overflow-hidden'>
+            <ResizablePanel className={g ? 'bg-background-panel overflow-hidden' : 'm-1 rounded-xl bg-background-panel overflow-hidden'}>
                 <ResponsePanel response={response} onCancel={() => {
                     console.log('cancel')
                     abort.current.abort()

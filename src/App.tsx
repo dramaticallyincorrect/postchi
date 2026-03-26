@@ -6,6 +6,7 @@ import {
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { useEffect, useMemo, useState } from 'react';
+import { useTheme } from './theme-context/theme-context';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -24,7 +25,6 @@ import { EnvironmentEditor } from './editors/environment-editor';
 import { ScriptEditor } from './editors/script-editor';
 import { EnvironmentProvider } from './active-environment/environment-context';
 import { ThemeProvider } from './theme-context/theme-context';
-import { themes } from './lib/theme/themes';
 import MsWindowControls from './components/window-controls';
 import { isDesktopMac, isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
@@ -64,7 +64,7 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
         return () => window.removeEventListener('keydown', handler)
     }, [])
 
-    return <ThemeProvider initialTheme={themes[0]}>
+    return <ThemeProvider>
         <EnvironmentProvider project={project} >
             <div className='flex-col h-screen w-screen flex'>
                 <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
@@ -155,27 +155,38 @@ const Editor = ({ path }: { path: string }) => {
 
 
 function Split(props: { children: React.ReactNode[]; isFileTreeVisible: boolean }) {
+    const { gapless } = useTheme()
+    const g = gapless
+
     function getDefaultFileTreeSize(screenWidth: number): number {
         if (screenWidth < 640) return 30
         if (screenWidth < 1024) return 22
         if (screenWidth < 1440) return 18
         return 15
     }
+
+    const panelClass = g
+        ? 'bg-background-panel'
+        : 'm-1 rounded-xl bg-background-panel'
+    const handleClass = g
+        ? 'w-px bg-muted'
+        : 'bg-transparent'
+
     return (
         <ResizablePanelGroup
             orientation="horizontal"
             className="w-full h-full" >
             {props.isFileTreeVisible && (
                 <>
-                    <ResizablePanel defaultSize={`${getDefaultFileTreeSize(window.innerWidth)}%`} className='m-1 rounded-xl bg-background-panel'>
+                    <ResizablePanel defaultSize={`${getDefaultFileTreeSize(window.innerWidth)}%`} className={panelClass}>
                         {props.children[0]}
                     </ResizablePanel>
 
-                    <ResizableHandle className='bg-transparent' />
+                    <ResizableHandle className={handleClass} />
                 </>
             )}
 
-            <ResizablePanel className='m-1 rounded-xl bg-background-panel'>
+            <ResizablePanel className={panelClass}>
                 {props.children[1]}
             </ResizablePanel>
         </ResizablePanelGroup>

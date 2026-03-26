@@ -73,7 +73,7 @@ const ResponseHeaders = ({ headers }: { headers: Headers }) => {
                 <div className='flex flex-col'>
                     {Array.from(headers.entries()).map(([key, value], index) => (
                         <div key={index}>
-                            <span style={{ color: theme.codemirror.tokens.attributeName, fontWeight: 'bold' }} >{key}: </span><span style={{ color: theme.codemirror.tokens.attributeValue }}>{value}</span>
+                            <span style={{ color: theme.codemirror.tokens.propertyName, fontWeight: 'bold' }} >{key}: </span><span style={{ color: theme.codemirror.tokens.string }}>{value}</span>
                         </div>
                     ))}
                 </div>
@@ -101,7 +101,7 @@ const RequestView = ({ request }: { request: HttpRequest }) => {
                     <CodeMirror
                         value={formatRequest(request)}
                         height='100%'
-                        theme={theme.codemirror.theme}
+                        theme={[theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]}
                         className='height: 100% outline-none'
                         extensions={[customHttpLanguage]}
                         readOnly={true}
@@ -138,7 +138,7 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
 
         return <CodeMirror
             value={formattedBody()}
-            theme={theme.codemirror.theme}
+            theme={[theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]}
             readOnly={true}
             className='height: 100% outline-none'
             basicSetup={{
@@ -155,8 +155,8 @@ const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }
             <div className='ml-1'>
                 {entries.map(([key, value], index) => (
                     <div key={index}>
-                        <span style={{ color: theme.codemirror.tokens.attributeName }}>{key}: </span>
-                        <span style={{ color: theme.codemirror.tokens.attributeValue }}>{value instanceof File ? `File(${value.name})` : String(value)}</span>
+                        <span style={{ color: theme.codemirror.tokens.propertyName }}>{key}: </span>
+                        <span style={{ color: theme.codemirror.tokens.string }}>{value instanceof File ? `File(${value.name})` : String(value)}</span>
                     </div>
                 ))}
             </div>
@@ -170,7 +170,7 @@ const JsonView = ({ body }: { body: string }) => {
     return (
         <CodeMirror
             value={body}
-            theme={theme.codemirror.theme}
+            theme={[theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]}
             readOnly={true}
             className='height: 100% outline-none'
             extensions={[json()]}
