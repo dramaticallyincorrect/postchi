@@ -119,6 +119,21 @@ describe('request -> postchi request', () => {
                     method: "POST",
                     url: url,
                     body: {
+                        mode: 'raw',
+                        raw: JSON.stringify({
+                            key1: 'value1',
+                            key2: '{{value2}}'
+                        })
+                    }
+                },
+                expected: `POST ${exampleUrl}\n@body\n{"key1":"value1","key2":"<value2>"}`
+            },
+            {
+                name: 'body - urlencoded',
+                request: {
+                    method: "POST",
+                    url: url,
+                    body: {
                         mode: 'urlencoded',
                         urlencoded: [
                             { key: 'key1', value: 'value1' },

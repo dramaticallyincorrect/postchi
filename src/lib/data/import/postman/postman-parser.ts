@@ -61,6 +61,7 @@ export function convertPostmanRequest(request: Request, inheritedAuth: RequestAu
             break;
         case 'raw':
             bodyString = request.body.raw || '';
+            bodyString = transformVariables(bodyString);
             break;
         case 'file':
             bodyString = `readFile(${request.body.file?.src || ''})`;
