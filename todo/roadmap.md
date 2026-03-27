@@ -8,8 +8,8 @@
       1. ~~set token~~
       2. ~~executeRequest~~
 3. settings ui
-   1. themes
-   2. license
+   1. ~~themes~~
+   2. ~~license~~
 4. ~~optimize calling license endpoint~~
    1. ~~in update, check if updates exist first then check license~~
    2. ~~check license verification every 3 days~~

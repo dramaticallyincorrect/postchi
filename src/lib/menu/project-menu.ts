@@ -1,6 +1,7 @@
 import { Menu } from '@tauri-apps/api/menu';
 import { isDesktopMac, isTauri } from '../utils/os';
 import { emitMenuEvent, MenuActions } from './menu-events';
+import { exit } from '@tauri-apps/plugin-process';
 
 export async function initMenu(isTemp: boolean = true): Promise<void> {
     if (isDesktopMac()) {
@@ -38,6 +39,7 @@ const sharedMenuItems = [
     {
         id: 'settings',
         text: 'Settings',
+        accelerator: 'CmdOrCtrl+,',
         action: async () => emitMenuEvent(MenuActions.SETTINGS),
     },
     {
@@ -68,6 +70,7 @@ const desktopOnlyMenuItems = [
     {
         id: 'settings',
         text: 'Settings',
+        accelerator: 'CmdOrCtrl+,',
         action: async () => emitMenuEvent(MenuActions.SETTINGS),
     },
     {
@@ -84,7 +87,9 @@ const desktopOnlyMenuItems = [
     {
         id: "quit",
         text: "Quit",
+        accelerator: 'CmdOrCtrl+Q',
         action: async () => {
+            exit(0);
             // const {  } = await import("@tauri-apps/api/app");
             // app.exit(0);
         },

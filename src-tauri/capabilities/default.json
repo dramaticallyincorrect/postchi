@@ -51,6 +51,14 @@
     "dialog:allow-open",
     "updater:default",
     "process:allow-restart",
+    {
+      "identifier": "process:allow-exit",
+      "allow": [
+        {
+          "command": "**"
+        }
+      ]
+    },
     "sql:default",
     {
       "identifier": "sql:allow-execute",
