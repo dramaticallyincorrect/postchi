@@ -2,6 +2,7 @@ import { loadStore } from '../data/store/store'
 import { isTauri } from '@tauri-apps/api/core'
 
 const LICENSE_KEY = 'licenseKey'
+const LAST_LICENSE_VALIDATION_DATE = 'lastLicenseValidationDate'
 const SETTINGS_STORE = 'settings.json'
 const LICENSE_API_BASE = 'https://postchi-backend-s76aq.sevalla.app'
 const LICENSE_PATTERN = /^CHI-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -18,6 +19,19 @@ export async function saveLicense(key: string): Promise<void> {
     await store.set(LICENSE_KEY, key)
     await store.save()
 }
+
+
+export async function setLastLicenseValidationDate(date: string): Promise<void> {
+    const store = await loadStore(SETTINGS_STORE)
+    await store.set(LAST_LICENSE_VALIDATION_DATE, date)
+    await store.save()
+}
+
+export async function getLastLicenseValidationDate(): Promise<string | null> {
+    const store = await loadStore(SETTINGS_STORE)
+    return store.get<string>(LAST_LICENSE_VALIDATION_DATE)
+}
+
 
 export function isValidLicenseFormat(key: string): boolean {
     return LICENSE_PATTERN.test(key.trim())
@@ -44,10 +58,24 @@ export async function getInitialLicenseStatus(): Promise<LicenseStatus> {
 }
 
 export async function validateLicenseStatus(): Promise<LicenseStatus> {
+
+    const lastValidation = await getLastLicenseValidationDate()
+    const now = new Date()
+    if (lastValidation) {
+        const lastDate = new Date(lastValidation)
+        const diffInHours = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60)
+        if (diffInHours < 72) {
+            const key = await getStoredLicense()
+            return key && isValidLicenseFormat(key) ? 'pro' : 'free'
+        }
+    }
+
+    console.log('Validating license status...')
     const key = await getStoredLicense()
     if (!key || !isValidLicenseFormat(key)) return 'free'
     try {
         const result = await validateLicense(key)
+        await setLastLicenseValidationDate(now.toISOString())
         return result.isValid ? 'pro' : 'free'
     } catch {
         return 'pro'

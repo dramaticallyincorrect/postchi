@@ -12,19 +12,19 @@ import { getStoredLicense, checkUpdateEntitlement } from '../license/license';
  *   is suppressed rather than shown, to avoid offering an install the license may not cover.
  */
 export async function checkForUpdate(): Promise<Update | null> {
-    // const licenseKey = await getStoredLicense();
-
-    // if (licenseKey) {
-    //     try {
-    //         const entitled = await checkUpdateEntitlement(licenseKey);
-    //         if (!entitled) return null;
-    //     } catch {
-    //         return null;
-    //     }
-    // }
-
     const update = await check();
     if (!update) return null;
+
+    const licenseKey = await getStoredLicense();
+
+    if (licenseKey) {
+        try {
+            const entitled = await checkUpdateEntitlement(licenseKey);
+            if (!entitled) return null;
+        } catch {
+            return null;
+        }
+    }
 
     return update;
 }
