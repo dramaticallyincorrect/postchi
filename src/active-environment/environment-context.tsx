@@ -9,8 +9,6 @@ type VariablesContextType = {
     activeEnvironment: ProjectEnvironment | null
     setActiveEnvironment: (env: ProjectEnvironment) => void
     reload: () => Promise<void>
-    envPath: string
-    secretsPath: string
 }
 
 const EnvironmentContext = createContext<VariablesContextType | null>(null)
@@ -44,7 +42,7 @@ export const EnvironmentProvider = ({ project, children }: { project: Project, c
     useFileWatch(project.secretsPath, reload, { ignoreModified: false })
 
     return (
-        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload, envPath: project.envPath, secretsPath: project.secretsPath }}>
+        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload }}>
             {children}
         </EnvironmentContext.Provider>
     )

@@ -21,7 +21,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
     const [response, setResponse] = useState<HttpExecutionStatus | null | undefined>(undefined)
 
-    const { activeEnvironment, envPath, secretsPath } = useEnvironment()
+    const { activeEnvironment } = useEnvironment()
 
     const abort = useRef(new AbortController());
 
@@ -38,12 +38,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
                 setResponse(new Loading())
 
-                const vars = [
-                    activeEnvironment?.variables ?? [],
-                    activeEnvironment?.secrets ?? []
-                ].flat()
-                
-                const response = await executeHttpTemplate(text, path, vars, abort.current, envPath, activeEnvironment?.name ?? '', secretsPath);
+                const response = await executeHttpTemplate(text, path, abort.current);
                 if (response.isOk) {
                     setResponse(response.value);
                     getResponseHistory().save(path, response.value);

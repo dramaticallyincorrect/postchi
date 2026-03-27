@@ -8,6 +8,7 @@ import { afterScriptPath } from "./after-script-executor";
 import { serializeEnvironments } from "../project/serialize-environments";
 import { HttpClient, HttpError, HttpRequest, HttpResponse } from "./client/http-client";
 import Task from "true-myth/task";
+import { setActiveEnvironment, setActiveProject } from "@/lib/project-state";
 
 
 describe('execute http template', () => {
@@ -26,7 +27,16 @@ describe('execute http template', () => {
     });
 
     const executeTemplate = (request = template, abortController = new AbortController()) => {
-        return executeHttpTemplate(request, templatePath, [], abortController, envPath, 'production', '', client)
+        setActiveProject({
+            name: 'Test Project',
+            path: root,
+            envPath: envPath,
+            secretsPath: '',
+            collectionsPath: '',
+            actionsPath: ''
+        })
+        setActiveEnvironment({ name: 'production', variables: [], secrets: [] })
+        return executeHttpTemplate(request, templatePath, abortController, client)
     }
 
     it('executes template', async () => {

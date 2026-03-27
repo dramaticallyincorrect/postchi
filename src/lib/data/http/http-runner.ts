@@ -8,6 +8,7 @@ import { HttpRequest, HttpResponse } from './client/http-client';
 import { createHttpClient } from './client/http-client-factory';
 import { buildScriptResponse } from '../../scripts/script-types';
 import { persistMutations } from '../../scripts/persist-mutations';
+import { getActiveEnvironment } from '@/lib/project-state';
 
 export class ExecutionError {
     type: 'network' | 'template' | 'abort' | 'script';
@@ -19,15 +20,18 @@ export class ExecutionError {
     }
 }
 
-export default function executeHttpTemplate(template: string,
+export default function executeHttpTemplate(
+    template: string,
     templatePath: string,
-    variables: { key: string, value: string }[],
-    abort: AbortController, 
-    envPath: string = '',
-    activeEnvironmentName: string = '',
-    secretsPath: string = '',
+    abort: AbortController,
     http = createHttpClient()): Task<HttpExecution, ExecutionError> {
     return new Task(async (resolve, reject) => {
+        const environment = getActiveEnvironment()
+        const variables = [
+            environment?.variables ?? [],
+            environment?.secrets ?? []
+        ].flat()
+
         const vars = new Map(variables.map(obj => [obj.key, obj.value]))
 
         const request = await resolveHttpTemplate(template, {
@@ -58,7 +62,7 @@ export default function executeHttpTemplate(template: string,
             try {
                 const scriptResponse = buildScriptResponse(response);
                 const mutations = await executeAfterScript(templatePath, finalRequest, scriptResponse, variables);
-                await persistMutations(mutations, envPath, secretsPath, activeEnvironmentName);
+                await persistMutations(mutations);
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
                 afterScriptError = `After script error: ${message}`;

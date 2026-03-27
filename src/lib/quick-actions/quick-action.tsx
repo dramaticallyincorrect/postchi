@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTimeout } from "../hooks/use-timeout";
 import { useQuickAction } from "./use-quick-action";
-import { useEnvironment } from "@/active-environment/environment-context";
 import { useLicense } from "../license/license-context";
 import { createQuickAction, Project } from "../data/project/project";
 import { executeQuickAction } from "./quick-action-executor";
@@ -16,8 +15,6 @@ export const QuickActionsButton = ({ project }: { project: Project }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [runState, setRunState] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
-
-    const { activeEnvironment, envPath, secretsPath } = useEnvironment();
     const { isPro, openLicenseDialog } = useLicense();
 
 
@@ -30,12 +27,7 @@ export const QuickActionsButton = ({ project }: { project: Project }) => {
         if (runState === 'running') return;
 
         setRunState('running');
-        const variables = [
-            activeEnvironment?.variables ?? [],
-            activeEnvironment?.secrets ?? []
-        ].flat()
-        const envName = activeEnvironment?.name ?? '';
-        const result = await executeQuickAction(actionPath, variables, envPath, secretsPath, envName, project.collectionsPath);
+        const result = await executeQuickAction(actionPath);
         setErrorMessage(result.errorMessage);
         setRunState(result.success ? 'success' : 'failed');
     };

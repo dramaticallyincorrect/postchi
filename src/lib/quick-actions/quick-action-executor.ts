@@ -5,6 +5,7 @@ import { buildEnv, buildScriptResponse, EnvMutation, ScriptResponse } from '../s
 import { persistMutations } from '../scripts/persist-mutations';
 import executeHttpTemplate from '../data/http/http-runner';
 import { pathOf } from '../data/files/join';
+import { getProjectState } from '../project-state';
 
 export type QuickActionResult = {
     success: boolean;
@@ -13,12 +14,8 @@ export type QuickActionResult = {
 
 export async function executeQuickAction(
     scriptPath: string,
-    variables: { key: string; value: string }[],
-    envPath: string,
-    secretsPath: string,
-    activeEnvironmentName: string,
-    collectionsPath: string,
-    storage: FileStorage = DefaultFileStorage.getInstance()
+    storage: FileStorage = DefaultFileStorage.getInstance(),
+    state = getProjectState()
 ): Promise<QuickActionResult> {
     const scriptContent = await storage.readText(scriptPath);
 
@@ -26,18 +23,15 @@ export async function executeQuickAction(
     const secretMutations: EnvMutation[] = [];
 
     const executeRequest = async (relativePath: string): Promise<ScriptResponse> => {
-        const absolutePath = pathOf(collectionsPath, relativePath);
+        const absolutePath = pathOf(state.project.collectionsPath, relativePath);
         const template = await storage.readText(absolutePath);
 
         const result = await executeHttpTemplate(
             template,
             absolutePath,
-            variables,
             new AbortController(),
-            envPath,
-            activeEnvironmentName,
-            secretsPath,
         );
+
         if (result.isOk) {
             return buildScriptResponse(result.value.response);
         } else {
@@ -46,17 +40,18 @@ export async function executeQuickAction(
     };
 
     try {
-        const result = await executeScript({
-            env: buildEnv(variables),
+        // TODO: refactor to avoid the mapping
+        await executeScript({
+            env: buildEnv(state.environment.variables.concat(state.environment.secrets)),
             fetch: globalThis.fetch,
             setEnvironmentVariable: (key: string, value: string) => envMutations.push({ key, value }),
             setSecret: (key: string, value: string) => secretMutations.push({ key, value }),
             executeRequest,
         }, scriptContent);
 
-        await persistMutations({ envMutations, secretMutations }, envPath, secretsPath, activeEnvironmentName);
+        await persistMutations({ envMutations, secretMutations });
 
-        return { success: !!result };
+        return { success: true };
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         console.error('Error executing quick action:', error);

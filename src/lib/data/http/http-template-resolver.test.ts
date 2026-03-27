@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import resolveHttpTemplate from "./http-template-resolver";
 import { fs } from "memfs";
 import Task from "true-myth/task";
+import { computeHttpDiagnostics } from "@/lib/http/linter/http-linter";
 
 
 describe('creates http request from ast', () => {
@@ -327,7 +328,7 @@ describe('creates http request from ast', () => {
 
     })
 
-    it('returns null if any errors exist', async () => {
+    it('returns first diagnostic when linter errors exist', async () => {
         // error is urlencoded body with file attached
         const template = `GET https://getpostchi.com/download
                             Content-Type: application/x-www-form-urlencoded
@@ -339,8 +340,10 @@ describe('creates http request from ast', () => {
 
         const httpRequest = await resolveHttpTemplate(template);
 
+        const diagnostic = computeHttpDiagnostics(template)[0]
+
         expect(httpRequest, template).toStrictEqual({
-            message: 'request contains errors'
+            message: diagnostic.message
         });
     })
 
