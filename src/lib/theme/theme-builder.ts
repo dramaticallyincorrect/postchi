@@ -206,7 +206,21 @@ export function buildEditorTheme(colors: EditorColors, dark: boolean): Extension
             padding: '0 2px',
             color: `${colors.variableValidForeground} !important`,
         },
+        // Handle case where variable is wrapped in a span (e.g. due to syntax highlighting like in JSON)
+        '.cm-variable-valid span': {
+            backgroundColor: `${colors.variableValidBackground} !important`,
+            borderRadius: '2px',
+            padding: '0 2px',
+            color: `${colors.variableValidForeground} !important`,
+        },
         '.cm-variable-invalid': {
+            backgroundColor: colors.variableInvalidBackground,
+            borderRadius: '2px',
+            padding: '0 2px',
+            color: colors.variableInvalidForeground,
+        },
+        // Handle case where variable is wrapped in a span (e.g. due to syntax highlighting like in JSON)
+        '.cm-variable-invalid span': {
             backgroundColor: colors.variableInvalidBackground,
             borderRadius: '2px',
             padding: '0 2px',
