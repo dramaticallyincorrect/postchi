@@ -51,7 +51,7 @@ export function LicenseDialog({ onActivated }: { onActivated: () => void }) {
         setBuyLabel('relief')
         revertTimerRef.current = setTimeout(() => setBuyLabel('default'), 3000)
     }
-    // "Buy Pro ${if (enabled) "(Oh come on!)" else if (phew) "(phew \uD83D\uDE2E\u200D\uD83D\uDCA8)" else ""}",
+
     const buyLabelText = buyLabel === 'tease' ? 'Oh come on!' : buyLabel === 'relief' ? 'phew \uD83D\uDE2E\u200D\uD83D\uDCA8' : 'Buy Pro'
 
     const handleActivate = async () => {

@@ -36,6 +36,11 @@ export function projectMenuItems(isTemp: boolean) {
 const sharedMenuItems = [
     { item: "Separator" as const },
     {
+        id: 'settings',
+        text: 'Settings',
+        action: async () => emitMenuEvent(MenuActions.SETTINGS),
+    },
+    {
         id: 'activate_license',
         text: 'Activate License…',
         action: async () => emitMenuEvent(MenuActions.ACTIVATE_LICENSE),
@@ -60,6 +65,11 @@ const desktopOnlyMenuItems = [
         action: async () => emitMenuEvent(MenuActions.CHECK_FOR_UPDATES),
     },
     { item: "Separator" as const },
+    {
+        id: 'settings',
+        text: 'Settings',
+        action: async () => emitMenuEvent(MenuActions.SETTINGS),
+    },
     {
         id: 'activate_license',
         text: 'Activate License…',

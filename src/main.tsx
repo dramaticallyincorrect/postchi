@@ -19,10 +19,12 @@ import { LicenseDialog } from "./components/license-dialog"
 import { LicenseContext } from "./lib/license/license-context"
 import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/license";
 import { AboutDialog } from "./about/about-dialog";
+import { SettingsDialog } from "./components/settings-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { PostHogProvider } from "posthog-js/react";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { setActiveProject } from "./lib/project-state";
+import { ThemeProvider } from "./theme-context/theme-context";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -142,6 +144,7 @@ function AppShell() {
                 }}
             />
             <AboutDialog />
+            <SettingsDialog />
             <Toaster />
         </LicenseContext.Provider>
     )
@@ -150,11 +153,13 @@ function AppShell() {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <TooltipProvider>
-            <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
-                <AppShell />
-            </PostHogProvider>
-        </TooltipProvider>
+        <ThemeProvider>
+            <TooltipProvider>
+                <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
+                    <AppShell />
+                </PostHogProvider>
+            </TooltipProvider>
+        </ThemeProvider>
 
     </React.StrictMode>,
 );

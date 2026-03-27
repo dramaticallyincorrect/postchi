@@ -5,14 +5,14 @@
    2. show skipped requests
 2. scripts
    1. more functions
-      1. set token
-      2. executeRequest
+      1. ~~set token~~
+      2. ~~executeRequest~~
 3. settings ui
    1. themes
    2. license
-4. optimize calling license endpoint
-   1. in update, check if updates exist first then check license
-   2. check license verification every 3 days
+4. ~~optimize calling license endpoint~~
+   1. ~~in update, check if updates exist first then check license~~
+   2. ~~check license verification every 3 days~~
 5. back and forward recent requests
 6. end to end tests
 7. search

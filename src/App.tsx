@@ -24,7 +24,6 @@ import { FileType } from './lib/data/supported-filetypes';
 import { EnvironmentEditor } from './editors/environment-editor';
 import { ScriptEditor } from './editors/script-editor';
 import { EnvironmentProvider } from './active-environment/environment-context';
-import { ThemeProvider } from './theme-context/theme-context';
 import MsWindowControls from './components/window-controls';
 import { isDesktopMac, isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
@@ -64,27 +63,25 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
         return () => window.removeEventListener('keydown', handler)
     }, [])
 
-    return <ThemeProvider>
-        <EnvironmentProvider project={project} >
-            <div className='flex-col h-screen w-screen flex'>
-                <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
-                <Split isFileTreeVisible={isFileTreeVisible}>
-                    <FileTree items={fileTree} actionsPath={project.actionsPath} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
-                    {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
-                </Split>
-                <SearchDialog
-                    open={searchOpen}
-                    onOpenChange={setSearchOpen}
-                    files={httpFiles}
-                    collectionsPath={project.collectionsPath}
-                    onSelect={item => {
-                        setSelectedFile(item)
-                        setSearchOpen(false)
-                    }}
-                />
-            </div>
-        </EnvironmentProvider>
-    </ThemeProvider>
+    return <EnvironmentProvider project={project} >
+        <div className='flex-col h-screen w-screen flex'>
+            <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
+            <Split isFileTreeVisible={isFileTreeVisible}>
+                <FileTree items={fileTree} actionsPath={project.actionsPath} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
+                {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
+            </Split>
+            <SearchDialog
+                open={searchOpen}
+                onOpenChange={setSearchOpen}
+                files={httpFiles}
+                collectionsPath={project.collectionsPath}
+                onSelect={item => {
+                    setSelectedFile(item)
+                    setSearchOpen(false)
+                }}
+            />
+        </div>
+    </EnvironmentProvider>
 
 }
 
