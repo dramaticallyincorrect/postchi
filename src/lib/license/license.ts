@@ -69,8 +69,6 @@ export async function validateLicenseStatus(): Promise<LicenseStatus> {
             return key && isValidLicenseFormat(key) ? 'pro' : 'free'
         }
     }
-
-    console.log('Validating license status...')
     const key = await getStoredLicense()
     if (!key || !isValidLicenseFormat(key)) return 'free'
     try {
