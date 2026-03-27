@@ -15,6 +15,8 @@ import {
     saveLicense,
     openBuyPage,
 } from '@/lib/license/license'
+import { useMenuTrigger } from '@/lib/hooks/use-menu-trigger'
+import { MenuActions } from '@/lib/menu/menu-events'
 
 const FREE_FEATURES = [
     'HTTP requests',
@@ -31,13 +33,9 @@ const PRO_ONLY_FEATURES = [
 
 type ActivationStatus = 'idle' | 'validating' | 'success' | 'error'
 
-type LicenseDialogProps = {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    onActivated: () => void
-}
 
-export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialogProps) {
+export function LicenseDialog({ onActivated }: { onActivated: () => void }) {
+    const [open, setOpen] = useMenuTrigger(MenuActions.ACTIVATE_LICENSE)
     const [key, setKey] = useState('')
     const [status, setStatus] = useState<ActivationStatus>('idle')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -53,7 +51,7 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
         setBuyLabel('relief')
         revertTimerRef.current = setTimeout(() => setBuyLabel('default'), 3000)
     }
-// "Buy Pro ${if (enabled) "(Oh come on!)" else if (phew) "(phew \uD83D\uDE2E\u200D\uD83D\uDCA8)" else ""}",
+    // "Buy Pro ${if (enabled) "(Oh come on!)" else if (phew) "(phew \uD83D\uDE2E\u200D\uD83D\uDCA8)" else ""}",
     const buyLabelText = buyLabel === 'tease' ? 'Oh come on!' : buyLabel === 'relief' ? 'phew \uD83D\uDE2E\u200D\uD83D\uDCA8' : 'Buy Pro'
 
     const handleActivate = async () => {
@@ -90,7 +88,7 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
             setStatus('idle')
             setErrorMessage(null)
         }
-        onOpenChange(open)
+        setOpen(open)
     }
 
     return (
@@ -110,7 +108,7 @@ export function LicenseDialog({ open, onOpenChange, onActivated }: LicenseDialog
                             <Button
                                 variant="outline"
                                 className="w-full"
-                                onClick={() => handleOpenChange(false)}
+                                onClick={() => setOpen(false)}
                                 onMouseEnter={handleFreeHoverIn}
                                 onMouseLeave={handleFreeHoverOut}
                             >

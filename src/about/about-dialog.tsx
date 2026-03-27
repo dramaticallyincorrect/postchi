@@ -1,13 +1,17 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMenuTrigger } from "@/lib/hooks/use-menu-trigger";
 import { getAppVersion } from "@/lib/license/license";
+import { MenuActions } from "@/lib/menu/menu-events";
 import { useMemo } from "react";
 
-export const AboutDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+export const AboutDialog = () => {
+    const [open, setOpen] = useMenuTrigger(MenuActions.ABOUT_POSTCHI);
+
     const version = useMemo(() => {
         return getAppVersion();
     }, []);
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="p-12" aria-describedby={undefined}>
                 <DialogHeader className="text-center items-center pb-2">
                     <img src="/postchi.svg" alt="Postchi Logo" className="w-16 h-16 mb-4" />

@@ -11,14 +11,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
+import { useMenuTrigger } from "@/lib/hooks/use-menu-trigger"
+import { MenuActions } from "@/lib/menu/menu-events"
 
 type NewProjectDialogProps = {
-    open: boolean
-    onOpenChange: (open: boolean) => void
     onConfirm: (name: string, parentFolder: string) => void
 }
 
-export function NewProjectDialog({ open, onOpenChange, onConfirm }: NewProjectDialogProps) {
+export function NewProjectDialog({onConfirm }: NewProjectDialogProps) {
+    const [open, setOpen] = useMenuTrigger(MenuActions.NEW_PROJECT)
     const [name, setName] = useState("")
     const [parentFolder, setParentFolder] = useState("")
 
@@ -41,7 +42,7 @@ export function NewProjectDialog({ open, onOpenChange, onConfirm }: NewProjectDi
     const isValid = name.trim().length > 0 && parentFolder.length > 0
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
                 <DialogHeader>
                     <DialogTitle>New Project</DialogTitle>

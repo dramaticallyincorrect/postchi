@@ -48,11 +48,7 @@ await initMenu(lastPath === tempPath)
 
 function AppShell() {
     const [project, setProject] = useState<Project>(initialProject)
-    const [importOpen, setImportOpen] = useState(false)
-    const [aboutOpen, setAboutOpen] = useState(false)
-    const [newProjectOpen, setNewProjectOpen] = useState(false)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
-    const [licenseOpen, setLicenseOpen] = useState(false)
     const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
 
     const refreshLicense = async () => {
@@ -86,12 +82,6 @@ function AppShell() {
     useEffect(() => {
         const unlisten = onMenuEvent(async (action) => {
             switch (action) {
-                case MenuActions.IMPORT_PROJECT:
-                    setImportOpen(true)
-                    break
-                case MenuActions.NEW_PROJECT:
-                    setNewProjectOpen(true)
-                    break
                 case MenuActions.OPEN_PROJECT: {
                     if (!isTauri()) break
                     const { open } = await import("@tauri-apps/plugin-dialog")
@@ -108,9 +98,6 @@ function AppShell() {
                     }
                     break
                 }
-                case MenuActions.ACTIVATE_LICENSE:
-                    setLicenseOpen(true)
-                    break
                 case MenuActions.SAVE_PROJECT: {
                     const { open } = await import("@tauri-apps/plugin-dialog")
                     const selected = await open({ directory: true, title: "Save Project To…" })
@@ -118,9 +105,6 @@ function AppShell() {
                     await switchProject(await copyProject(project, selected))
                     break
                 }
-                case MenuActions.ABOUT_POSTCHI:
-                    setAboutOpen(true)
-                    break
             }
         })
 
@@ -128,11 +112,9 @@ function AppShell() {
     }, [project])
 
     return (
-        <LicenseContext.Provider value={{ isPro, openLicenseDialog: () => setLicenseOpen(true), refreshLicense }}>
+        <LicenseContext.Provider value={{ isPro, refreshLicense }}>
             <App key={project.path} project={project} isTemp={project.path === tempPath} />
             <ImportDialog
-                open={importOpen}
-                onOpenChange={setImportOpen}
                 onImport={async (format, file) => {
                     if (format === 'postman') {
                         if (file.name.endsWith('.zip')) {
@@ -144,10 +126,7 @@ function AppShell() {
                 }}
             />
             <NewProjectDialog
-                open={newProjectOpen}
-                onOpenChange={setNewProjectOpen}
                 onConfirm={async (name, parentFolder) => {
-                    setNewProjectOpen(false)
                     const destPath = pathOf(parentFolder, name)
                     const newProject = await createProject(destPath)
                     await switchProject(newProject)
@@ -158,17 +137,11 @@ function AppShell() {
                 onClose={() => setAvailableUpdate(null)}
             />
             <LicenseDialog
-                open={licenseOpen}
-                onOpenChange={setLicenseOpen}
                 onActivated={async () => {
                     setIsPro(true)
-                    setLicenseOpen(false)
                 }}
             />
-            <AboutDialog
-                open={aboutOpen}
-                onOpenChange={setAboutOpen}
-            />
+            <AboutDialog />
             <Toaster />
         </LicenseContext.Provider>
     )

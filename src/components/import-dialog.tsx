@@ -1,10 +1,12 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, X, AlertCircle, TriangleAlert, CircleCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImportResult } from '@/lib/data/import/import-folder';
+import { MenuActions, onMenuEvent } from '@/lib/menu/menu-events';
+import { useMenuTrigger } from '@/lib/hooks/use-menu-trigger';
 
 
 function PostmanIcon({ className }: { className?: string }) {
@@ -63,17 +65,17 @@ const FORMAT_INFO: FormatInfo[] = [
 
 
 interface ImportDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
     onImport: (format: ImportFormat, file: File) => Promise<ImportResult>;
 }
 
-export function ImportDialog({ open, onOpenChange, onImport }: ImportDialogProps) {
+export function ImportDialog({ onImport }: ImportDialogProps) {
+    const [open, setOpen] = useMenuTrigger(MenuActions.IMPORT_PROJECT);
     const [selectedFormat, setSelectedFormat] = useState<FormatInfo>(FORMAT_INFO[0]);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [rejectedFile, setRejectedFile] = useState(false);
     const [importResult, setImportResult] = useState<{ count: number; skipped: number } | null>(null);
+
 
     const accept = useMemo(() => selectedFormat.accept, [selectedFormat]);
 
@@ -109,7 +111,7 @@ export function ImportDialog({ open, onOpenChange, onImport }: ImportDialogProps
 
     const handleClose = () => {
         if (loading) return;
-        onOpenChange(false);
+        setOpen(false);
         setFile(null);
         setRejectedFile(false);
         setImportResult(null);

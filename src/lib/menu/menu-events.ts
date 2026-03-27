@@ -8,6 +8,7 @@ export const MenuActions = {
     CHECK_FOR_UPDATES: 'check_for_updates',
     ACTIVATE_LICENSE: 'activate_license',
     ABOUT_POSTCHI: 'about_postchi',
+    SETTINGS: 'settings',
 } as const;
 
 export type MenuAction = (typeof MenuActions)[keyof typeof MenuActions];
