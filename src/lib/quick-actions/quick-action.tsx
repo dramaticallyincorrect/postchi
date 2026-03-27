@@ -5,18 +5,19 @@ import { useEnvironment } from "@/active-environment/environment-context";
 import { useLicense } from "../license/license-context";
 import { createQuickAction, Project } from "../data/project/project";
 import { executeQuickAction } from "./quick-action-executor";
-import { updateEnvironmentVariable } from "../data/project/update-environment-variable";
 import { Button } from "@/components/ui/button";
 import { Loader2Icon, PlayIcon, PlusIcon } from "lucide-react";
 import { NewQuickActionDialog } from "@/components/new-quick-action-dialog";
 import { isOsCommandKey } from "../utils/keyboard-event";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const QuickActionsButton = ({ project }: { project: Project }) => {
     const { action, setAction } = useQuickAction(project.actionsPath, project.path);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [runState, setRunState] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');
+    const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
 
-    const { activeEnvironment, envPath } = useEnvironment();
+    const { activeEnvironment, envPath, secretsPath } = useEnvironment();
     const { isPro, openLicenseDialog } = useLicense();
 
 
@@ -29,18 +30,13 @@ export const QuickActionsButton = ({ project }: { project: Project }) => {
         if (runState === 'running') return;
 
         setRunState('running');
-        const variables = activeEnvironment?.variables ?? [];
-        const result = await executeQuickAction(actionPath, variables);
-
-        if (result.success) {
-            const envName = activeEnvironment?.name ?? '';
-            await Promise.all(
-                result.mutations.map(({ key, value }) =>
-                    updateEnvironmentVariable(envPath, envName, key, value)
-                )
-            );
-        }
-
+        const variables = [
+            activeEnvironment?.variables ?? [],
+            activeEnvironment?.secrets ?? []
+        ].flat()
+        const envName = activeEnvironment?.name ?? '';
+        const result = await executeQuickAction(actionPath, variables, envPath, secretsPath, envName, project.collectionsPath);
+        setErrorMessage(result.errorMessage);
         setRunState(result.success ? 'success' : 'failed');
     };
 
@@ -77,16 +73,27 @@ export const QuickActionsButton = ({ project }: { project: Project }) => {
     }
 
     return (
-        <Button
-            variant="outline"
-            size="sm"
-            className="text-foreground mt-1.5 mx-2"
-            onClick={() => runAction(action.path)}
-            disabled={runState === 'running'}
-        >
-            {action.name}
-            <StatusIcon state={runState} />
-        </Button>
+        <Tooltip>
+            <TooltipTrigger>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-foreground mt-1.5 mx-2"
+                    onClick={() => runAction(action.path)}
+                    disabled={runState === 'running'}
+                >
+                    {action.name}
+                    <StatusIcon state={runState} />
+                </Button>
+            </TooltipTrigger>
+            <TooltipContent className={errorMessage ? "" : "hidden"}>
+                {errorMessage ? (
+                    <div className="max-w-xs whitespace-pre-wrap text-sm text-error">
+                        {errorMessage}
+                    </div>
+                ) : null}
+            </TooltipContent>
+        </Tooltip>
     );
 };
 

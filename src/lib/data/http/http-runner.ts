@@ -4,9 +4,10 @@ import { FolderSettings, readSettingsForRequest } from "../project/project";
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 import { executeBeforeScript } from "./before-script-executor";
 import { executeAfterScript } from "./after-script-executor";
-import { updateEnvironmentVariable } from "../project/update-environment-variable";
 import { HttpRequest, HttpResponse } from './client/http-client';
 import { createHttpClient } from './client/http-client-factory';
+import { buildScriptResponse } from '../../scripts/script-types';
+import { persistMutations } from '../../scripts/persist-mutations';
 
 export class ExecutionError {
     type: 'network' | 'template' | 'abort' | 'script';
@@ -21,8 +22,10 @@ export class ExecutionError {
 export default function executeHttpTemplate(template: string,
     templatePath: string,
     variables: { key: string, value: string }[],
-    abort: AbortController, envPath: string = '',
+    abort: AbortController, 
+    envPath: string = '',
     activeEnvironmentName: string = '',
+    secretsPath: string = '',
     http = createHttpClient()): Task<HttpExecution, ExecutionError> {
     return new Task(async (resolve, reject) => {
         const vars = new Map(variables.map(obj => [obj.key, obj.value]))
@@ -53,15 +56,9 @@ export default function executeHttpTemplate(template: string,
             let afterScriptError: string | undefined;
             const response = httpResult.value;
             try {
-                const scriptResponse = {
-                    status: response.status,
-                    headers: Object.fromEntries(response.headers.entries()),
-                    body: typeof response.body === 'string' ? response.body : null,
-                };
-                const afterMutations = await executeAfterScript(templatePath, finalRequest, scriptResponse, variables);
-                for (const { key, value } of afterMutations) {
-                    await updateEnvironmentVariable(envPath, activeEnvironmentName, key, value);
-                }
+                const scriptResponse = buildScriptResponse(response);
+                const mutations = await executeAfterScript(templatePath, finalRequest, scriptResponse, variables);
+                await persistMutations(mutations, envPath, secretsPath, activeEnvironmentName);
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
                 afterScriptError = `After script error: ${message}`;

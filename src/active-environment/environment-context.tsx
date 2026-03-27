@@ -2,6 +2,7 @@ import readEnvironments from "@/lib/data/project/read-environments"
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState, } from "react"
 import { useFileWatch } from "@/lib/hooks/file-watch"
 import { Project } from "@/lib/data/project/project"
+import { setActiveEnvironment as setProjectEnvironment } from "@/lib/project-state"
 
 type VariablesContextType = {
     environments: ProjectEnvironment[]
@@ -9,6 +10,7 @@ type VariablesContextType = {
     setActiveEnvironment: (env: ProjectEnvironment) => void
     reload: () => Promise<void>
     envPath: string
+    secretsPath: string
 }
 
 const EnvironmentContext = createContext<VariablesContextType | null>(null)
@@ -16,6 +18,10 @@ const EnvironmentContext = createContext<VariablesContextType | null>(null)
 export const EnvironmentProvider = ({ project, children }: { project: Project, children: ReactNode }) => {
     const [environments, setEnvironments] = useState<ProjectEnvironment[]>([])
     const [activeEnvironment, setActiveEnvironment] = useState<ProjectEnvironment | null>(null)
+
+    useEffect(() => {
+        setProjectEnvironment(activeEnvironment)
+    }, [activeEnvironment])
 
     const reload = useCallback(async () => {
         const envs = await readEnvironments(project.envPath)
@@ -38,7 +44,7 @@ export const EnvironmentProvider = ({ project, children }: { project: Project, c
     useFileWatch(project.secretsPath, reload, { ignoreModified: false })
 
     return (
-        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload, envPath: project.envPath }}>
+        <EnvironmentContext.Provider value={{ environments, activeEnvironment, setActiveEnvironment, reload, envPath: project.envPath, secretsPath: project.secretsPath }}>
             {children}
         </EnvironmentContext.Provider>
     )

@@ -26,7 +26,7 @@ describe('execute http template', () => {
     });
 
     const executeTemplate = (request = template, abortController = new AbortController()) => {
-        return executeHttpTemplate(request, templatePath, [], abortController, envPath, 'production', client)
+        return executeHttpTemplate(request, templatePath, [], abortController, envPath, 'production', '', client)
     }
 
     it('executes template', async () => {

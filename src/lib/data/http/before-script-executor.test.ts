@@ -85,4 +85,14 @@ describe('executeBeforeScript', () => {
 
         expect(request.body).toBe(formData);
     });
+
+    it('executes folder before.js then request-level before.js in order', async () => {
+        fs.writeFileSync(`${root}/before.js`, `request.headers['X-Order'] = '1';`);
+        fs.writeFileSync(`${root}/login.before.js`, `request.headers['X-Order'] = request.headers['X-Order'] + ',2';`);
+
+        const request = await executeBeforeScript(requestPath, baseRequest, []);
+
+        const orderHeader = request.headers.find(([k]) => k === 'X-Order');
+        expect(orderHeader?.[1]).toBe('1,2');
+    });
 });

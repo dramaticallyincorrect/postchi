@@ -1,4 +1,5 @@
 import { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
+import { SCRIPT_CONTEXT_ENTRIES, ScriptContextKind } from "../script-context";
 
 const STRING_METHODS: Completion[] = [
     { label: 'startsWith', type: 'method', detail: '(searchString: string): boolean' },
@@ -22,11 +23,7 @@ const STRING_METHODS: Completion[] = [
     { label: 'length', type: 'property', detail: 'number' },
 ];
 
-const SHARED_GLOBALS: Completion[] = [
-    { label: 'env', type: 'variable', detail: 'Record<string, string>', info: 'Resolved environment variables' },
-    { label: 'fetch', type: 'function', detail: 'fetch(input, init?)', info: 'Make a sub-request' },
-    { label: 'console', type: 'variable', detail: 'Console', info: 'Browser console for debugging' },
-];
+// ── Completion helpers ─────────────────────────────────────────────────
 
 function propCompletion(context: CompletionContext, pattern: RegExp, prefix: string, options: Completion[]): CompletionResult | null {
     const match = context.matchBefore(pattern);
@@ -52,60 +49,45 @@ function topLevelCompletion(context: CompletionContext, options: Completion[]): 
     return { from: word.from, options };
 }
 
-const BEFORE_REQUEST_PROPS: Completion[] = [
-    { label: 'method', type: 'property', detail: 'string', info: 'HTTP method, e.g. "GET"' },
-    { label: 'url', type: 'property', detail: 'string', info: 'Full request URL' },
-    { label: 'headers', type: 'property', detail: 'Record<string, string>', info: 'Request headers — access with request.headers["Content-Type"]' },
-    { label: 'body', type: 'property', detail: 'string | null', info: 'Request body, or null for bodyless requests' },
-];
+// ── Build completion source from registry ──────────────────────────────
 
-const AFTER_REQUEST_PROPS: Completion[] = [
-    { label: 'method', type: 'property', detail: 'string', info: 'HTTP method that was sent, e.g. "POST"' },
-    { label: 'url', type: 'property', detail: 'string', info: 'URL the request was sent to' },
-    { label: 'headers', type: 'property', detail: 'Record<string, string>', info: 'Headers that were sent with the request' },
-    { label: 'body', type: 'property', detail: 'string | null', info: 'Body that was sent, or null for bodyless requests' },
-];
+function buildCompletionSource(contextKind: ScriptContextKind) {
+    const entries = SCRIPT_CONTEXT_ENTRIES.filter(e => e.contexts.includes(contextKind));
 
-const RESPONSE_PROPS: Completion[] = [
-    { label: 'status', type: 'property', detail: 'number', info: 'HTTP status code, e.g. 200' },
-    { label: 'headers', type: 'property', detail: 'Record<string, string>', info: 'Response headers — access with response.headers["content-type"]' },
-    { label: 'body', type: 'property', detail: 'string | null', info: 'Response body as text, or null for binary responses' },
-];
+    return (context: CompletionContext): CompletionResult | null => {
+        // Most-specific patterns first to avoid short patterns shadowing longer chains
+        for (const entry of entries) {
+            const props = typeof entry.properties === 'function'
+                ? entry.properties(contextKind)
+                : entry.properties;
+            if (!props) continue;
 
-// Patterns are matched most-specific first to avoid short patterns shadowing
-// longer chains (e.g. `request.url.` before `request.`).
-export function beforeScriptCompletion(context: CompletionContext): CompletionResult | null {
-    return (
-        propCompletion(context, /request\.url\.\w*/, 'request.url.', STRING_METHODS) ??
-        propCompletion(context, /request\.method\.\w*/, 'request.method.', STRING_METHODS) ??
-        nullableBodyCompletion(context, /request\.body\.\w*/, 'request.body.') ??
-        propCompletion(context, /request\.\w*/, 'request.', BEFORE_REQUEST_PROPS) ??
-        topLevelCompletion(context, [
-            { label: 'request', type: 'variable', detail: 'ScriptRequest', info: 'Mutable request object — mutate its properties to change the request' },
-            ...SHARED_GLOBALS,
-        ])
-    );
+            // Check string/nullable-string property completions (e.g. request.url.trim)
+            for (const prop of props) {
+                if (prop.valueType === 'string' || prop.valueType === 'nullable-string') {
+                    const pattern = new RegExp(`${entry.name}\\.${prop.name}\\.\\w*`);
+                    const prefix = `${entry.name}.${prop.name}.`;
+                    const result = prop.valueType === 'nullable-string'
+                        ? nullableBodyCompletion(context, pattern, prefix)
+                        : propCompletion(context, pattern, prefix, STRING_METHODS);
+                    if (result) return result;
+                }
+            }
+
+            // Property-level completions (e.g. request.url, response.status)
+            const propPattern = new RegExp(`${entry.name}\\.\\w*`);
+            const propResult = propCompletion(context, propPattern, `${entry.name}.`, props.map(p => p.completion));
+            if (propResult) return propResult;
+        }
+
+        // Top-level completions
+        const topLevel = entries.map(e =>
+            typeof e.completion === 'function' ? e.completion(contextKind) : e.completion
+        );
+        return topLevelCompletion(context, topLevel);
+    };
 }
 
-export function quickActionCompletion(context: CompletionContext): CompletionResult | null {
-    return topLevelCompletion(context, [
-        ...SHARED_GLOBALS,
-        { label: 'setEnvironmentVariable', type: 'function', detail: '(key: string, value: string): void', info: 'Set a variable in the active environment and persist it to the .cenv file' },
-    ]);
-}
-
-export function afterScriptCompletion(context: CompletionContext): CompletionResult | null {
-    return (
-        nullableBodyCompletion(context, /response\.body\.\w*/, 'response.body.') ??
-        propCompletion(context, /response\.\w*/, 'response.', RESPONSE_PROPS) ??
-        propCompletion(context, /request\.url\.\w*/, 'request.url.', STRING_METHODS) ??
-        propCompletion(context, /request\.method\.\w*/, 'request.method.', STRING_METHODS) ??
-        propCompletion(context, /request\.\w*/, 'request.', AFTER_REQUEST_PROPS) ??
-        topLevelCompletion(context, [
-            { label: 'response', type: 'variable', detail: 'ScriptResponse', info: 'The HTTP response — status, headers, body' },
-            { label: 'request', type: 'variable', detail: 'ScriptRequest', info: 'The request that was sent (read-only at this point)' },
-            ...SHARED_GLOBALS,
-            { label: 'setEnvironmentVariable', type: 'function', detail: '(key: string, value: string): void', info: 'Set a variable in the active environment and persist it to the .cenv file' },
-        ])
-    );
-}
+export const beforeScriptCompletion = buildCompletionSource('before');
+export const afterScriptCompletion = buildCompletionSource('after');
+export const quickActionCompletion = buildCompletionSource('quick-action');

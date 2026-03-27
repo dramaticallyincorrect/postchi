@@ -21,6 +21,8 @@ import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/li
 import { AboutDialog } from "./about/about-dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { PostHogProvider } from "posthog-js/react";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { setActiveProject } from "./lib/project-state";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -37,6 +39,9 @@ const store = await loadStore(SETTINGS_STORE)
 const lastPath = await store.get<string>(LAST_PROJECT_KEY) ?? tempPath
 
 const initialProject = await createProject(lastPath)
+
+setActiveProject(initialProject)
+
 const initialLicenseStatus = await getInitialLicenseStatus()
 
 await initMenu(lastPath === tempPath)
@@ -54,6 +59,10 @@ function AppShell() {
         const status = await validateLicenseStatus()
         setIsPro(status === 'pro')
     }
+
+    useEffect(() => {
+        setActiveProject(project)
+    }, [project])
 
     useEffect(() => {
         if (!isTauri()) return
@@ -168,8 +177,11 @@ function AppShell() {
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
-            <AppShell />
-        </PostHogProvider>
+        <TooltipProvider>
+            <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
+                <AppShell />
+            </PostHogProvider>
+        </TooltipProvider>
+
     </React.StrictMode>,
 );

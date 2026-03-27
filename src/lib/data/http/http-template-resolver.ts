@@ -16,7 +16,7 @@ export default async function resolveHttpTemplate(template: string, context: Exe
 
     const errors = computeHttpDiagnostics(template, Array.from(context.variables.entries()).map(([key, value]) => ({ key, value })));
     if (errors.length > 0) {
-        return { message: 'request contains errors' }
+        return { message: errors[0].message }
     }
 
     const urlNode = ast.url[0]

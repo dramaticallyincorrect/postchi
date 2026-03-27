@@ -3,18 +3,11 @@ import DefaultFileStorage from "../files/file-default";
 import { FileType } from "../supported-filetypes";
 import { readClosestFile } from "../files/file-utils/file-utils";
 import { HttpRequest } from "./client/http-client";
+import { buildScriptRequest, buildEnv, scriptPath, ScriptRequest } from "../../scripts/script-types";
+import { executeScript } from "../../scripts/script-executor";
 
 export function beforeScriptPath(requestPath: string): string {
-    const lastDot = requestPath.lastIndexOf('.');
-    const base = lastDot !== -1 ? requestPath.substring(0, lastDot) : requestPath;
-    return `${base}${FileType.BEFORE_SCRIPT}`;
-}
-
-type ScriptRequest = {
-    method: string;
-    url: string;
-    headers: Record<string, string>;
-    body: string | null;
+    return scriptPath(requestPath, FileType.BEFORE_SCRIPT);
 }
 
 async function runBeforeScriptContent(
@@ -22,25 +15,13 @@ async function runBeforeScriptContent(
     request: HttpRequest,
     variables: { key: string; value: string }[],
 ): Promise<HttpRequest> {
-    const headersRecord: Record<string, string> = {};
-    for (const [key, value] of request.headers) {
-        headersRecord[key] = value;
-    }
+    const scriptRequest: ScriptRequest = buildScriptRequest(request);
 
-    const scriptRequest: ScriptRequest = {
-        method: request.method,
-        url: request.url,
-        headers: headersRecord,
-        body: typeof request.body === 'string' ? request.body : null,
-    };
-
-    const env: Record<string, string> = {};
-    for (const { key, value } of variables) {
-        env[key] = value;
-    }
-
-    const fn = new Function('request', 'env', 'fetch', `return (async () => { ${scriptContent} })()`);
-    await fn(scriptRequest, env, globalThis.fetch);
+    await executeScript({
+        request: scriptRequest,
+        env: buildEnv(variables),
+        fetch: globalThis.fetch,
+    }, scriptContent);
 
     return {
         ...request,
@@ -80,7 +61,6 @@ export async function executeBeforeScript(
     }
 
     const result = await runBeforeScriptContent(requestScriptContent, currentRequest, variables);
-
 
     return result;
 }
