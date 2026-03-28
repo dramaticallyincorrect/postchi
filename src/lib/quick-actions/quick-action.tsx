@@ -9,13 +9,14 @@ import { Loader2Icon, PlayIcon, PlusIcon } from "lucide-react";
 import { NewQuickActionDialog } from "@/components/new-quick-action-dialog";
 import { isOsCommandKey } from "../utils/keyboard-event";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { emitMenuEvent, MenuActions } from "../menu/menu-events";
 
 export const QuickActionsButton = ({ project }: { project: Project }) => {
     const { action, setAction } = useQuickAction(project.actionsPath, project.path);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [runState, setRunState] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');
     const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
-    const { isPro, openLicenseDialog } = useLicense();
+    const { isPro } = useLicense();
 
 
     useTimeout(
@@ -33,7 +34,7 @@ export const QuickActionsButton = ({ project }: { project: Project }) => {
     };
 
     const handleCreateClick = () => {
-        if (!isPro) return openLicenseDialog();
+        if (!isPro) return emitMenuEvent(MenuActions.ACTIVATE_LICENSE);
         setDialogOpen(true);
     };
 
