@@ -4,11 +4,11 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, FileCodeIcon, FolderIcon, LockIcon } from "lucide-react"
+import { ArrowDownFromLine, ArrowUpToLine, ChevronRightIcon, DeleteIcon, FileCode2Icon, FileCodeIcon, FilePlus2Icon, FilePlusIcon, FolderIcon, FolderOpenIcon, FolderPlusIcon, LockIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "./ui/context-menu"
+import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "./ui/context-menu"
 import { FileDialogType, NewFileDialog } from "@/lib/file-dialogs/new-file-dialog"
 import { Dialog } from "./ui/dialog"
 import DefaultFileStorage from "@/lib/data/files/file-default"
@@ -24,6 +24,7 @@ import { FileType } from "@/lib/data/supported-filetypes"
 import FileJavascriptIcon from "./icons/file-js"
 import { isTauri } from "@tauri-apps/api/core"
 import { isMac } from "@/lib/utils/os"
+import { emitMenuEvent, MenuActions } from "@/lib/menu/menu-events"
 
 const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
 
@@ -32,6 +33,10 @@ const revealInFinder = async (path: string) => {
     const { revealItemInDir } = await import('@tauri-apps/plugin-opener');
     await revealItemInDir(path);
 };
+
+const openLicenseDialog = () => {
+    emitMenuEvent(MenuActions.ACTIVATE_LICENSE);
+}
 
 
 
@@ -81,7 +86,7 @@ const FolderNode = ({
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
     const [settingsDialog, setSettingsDialog] = useState<boolean>(false);
     const [open, setOpen] = useState(() => isAncestor(folder.path, selectedPath));
-    const { isPro, openLicenseDialog } = useLicense();
+    const { isPro } = useLicense();
 
     useEffect(() => {
         if (isAncestor(folder.path, selectedPath)) {
@@ -151,6 +156,7 @@ const FolderNode = ({
                                     variant="ghost"
                                     size="sm"
                                     className="group text-muted-foreground data-[state=open]:hover:text-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                                    onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                                 >
                                     <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                                     <FolderIcon />
@@ -172,23 +178,26 @@ const FolderNode = ({
                             </div>
                         </CollapsibleContent>
                     </Collapsible>
-                    <ContextMenuContent>
+                    <ContextMenuContent className="w-50">
                         {isActionsFolder ? (
                             <>
-                                <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4">New Action {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><ZapIcon className="size-4" />New Action</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}>{revealLabel}</ContextMenuItem>
+                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4" />{revealLabel}</ContextMenuItem>
                             </>
                         ) : (
                             <>
-                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}>New Request</ContextMenuItem>
-                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}>New Folder</ContextMenuItem>
-                                <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                                <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                                <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4">Settings {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}><FilePlus2Icon className="size-4 mx-1" />New Request</ContextMenuItem>
+                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}><FolderPlusIcon className="size-4 mx-1" />New Folder</ContextMenuItem>
+                                <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                                <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><Settings2Icon className="size-4 mx-1" />Settings</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}>{revealLabel}</ContextMenuItem>
-                                <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
+                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
+                                <ContextMenuItem onClick={deleteItem} variant="destructive">
+                                    <TrashIcon className="size-4 mx-1" />Delete
+                                    <DeleteIcon className="size-4 ml-auto" />
+                                    </ContextMenuItem>
                             </>
                         )}
                     </ContextMenuContent>
@@ -220,7 +229,7 @@ const FolderNode = ({
 
 const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item: FileTreeItem, isInActionsFolder?: boolean, onItemClick: any, selectedPath: string }) => {
     const storage = DefaultFileStorage.getInstance();
-    const { isPro, openLicenseDialog } = useLicense();
+    const { isPro } = useLicense();
     const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT) || item.name === FileType.FOLDER_BEFORE_SCRIPT;
     const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT) || item.name === FileType.FOLDER_AFTER_SCRIPT;
 
@@ -252,6 +261,7 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                         variant="ghost"
                         size="sm"
                         onClick={() => onItemClick(item)}
+                        onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                         className={cn(
                             "w-full justify-start gap-2 transition-none",
                             selectedPath === item.path ? "text-foreground bg-muted" : "text-muted-foreground hover:bg-muted"
@@ -261,16 +271,19 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                         <span>{item.name}</span>
                     </Button>
                 </ContextMenuTrigger>
-                <ContextMenuContent>
+                <ContextMenuContent className="w-50">
                     {!isInActionsFolder && (
                         <>
-                            <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4">Before Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                            <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4">After Script {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                         </>
                     )}
                     <ContextMenuSeparator />
-                    <ContextMenuItem onClick={() => revealInFinder(item.path)}>{revealLabel}</ContextMenuItem>
-                    <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
+                    <ContextMenuItem onClick={() => revealInFinder(item.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
+                    <ContextMenuItem onClick={deleteItem} variant="destructive">
+                        <TrashIcon className="size-4 mx-1" />Delete
+                        <DeleteIcon className="size-4 ml-auto" />
+                        </ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
             {hasScripts && (
@@ -311,19 +324,25 @@ const ScriptNode = ({ label, path, isSelected, onItemClick }: { label: string, p
                     variant="ghost"
                     size="sm"
                     onClick={() => onItemClick(new FileItem(label, path))}
+                    onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                     className={cn(
                         "w-full justify-start gap-1 transition-none",
                         isSelected ? "text-foreground bg-muted" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     )}
                 >
-                    <FileJavascriptIcon />
+                    <FileJavascriptIcon className="size-4" />
                     <span>{label}</span>
                 </Button>
             </ContextMenuTrigger>
             <ContextMenuContent>
-                <ContextMenuItem onClick={() => revealInFinder(path)}>{revealLabel}</ContextMenuItem>
+                <ContextMenuItem onClick={() => revealInFinder(path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
                 <ContextMenuSeparator />
-                <ContextMenuItem onClick={deleteItem} variant="destructive">Delete</ContextMenuItem>
+                <ContextMenuGroup>
+                    <ContextMenuItem onClick={deleteItem} variant="destructive">
+                        <TrashIcon className="size-4 mx-1" />Delete
+                        <DeleteIcon className="size-4 ml-auto" />
+                    </ContextMenuItem>
+                </ContextMenuGroup>
             </ContextMenuContent>
         </ContextMenu>
     )
