@@ -14,6 +14,7 @@ import { Bullet } from '@/components/bullet';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/theme-context/theme-context';
 import { toggleLineCommentAtStart } from '@/editors/toggle-line-comment';
+import { isOnlyOsCommandKey } from '@/lib/utils/keyboard-event';
 
 export default function HttpRequestResponse({ path }: { path: string }) {
 
@@ -27,7 +28,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
 
     useEffect(() => {
         const handler = async (e: KeyboardEvent) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            if (e.key === "Enter" && isOnlyOsCommandKey(e)) {
                 e.preventDefault();
                 const text = viewRef.current?.state.doc.toString() ?? '';
                 if (!text.trim()) {
