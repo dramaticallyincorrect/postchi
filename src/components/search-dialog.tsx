@@ -61,7 +61,7 @@ export function SearchDialog({ open, onOpenChange, files, onSelect, collectionsP
                                             className="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg mx-1"
                                         >
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-medium text-accent truncate ">
+                                                <span className="text-sm font-medium truncate ">
                                                     {file.name}
                                                 </span>
                                                 {folder && (
