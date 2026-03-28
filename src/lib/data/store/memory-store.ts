@@ -8,7 +8,7 @@ type UnlistenFn = () => void
 
 class MemoryStore {
   private data: StoreData = {}
-  private listeners: Map<string, Set<(value: unknown) => void>> = new Map()
+  private listeners: Set<(key: string, value: unknown) => void> = new Set()
 
   async get<T>(key: string): Promise<T | null> {
     return (this.data[key] as T) ?? null
@@ -16,12 +16,12 @@ class MemoryStore {
 
   async set(key: string, value: unknown): Promise<void> {
     this.data[key] = value
-    this.listeners.get(key)?.forEach(cb => cb(value))
+    this.listeners.forEach(cb => cb(key, value))
   }
 
   async delete(key: string): Promise<void> {
     delete this.data[key]
-    this.listeners.get(key)?.forEach(cb => cb(undefined))
+    this.listeners.forEach(cb => cb(key, undefined))
   }
 
   async has(key: string): Promise<boolean> {
@@ -61,15 +61,10 @@ class MemoryStore {
   }
 
   async onChange<T>(
-    key: string,
-    cb: (value: T) => void
+    cb: (key: string, value: T | undefined) => void
   ): Promise<UnlistenFn> {
-    if (!this.listeners.has(key)) {
-      this.listeners.set(key, new Set())
-    }
-    const handler = (value: unknown) => cb(value as T)
-    this.listeners.get(key)!.add(handler)
-    return () => this.listeners.get(key)?.delete(handler)
+    this.listeners.add(cb as (key: string, value: unknown | undefined) => void)
+    return () => this.listeners.delete(cb as (key: string, value: unknown | undefined) => void)
   }
 }
 

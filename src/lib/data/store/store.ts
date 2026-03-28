@@ -20,7 +20,7 @@ export interface IStore {
   save(): Promise<void>
   reset(): Promise<void>
   length(): Promise<number>
-  onChange<T>(key: string, cb: (value: T) => void): Promise<UnlistenFn>
+  onChange<T>(cb: (key: string, value: T | undefined) => void): Promise<UnlistenFn>
 }
 
 // Cache store instances by filename

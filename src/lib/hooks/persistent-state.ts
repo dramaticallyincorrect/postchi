@@ -31,8 +31,9 @@ export default function usePersistentState<T>(
       setIsLoading(false)
 
       // Watch for external changes (e.g. another window updating the store)
-      unlistenRef.current = await store.onChange<T>(key, (value) => {
-        if (!cancelled) setState(value)
+      unlistenRef.current = await store.onChange<T>((changedKey, value) => {
+        console.log(`Persistent state change detected for key "${changedKey}":`, value)
+        if (!cancelled && changedKey === key && value !== undefined) setState(value)
       })
     }
 
