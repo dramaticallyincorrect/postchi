@@ -27,6 +27,7 @@
     "@lezer/highlight": "^1.2.3",
     "@lezer/lr": "^1.4.8",
     "@posthog/react": "^1.8.2",
+    "@readme/openapi-parser": "^6.0.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.6.0",
