@@ -1,8 +1,8 @@
 # Roadmap
 
 1. import
-   1. handle errors
-   2. show skipped requests
+   1. ~~handle errors~~
+   2. ~~show skipped requests~~
 2. scripts
    1. more functions
       1. ~~set token~~

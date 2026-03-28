@@ -14,7 +14,7 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
     const folderPath = pathOf(root, folder.name);
     await createProjectFolder(folderPath);
 
-    let result: ImportResult = { count: 0, skipped: 0 };
+    let result: ImportResult = { count: 0, skippedRequests: [] };
 
     for (const item of folder.items) {
         if ('request' in item) {
@@ -24,12 +24,12 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
                 result.count++;
             } catch (e) {
                 console.error(`Failed to import request ${request.name}:`, e);
-                result.skipped++;
+                result.skippedRequests.push(request.name);
             }
         } else {
             const subResult = await importFolderInto(item as ImportedFolder, folderPath);
             result.count += subResult.count;
-            result.skipped += subResult.skipped;
+            result.skippedRequests.push(...subResult.skippedRequests);
         }
     }
     return result;
@@ -37,5 +37,5 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
 
 export type ImportResult = {
     count: number;
-    skipped: number;
+    skippedRequests: string[];
 }

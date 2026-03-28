@@ -74,7 +74,7 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [rejectedFile, setRejectedFile] = useState(false);
-    const [importResult, setImportResult] = useState<{ count: number; skipped: number } | null>(null);
+    const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
 
     const accept = useMemo(() => selectedFormat.accept, [selectedFormat]);
@@ -292,37 +292,62 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     );
 }
 
-const ImportStats = ({ importResult }: { importResult: ImportResult | null }) => (
-    importResult && (
+const ImportStats = ({ importResult }: { importResult: ImportResult | null }) => {
+    const [showSkipped, setShowSkipped] = useState(false);
+
+    if (!importResult) return null;
+
+    const skipped = importResult.skippedRequests.length;
+
+    return (
         <div className="rounded-lg overflow-hidden border border-border mx-5 mb-5">
             <div className={cn(
                 "flex items-start gap-2.5 px-5 py-2.5 border-b",
-                importResult.skipped > 0
+                skipped > 0
                     ? "bg-warning/10 border-warning/20 text-warning"
                     : "bg-success/10 border-success/20 text-success"
             )}>
-                {importResult.skipped > 0 ? <TriangleAlert size={15} /> : <CircleCheck size={15} />}
+                {skipped > 0 ? <TriangleAlert size={15} /> : <CircleCheck size={15} />}
                 <div>
                     <p className="text-sm font-medium">
-                        {importResult.skipped > 0 ? "Import completed with warnings" : "Import successful"}
+                        {skipped > 0 ? "Import completed with warnings" : "Import successful"}
                     </p>
                     <p className="text-xs opacity-80">
-                        {importResult.skipped > 0
-                            ? `${importResult.skipped} requests were skipped`
+                        {skipped > 0
+                            ? `${skipped} requests were skipped`
                             : `${importResult.count} requests imported`}
                     </p>
                 </div>
             </div>
+            {showSkipped && importResult.skippedRequests.length > 0 && (
+                <div className="border-b border-border px-5 py-2.5 max-h-36 overflow-y-auto">
+                    <ul className="space-y-1">
+                        {importResult.skippedRequests.map((name, i) => (
+                            <li key={i} className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                <span className="h-1 w-1 rounded-full bg-warning shrink-0" />
+                                {name}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
             <div className="flex items-center justify-between px-5 py-2.5">
                 <div className="flex gap-4">
                     <Stat label="imported" value={importResult.count} />
-                    <Stat label="skipped" value={importResult.skipped} warn={importResult.skipped > 0} />
+                    <Stat label="skipped" value={skipped} warn={skipped > 0} />
                 </div>
-                <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+                <div className="flex items-center gap-2">
+                    {skipped > 0 && (
+                        <Button variant="ghost" size="sm" onClick={() => setShowSkipped(v => !v)}>
+                            {showSkipped ? 'Hide list' : 'View skipped'}
+                        </Button>
+                    )}
+                    <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+                </div>
             </div>
         </div>
-    )
-);
+    );
+};
 
 
 const Stat = ({ label, value, warn }: { label: string; value: number; warn?: boolean }) => {

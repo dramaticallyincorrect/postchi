@@ -41,8 +41,28 @@ export async function createProjectFolder(path: string, fileStorage: FileStorage
     return fileStorage.mkdir(path)
 }
 
+function sanitizeFilename(name: string): string {
+    // Strip characters illegal on Windows, macOS, or Linux
+    // Windows: \ / : * ? " < > |
+    // macOS/Linux: / and null byte
+    // Also strip control characters (0x00–0x1F)
+    let sanitized = name
+        .replace(/[/\\:*?"<>|]/g, ' ')   // illegal on Windows or path separators
+        .replace(/[\x00-\x1F]/g, '')     // control characters
+        .trim()
+        .replace(/\.+$/, '')             // trailing dots (illegal on Windows)
+
+    // Windows reserved names (e.g. CON, PRN, AUX, NUL, COM1–COM9, LPT1–LPT9)
+    if (/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i.test(sanitized)) {
+        sanitized = `_${sanitized}`
+    }
+
+    return sanitized || '_'
+}
+
 export async function createHttpRequest(dir: string, name: string, content: string = 'GET http://', fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
-    const filename = name.endsWith(FileType.HTTP) ? name : name + FileType.HTTP
+    const safeName = sanitizeFilename(name.endsWith(FileType.HTTP) ? name.slice(0, -FileType.HTTP.length) : name)
+    const filename = safeName + FileType.HTTP
     const path = pathOf(dir, filename)
     await fileStorage.create(path, content)
     return path

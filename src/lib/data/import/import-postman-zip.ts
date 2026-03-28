@@ -8,7 +8,7 @@ export async function importPostmanZip(file: File, root: string): Promise<Import
         name => /\/collection\/[^/]+\.json$/.test(name)
     );
 
-    const result: ImportResult = { count: 0, skipped: 0 };
+    const result: ImportResult = { count: 0, skippedRequests: [] };
     for (const path of collectionFiles) {
         try {
             const content = await zip.files[path].async('string');
@@ -16,10 +16,10 @@ export async function importPostmanZip(file: File, root: string): Promise<Import
             const rootFolder = convertPostmanCollectionToPostchi(postmanData);
             const sub = await importFolderInto(rootFolder, root);
             result.count += sub.count;
-            result.skipped += sub.skipped;
+            result.skippedRequests.push(...sub.skippedRequests);
         }catch (e) {
             console.error(`Failed to import collection at ${path}:`, e);
-            result.skipped += 1;
+            result.skippedRequests.push(path);
         }
         
     }

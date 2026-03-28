@@ -124,7 +124,7 @@ function AppShell() {
                         }
                         return importPostmanCollection(file, project.collectionsPath)
                     }
-                    return { count: 0, skipped: 0 }
+                    return { count: 0, skipped: 0, skippedRequests: [] }
                 }}
             />
             <NewProjectDialog
