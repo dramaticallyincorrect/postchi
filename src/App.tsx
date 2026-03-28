@@ -113,7 +113,7 @@ const FileMenu = ({ projectName, isTemp }: { projectName: string; isTemp: boolea
                 <Button variant="ghost" className='hover:bg-muted-foreground'>{projectName}</Button>
             </DropdownMenuTrigger>
             {
-                !isDesktopMac() && <DropdownMenuContent>
+                !isDesktopMac() && <DropdownMenuContent className='w-full'>
                     {projectMenuItems(isTemp).map((item, index) =>
                         'item' in item ? (
                             <DropdownMenuSeparator key={`separator-${index}`} />

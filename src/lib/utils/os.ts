@@ -9,4 +9,12 @@ export const isMac = () => {
     }
 }
 
+export const isWindows = () => {
+    if (isTauri()) {
+        return type() === 'windows';
+    } else {
+        return navigator.platform.toUpperCase().includes('WIN')
+    }
+}
+
 export const isDesktopMac = () => isTauri() && type() === 'macos';

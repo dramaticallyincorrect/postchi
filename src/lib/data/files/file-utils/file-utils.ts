@@ -1,5 +1,8 @@
 import Result from "true-myth/result";
 import DefaultFileStorage from "../file-default";
+import {isWindows } from "@/lib/utils/os";
+
+const FileSeparator = isWindows() ? '\\' : '/'
 
 export async function readClosestFile(
     filename: string,
@@ -32,7 +35,7 @@ export async function readClosestFile(
 }
 
 export function filename(path: string): string {
-    const parts = path.split('/')
+    const parts = path.split(FileSeparator)
     return parts[parts.length - 1]
 }
 
@@ -46,6 +49,5 @@ export function trimExtension(filename: string): string {
 }
 
 export function parentDir(filePath: string): string {
-    const sep = filePath.includes('\\') ? '\\' : '/';
-    return filePath.substring(0, filePath.lastIndexOf(sep));
+    return filePath.substring(0, filePath.lastIndexOf(FileSeparator));
 };
