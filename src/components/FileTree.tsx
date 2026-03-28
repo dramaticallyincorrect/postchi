@@ -4,11 +4,11 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ArrowDownFromLine, ArrowUpToLine, ChevronRightIcon, DeleteIcon, FileCode2Icon, FileCodeIcon, FilePlus2Icon, FilePlusIcon, FolderIcon, FolderOpenIcon, FolderPlusIcon, LockIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, LockIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
-import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from "./ui/context-menu"
+import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "./ui/context-menu"
 import { FileDialogType, NewFileDialog } from "@/lib/file-dialogs/new-file-dialog"
 import { Dialog } from "./ui/dialog"
 import DefaultFileStorage from "@/lib/data/files/file-default"
@@ -197,7 +197,7 @@ const FolderNode = ({
                                 <ContextMenuItem onClick={deleteItem} variant="destructive">
                                     <TrashIcon className="size-4 mx-1" />Delete
                                     <DeleteIcon className="size-4 ml-auto" />
-                                    </ContextMenuItem>
+                                </ContextMenuItem>
                             </>
                         )}
                     </ContextMenuContent>
@@ -283,7 +283,7 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                     <ContextMenuItem onClick={deleteItem} variant="destructive">
                         <TrashIcon className="size-4 mx-1" />Delete
                         <DeleteIcon className="size-4 ml-auto" />
-                        </ContextMenuItem>
+                    </ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
             {hasScripts && (
