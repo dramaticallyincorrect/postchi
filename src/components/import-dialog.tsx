@@ -2,14 +2,20 @@ import { useState, useCallback, useMemo } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, X, AlertCircle, TriangleAlert, CircleCheck } from 'lucide-react';
+import { FileText, X, AlertCircle, TriangleAlert, CircleCheck, Server } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ImportResult } from '@/lib/data/import/import-folder';
+import { ImportResult, ImportOpenApiResult } from '@/lib/data/import/import-folder';
 import { MenuActions } from '@/lib/menu/menu-events';
 import { useMenuTrigger } from '@/lib/hooks/use-menu-trigger';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
 import { isGitLabUrl } from '@/lib/data/integrations/gitlab';
+
+export type ServerMapping = {
+    url: string;
+    envName: string;
+    varName: string;
+}
 
 
 function PostmanIcon({ className }: { className?: string }) {
@@ -68,9 +74,10 @@ const FORMAT_INFO: FormatInfo[] = [
 
 interface ImportDialogProps {
     onImport: (format: ImportFormat, source: File | string, saveAsSource: boolean, token?: string) => Promise<ImportResult>;
+    onSetupServers?: (mappings: ServerMapping[], folderName: string) => Promise<void>;
 }
 
-export function ImportDialog({ onImport }: ImportDialogProps) {
+export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
     const [open, setOpen] = useMenuTrigger(MenuActions.IMPORT_PROJECT);
     const [selectedFormat, setSelectedFormat] = useState<FormatInfo>(FORMAT_INFO[0]);
     const [file, setFile] = useState<File | null>(null);
@@ -80,6 +87,8 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
     const [saveAsSource, setSaveAsSource] = useState(false);
     const [gitlabToken, setGitlabToken] = useState('');
+    const [serverMappings, setServerMappings] = useState<ServerMapping[] | null>(null);
+    const [applyingServers, setApplyingServers] = useState(false);
 
     const accept = useMemo(() => selectedFormat.accept ?? {}, [selectedFormat]);
 
@@ -105,12 +114,26 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
         setImportResult(null);
         setSaveAsSource(false);
         setGitlabToken('');
+        setServerMappings(null);
     };
 
     const handleImport = async (source: File | string) => {
         setLoading(true);
         try {
             const result = await onImport(selectedFormat.format, source, saveAsSource, gitlabToken || undefined);
+            const openApiResult = result as ImportOpenApiResult;
+            if (
+                onSetupServers &&
+                openApiResult.servers?.length > 0 &&
+                openApiResult.rootFolderName
+            ) {
+                const defaultVarName = 'API_BASE_URL';
+                setServerMappings(openApiResult.servers.map((s, i) => ({
+                    url: s.url,
+                    envName: s.description?.trim() || (openApiResult.servers.length === 1 ? 'Default' : `Server ${i + 1}`),
+                    varName: defaultVarName,
+                })));
+            }
             setImportResult(result);
         } finally {
             setLoading(false);
@@ -118,7 +141,7 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     };
 
     const handleClose = () => {
-        if (loading) return;
+        if (loading || applyingServers) return;
         setOpen(false);
         setFile(null);
         setUrl('');
@@ -126,6 +149,7 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
         setImportResult(null);
         setSaveAsSource(false);
         setGitlabToken('');
+        setServerMappings(null);
     };
 
     // TODO: extract file size formatting to a util function
@@ -309,7 +333,24 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
                     )}
                 </div>
 
-                <ImportStats importResult={importResult} />
+                {serverMappings && importResult && onSetupServers && (
+                    <ServerMappingStep
+                        mappings={serverMappings}
+                        applying={applyingServers}
+                        onMappingsChange={setServerMappings}
+                        onApply={async () => {
+                            setApplyingServers(true);
+                            try {
+                                await onSetupServers(serverMappings, importResult.rootFolderName);
+                            } finally {
+                                setApplyingServers(false);
+                                setServerMappings(null);
+                            }
+                        }}
+                        onSkip={() => setServerMappings(null)}
+                    />
+                )}
+                {!serverMappings && <ImportStats importResult={importResult} />}
 
             </DialogContent>
         </Dialog>
@@ -430,6 +471,68 @@ const ImportStats = ({ importResult }: { importResult: ImportResult | null }) =>
     );
 };
 
+
+function ServerMappingStep({ mappings, applying, onMappingsChange, onApply, onSkip }: {
+    mappings: ServerMapping[];
+    applying: boolean;
+    onMappingsChange: (mappings: ServerMapping[]) => void;
+    onApply: () => void;
+    onSkip: () => void;
+}) {
+    const updateMapping = (index: number, patch: Partial<ServerMapping>) => {
+        onMappingsChange(mappings.map((m, i) => i === index ? { ...m, ...patch } : m));
+    };
+
+    return (
+        <div className="mx-5 mb-5 rounded-lg border border-border overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/30">
+                <Server size={13} className="text-muted-foreground shrink-0" />
+                <p className="text-[12px] font-medium text-foreground">
+                    {mappings.length === 1 ? '1 server detected' : `${mappings.length} servers detected`}
+                </p>
+                <p className="text-[11px] text-muted-foreground ml-1">— map to environment variables</p>
+            </div>
+
+            <div className="divide-y divide-border">
+                {mappings.map((mapping, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-2">
+                        <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Environment</p>
+                            <Input
+                                value={mapping.envName}
+                                onChange={(e) => updateMapping(i, { envName: e.target.value })}
+                                disabled={applying}
+                                className="h-7 text-[12px]"
+                            />
+                        </div>
+                        <div className="text-muted-foreground text-[11px] mt-4">→</div>
+                        <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Variable</p>
+                            <Input
+                                value={mapping.varName}
+                                onChange={(e) => updateMapping(i, { varName: e.target.value })}
+                                disabled={applying}
+                                className="h-7 text-[12px] font-mono"
+                            />
+                        </div>
+                        <div className="col-span-3 -mt-1">
+                            <p className="text-[11px] text-muted-foreground truncate">{mapping.url}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 px-4 py-2.5 border-t border-border">
+                <Button variant="ghost" size="sm" onClick={onSkip} disabled={applying}>
+                    Skip
+                </Button>
+                <Button size="sm" onClick={onApply} disabled={applying}>
+                    {applying ? 'Applying…' : 'Apply'}
+                </Button>
+            </div>
+        </div>
+    );
+}
 
 const Stat = ({ label, value, warn }: { label: string; value: number; warn?: boolean }) => {
     return (

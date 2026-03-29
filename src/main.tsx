@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./App.css";
-import { copyProject, createProject, getDefaultProjectPath, Project } from "./lib/data/project/project";
+import { copyProject, createProject, createOrOverrideFolderSettings, getDefaultProjectPath, Project } from "./lib/data/project/project";
 import { isTauri } from "@tauri-apps/api/core";
 import { MenuActions, onMenuEvent } from "./lib/menu/menu-events";
 import { initMenu } from "./lib/menu/project-menu";
 import { ImportDialog } from "./components/import-dialog";
 import { NewProjectDialog } from "./components/new-project-dialog";
 import { importOpenApiFromUrl, importPostmanCollection } from "./lib/data/import/import-folder";
+import { appendEnvironmentVariables } from "./lib/environments/env-writer";
 import DefaultFileStorage from "./lib/data/files/file-default";
 import { addSource } from "./lib/data/sources/sources";
 import { setSourceToken } from "./lib/data/store/credential-store";
@@ -156,6 +157,15 @@ function AppShell() {
                 }}
             />
             <ImportDialog
+                onSetupServers={async (mappings, folderName) => {
+                    const folderPath = pathOf(project.collectionsPath, folderName);
+                    const varName = mappings[0]?.varName ?? 'API_BASE_URL';
+                    await createOrOverrideFolderSettings(folderPath, { baseUrl: `<${varName}>` });
+                    await appendEnvironmentVariables(
+                        project.envPath,
+                        mappings.map(m => ({ envName: m.envName, key: m.varName, value: m.url }))
+                    );
+                }}
                 onImport={async (format, source, saveAsSource, token) => {
                     if (format === 'postman' && source instanceof File) {
                         if (source.name.endsWith('.zip')) {

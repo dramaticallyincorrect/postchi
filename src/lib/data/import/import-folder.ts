@@ -2,6 +2,7 @@ import { convertPostmanCollectionToPostchi, ImportedFolder, ImportedRequest } fr
 import { convertDocumentToFolder, fetchOpenApiSpec } from "./open-api/open-api-parser";
 import { pathOf } from "../files/join";
 import { createHttpRequest, createProjectFolder } from "../project/project";
+import { OpenAPIV3 } from "openapi-types";
 
 // TODO: handle import failure
 export async function importPostmanCollection(file: File, root: string): Promise<ImportResult> {
@@ -16,11 +17,12 @@ export async function importOpenApiFromUrl(url: string, root: string, token?: st
     const doc = await fetchOpenApiSpec(url, token);
     const rootFolder = convertDocumentToFolder(doc);
     const result = await importFolderInto(rootFolder, root);
-    return { ...result, specJson: JSON.stringify(doc, null, 2) };
+    return { ...result, specJson: JSON.stringify(doc, null, 2), servers: doc.servers ?? [] };
 }
 
 export type ImportOpenApiResult = ImportResult & {
     specJson: string;
+    servers: OpenAPIV3.ServerObject[];
 }
 
 export async function importFolderInto(folder: ImportedFolder, root: string): Promise<ImportResult> {
