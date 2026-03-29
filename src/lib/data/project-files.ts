@@ -6,6 +6,8 @@ import { Project } from './project/project';
 import { beforeScriptPath } from './http/before-script-executor';
 import { FileType } from './supported-filetypes';
 import { trimExtension } from './files/file-utils/file-utils';
+import { readSources } from './sources/sources';
+import { pathOf } from './files/join';
 
 export class FileItem {
     name: string;
@@ -25,19 +27,26 @@ export class FolderItem {
     name: string;
     path: string;
     items: FileTreeItem[]
+    isSource: boolean;
 
-    constructor(name: string, path: string, items: FileTreeItem[]) {
+    constructor(name: string, path: string, items: FileTreeItem[], isSource: boolean = false) {
         this.name = name;
         this.path = path;
         this.items = items;
+        this.isSource = isSource;
     }
 }
 
 export type FileTreeItem = FileItem | FolderItem
 
 export async function readProjectFileTree(project: Project, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
-    const colllectionItems = await readItems(project.collectionsPath, storage)
-    const actionsItems = await readActionItems(project.actionsPath, storage)
+    const [colllectionItems, actionsItems, sourcesConfig] = await Promise.all([
+        readItems(project.collectionsPath, storage),
+        readActionItems(project.actionsPath, storage),
+        readSources(project.path, storage).catch(() => ({ sources: [] })),
+    ])
+    const sourcePaths = new Set(sourcesConfig.sources.map(s => pathOf(project.collectionsPath, s.path)))
+    markSourceFolders(colllectionItems, sourcePaths)
     const result: FileTreeItem[] = [
         new FolderItem('collections', project.collectionsPath, colllectionItems),
     ]
@@ -49,6 +58,15 @@ export async function readProjectFileTree(project: Project, storage: FileStorage
         new FileItem('secrets', project.secretsPath)
     )
     return result
+}
+
+function markSourceFolders(items: FileTreeItem[], sourcePaths: Set<string>): void {
+    for (const item of items) {
+        if (item instanceof FolderItem) {
+            item.isSource = sourcePaths.has(item.path)
+            markSourceFolders(item.items, sourcePaths)
+        }
+    }
 }
 
 async function readItems(path: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {

@@ -7,7 +7,13 @@
    4. ~~show diff~~
    5. ~~warn local changes~~ ~~no warning changes are preserved~~
       1. ~~map what we can to new changes, ie parameter or variable values~~
-   6. git ignored?
+   6. ~~file tree icon~~
+   7. settings
+      1. servers
+      2. info
+         1. version
+         2. description
+   8. git ignored?
       1. what happends if we don't?
       2. if we were, retrieve the spec from remote on project import?
 2. back and forward recent requests

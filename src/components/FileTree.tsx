@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, LockIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, HardDriveIcon, LockIcon, ServerIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/lib/data/project-files"
@@ -83,6 +83,7 @@ const FolderNode = ({
     selectedPath?: string
 }) => {
     const isActionsFolder = folder.path === actionsPath;
+    const isSource = folder.isSource;
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
     const [settingsDialog, setSettingsDialog] = useState<boolean>(false);
     const [open, setOpen] = useState(() => isAncestor(folder.path, selectedPath));
@@ -159,7 +160,7 @@ const FolderNode = ({
                                     onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                                 >
                                     <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
-                                    <FolderIcon />
+                                    {isSource ? <ServerIcon /> : <FolderIcon />}
                                     {folder.name}
                                 </Button>
                             </CollapsibleTrigger>
