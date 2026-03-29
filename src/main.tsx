@@ -9,7 +9,9 @@ import { initMenu } from "./lib/menu/project-menu";
 import { ImportDialog } from "./components/import-dialog";
 import { NewProjectDialog } from "./components/new-project-dialog";
 import { importOpenApiFromUrl, importPostmanCollection } from "./lib/data/import/import-folder";
+import DefaultFileStorage from "./lib/data/files/file-default";
 import { addSource } from "./lib/data/sources/sources";
+import { checkSources, PendingSourceChanges } from "./lib/data/sources/source-checker";
 import { importPostmanZip } from "./lib/data/import/import-postman-zip";
 import { pathOf } from "./lib/data/files/join";
 import { loadStore } from "./lib/data/store/store";
@@ -53,6 +55,7 @@ function AppShell() {
     const [project, setProject] = useState<Project>(initialProject)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
     const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
+    const [pendingSourceChanges, setPendingSourceChanges] = useState<PendingSourceChanges[]>([])
 
     const refreshLicense = async () => {
         const status = await validateLicenseStatus()
@@ -61,6 +64,13 @@ function AppShell() {
 
     useEffect(() => {
         setActiveProject(project)
+    }, [project])
+
+    useEffect(() => {
+        setPendingSourceChanges([])
+        checkSources(project)
+            .then(setPendingSourceChanges)
+            .catch(() => { })
     }, [project])
 
     useEffect(() => {
@@ -116,7 +126,7 @@ function AppShell() {
 
     return (
         <LicenseContext.Provider value={{ isPro, refreshLicense }}>
-            <App key={project.path} project={project} isTemp={project.path === tempPath} />
+            <App key={project.path} project={project} isTemp={project.path === tempPath} pendingSourceChanges={pendingSourceChanges} />
             <ImportDialog
                 onImport={async (format, source, saveAsSource) => {
                     if (format === 'postman' && source instanceof File) {
@@ -128,6 +138,8 @@ function AppShell() {
                     if (format === 'openapi' && typeof source === 'string') {
                         const result = await importOpenApiFromUrl(source, project.collectionsPath)
                         if (saveAsSource && result.rootFolderName) {
+                            const specPath = pathOf(project.collectionsPath, result.rootFolderName, 'source.json')
+                            await DefaultFileStorage.getInstance().create(specPath, result.specJson)
                             await addSource(project.path, { type: 'open-api', url: source, path: result.rootFolderName })
                         }
                         return result

@@ -41,7 +41,7 @@ export async function checkSources(
 
             const remoteDoc = await fetchOpenApiSpec(source.url)
 
-            const changes = diffSources(localDoc, remoteDoc)
+            const changes = diffSources(localDoc, remoteDoc, sourceFolderPath)
             if (changes.length > 0) {
                 results.push({ source, changes })
             }
@@ -53,11 +53,11 @@ export async function checkSources(
     return results
 }
 
-export function diffSources(documentA: OpenAPIV3.Document, documentB: OpenAPIV3.Document): SourceChange[] {
+export function diffSources(documentA: OpenAPIV3.Document, documentB: OpenAPIV3.Document, sourceFolderPath = ''): SourceChange[] {
     try {
-        const localMap = flattenImportedFolder(convertDocumentToFolder(documentA))
-        const remoteMap = flattenImportedFolder(convertDocumentToFolder(documentB))
-        const changes = diffMaps(remoteMap, localMap)
+        const localMap = flattenImportedFolder(convertDocumentToFolder(documentA), sourceFolderPath)
+        const remoteMap = flattenImportedFolder(convertDocumentToFolder(documentB), sourceFolderPath)
+        const changes = diffMaps(remoteMap, localMap,)
         return changes
     } catch (e) {
         console.error(`[sources] Failed to check source:`, e)
@@ -86,10 +86,10 @@ function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string,
         if ('request' in item) {
             const req = item as ImportedRequest
             const filename = sanitizeFilename(req.name) + FileType.HTTP
-            map.set(prefix + filename, req.request)
+            map.set(pathOf(prefix, filename), req.request)
         } else {
             const sub = item as ImportedFolder
-            const subPrefix = prefix + sanitizeFilename(sub.name) + '/'
+            const subPrefix = pathOf(prefix, sanitizeFilename(sub.name))
             for (const [p, c] of flattenImportedFolder(sub, subPrefix)) {
                 map.set(p, c)
             }

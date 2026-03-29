@@ -53,6 +53,7 @@
     "postman-collection": "^5.3.0",
     "radix-ui": "^1.4.3",
     "react": "^19.1.0",
+    "react-codemirror-merge": "^4.25.9",
     "react-dom": "^19.1.0",
     "react-dropzone": "^15.0.0",
     "react-resizable-panels": "^4.6.3",

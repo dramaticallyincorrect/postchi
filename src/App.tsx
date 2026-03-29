@@ -35,8 +35,10 @@ import usePersistentState from './lib/hooks/persistent-state';
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
 import { QuickActionsButton } from './lib/quick-actions/quick-action';
+import { SourceChangesButton } from './components/source-changes-dialog';
+import { PendingSourceChanges } from './lib/data/sources/source-checker';
 
-export default function App({ project, isTemp }: { project: Project, isTemp: boolean }) {
+export default function App({ project, isTemp, pendingSourceChanges }: { project: Project, isTemp: boolean, pendingSourceChanges: PendingSourceChanges[] }) {
 
     const [selectedFile, setSelectedFile] = usePersistentState<FileItem | null>(`selectedFile:${project.path}`, null)
     const [isFileTreeVisible, setIsFileTreeVisible] = useState(true)
@@ -65,7 +67,7 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
 
     return <EnvironmentProvider project={project} >
         <div className='flex-col h-screen w-screen flex'>
-            <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
+            <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} pendingSourceChanges={pendingSourceChanges} />
             <Split isFileTreeVisible={isFileTreeVisible}>
                 <FileTree items={fileTree} actionsPath={project.actionsPath} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
                 {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
@@ -85,7 +87,7 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
 
 }
 
-const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isTemp: boolean; onToggleFileTree: () => void }) => {
+const TitleBar = ({ project, isTemp, onToggleFileTree, pendingSourceChanges }: { project: Project; isTemp: boolean; onToggleFileTree: () => void; pendingSourceChanges: PendingSourceChanges[] }) => {
     return <div className="titlebar bg-background-panel">
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
@@ -99,6 +101,7 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
             </div>
 
             <div className="ml-auto" />
+            <SourceChangesButton changes={pendingSourceChanges} />
             <QuickActionsButton project={project} />
             {!isMac() && <MsWindowControls />}
 
