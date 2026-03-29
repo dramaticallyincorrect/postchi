@@ -1,6 +1,6 @@
 import { fetchOpenApiSpec, convertDocumentToFolder } from "../import/open-api/open-api-parser"
 import { ImportedFolder, ImportedRequest } from "../import/postman/postman-parser"
-import { FileStorage } from "../files/file"
+import { FileStorage, StorageEntry } from "../files/file"
 import DefaultFileStorage from "../files/file-default"
 import { pathOf } from "../files/join"
 import { sanitizeFilename } from "../project/project"
@@ -9,6 +9,7 @@ import { Source, readSources } from "./sources"
 import { Project } from "../project/project"
 import { OpenAPIV3 } from "openapi-types"
 import { mergeRequestContent } from "./source-merger"
+import { getSourceToken } from "../store/credential-store"
 
 export const SOURCE_SPEC_FILENAME = 'source.json'
 
@@ -38,15 +39,17 @@ export async function checkSources(
     for (const source of config.sources) {
         try {
             const sourceFolderPath = pathOf(project.collectionsPath, source.path)
-            const localDoc = await readLocalSpec(sourceFolderPath, fileStorage)
-            if (!localDoc) continue
 
-            const remoteDoc = await fetchOpenApiSpec(source.url)
+            const token = source.authType
+                ? await getSourceToken(project.path, source.path) ?? undefined
+                : undefined
+            const remoteDoc = await fetchOpenApiSpec(source.url, token)
 
-            const changes = await enrichModifiedWithDiskContent(
-                diffSources(localDoc, remoteDoc, sourceFolderPath),
-                fileStorage
-            )
+            const remoteMap = flattenImportedFolder(convertDocumentToFolder(remoteDoc), sourceFolderPath)
+            const diskMap = await readDiskFileMap(sourceFolderPath, fileStorage)
+
+            const changes = diffMaps(remoteMap, diskMap)
+
             if (changes.length > 0) {
                 results.push({ source, changes, remoteDoc })
             }
@@ -62,24 +65,45 @@ export function diffSources(documentA: OpenAPIV3.Document, documentB: OpenAPIV3.
     try {
         const localMap = flattenImportedFolder(convertDocumentToFolder(documentA), sourceFolderPath)
         const remoteMap = flattenImportedFolder(convertDocumentToFolder(documentB), sourceFolderPath)
-        const changes = diffMaps(remoteMap, localMap,)
-        return changes
+        return diffMaps(remoteMap, localMap)
     } catch (e) {
-        console.error(`[sources] Failed to check source:`, e)
+        console.error(`[sources] Failed to diff sources:`, e)
         return []
     }
 }
 
-async function readLocalSpec(
-    sourceFolderPath: string,
-    fileStorage = DefaultFileStorage.getInstance()
-): Promise<OpenAPIV3.Document | null> {
-    const specPath = pathOf(sourceFolderPath, SOURCE_SPEC_FILENAME)
+/** Recursively reads all .http request files from a source folder into a path → content map. */
+async function readDiskFileMap(
+    dirPath: string,
+    fileStorage: FileStorage
+): Promise<Map<string, string>> {
+    const map = new Map<string, string>()
+    await collectDiskFiles(dirPath, map, fileStorage)
+    return map
+}
+
+async function collectDiskFiles(
+    dirPath: string,
+    map: Map<string, string>,
+    fileStorage: FileStorage
+): Promise<void> {
+    let entries: StorageEntry[]
     try {
-        const text = await fileStorage.readText(specPath)
-        return JSON.parse(text) as OpenAPIV3.Document
+        entries = await fileStorage.readDirectory(dirPath)
     } catch {
-        return null
+        return
+    }
+
+    for (const entry of entries) {
+        if (entry.isDirectory) {
+            await collectDiskFiles(entry.path, map, fileStorage)
+        } else if (entry.filename.endsWith(FileType.HTTP)) {
+            try {
+                map.set(entry.path, await fileStorage.readText(entry.path))
+            } catch {
+                // skip unreadable files
+            }
+        }
     }
 }
 
@@ -103,32 +127,13 @@ function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string,
     return map
 }
 
-async function enrichModifiedWithDiskContent(
-    changes: SourceChange[],
-    fileStorage: FileStorage
-): Promise<SourceChange[]> {
-    return Promise.all(changes.map(async (change) => {
-        if (change.kind !== 'modified') return change
-        try {
-            const diskContent = await fileStorage.readText(change.path)
-            return {
-                ...change,
-                oldContent: diskContent,
-                newContent: mergeRequestContent(diskContent, change.newContent ?? ''),
-            }
-        } catch {
-            return change
-        }
-    }))
-}
-
 function diffMaps(remote: Map<string, string>, local: Map<string, string>): SourceChange[] {
     const changes: SourceChange[] = []
 
     for (const [path, newContent] of remote) {
         if (!local.has(path)) {
             changes.push({ kind: 'added', path, newContent })
-        } else if (local.get(path) !== newContent) {
+        } else if (local.get(path) !== mergeRequestContent(local.get(path) ?? '', newContent ?? '')) {
             changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent })
         }
     }

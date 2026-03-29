@@ -1,5 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
+import { isGitLabUrl, fetchWithGitLabAuth } from '../../integrations/gitlab';
 import { ImportedFolder, ImportedRequest } from '../postman/postman-parser';
 
 const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'patch', 'options', 'head', 'trace'] as const;
@@ -18,7 +19,11 @@ export async function convertOpenApiToPostchi(filePath: string): Promise<Importe
     return convertDocumentToFolder(doc);
 }
 
-export async function fetchOpenApiSpec(url: string): Promise<OpenAPIV3.Document> {
+export async function fetchOpenApiSpec(url: string, token?: string): Promise<OpenAPIV3.Document> {
+    if (token && isGitLabUrl(url)) {
+        const raw = await fetchWithGitLabAuth(url, token);
+        return await SwaggerParser.dereference(raw as OpenAPIV3.Document) as OpenAPIV3.Document;
+    }
     return await SwaggerParser.dereference(url) as OpenAPIV3.Document;
 }
 

@@ -11,9 +11,9 @@ export async function importPostmanCollection(file: File, root: string): Promise
     return importFolderInto(rootFolder, root);
 }
 
-export async function importOpenApiFromUrl(url: string, root: string): Promise<ImportOpenApiResult> {
+export async function importOpenApiFromUrl(url: string, root: string, token?: string): Promise<ImportOpenApiResult> {
     console.log(`Fetching OpenAPI spec from ${url}...`);
-    const doc = await fetchOpenApiSpec(url);
+    const doc = await fetchOpenApiSpec(url, token);
     const rootFolder = convertDocumentToFolder(doc);
     const result = await importFolderInto(rootFolder, root);
     return { ...result, specJson: JSON.stringify(doc, null, 2) };

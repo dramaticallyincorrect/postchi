@@ -9,6 +9,7 @@ import { MenuActions } from '@/lib/menu/menu-events';
 import { useMenuTrigger } from '@/lib/hooks/use-menu-trigger';
 import { Input } from './ui/input';
 import { Switch } from './ui/switch';
+import { isGitLabUrl } from '@/lib/data/integrations/gitlab';
 
 
 function PostmanIcon({ className }: { className?: string }) {
@@ -66,7 +67,7 @@ const FORMAT_INFO: FormatInfo[] = [
 
 
 interface ImportDialogProps {
-    onImport: (format: ImportFormat, source: File | string, saveAsSource: boolean) => Promise<ImportResult>;
+    onImport: (format: ImportFormat, source: File | string, saveAsSource: boolean, token?: string) => Promise<ImportResult>;
 }
 
 export function ImportDialog({ onImport }: ImportDialogProps) {
@@ -78,6 +79,7 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     const [rejectedFile, setRejectedFile] = useState(false);
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
     const [saveAsSource, setSaveAsSource] = useState(false);
+    const [gitlabToken, setGitlabToken] = useState('');
 
     const accept = useMemo(() => selectedFormat.accept ?? {}, [selectedFormat]);
 
@@ -102,12 +104,13 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
         setRejectedFile(false);
         setImportResult(null);
         setSaveAsSource(false);
+        setGitlabToken('');
     };
 
     const handleImport = async (source: File | string) => {
         setLoading(true);
         try {
-            const result = await onImport(selectedFormat.format, source, saveAsSource);
+            const result = await onImport(selectedFormat.format, source, saveAsSource, gitlabToken || undefined);
             setImportResult(result);
         } finally {
             setLoading(false);
@@ -122,6 +125,7 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
         setRejectedFile(false);
         setImportResult(null);
         setSaveAsSource(false);
+        setGitlabToken('');
     };
 
     // TODO: extract file size formatting to a util function
@@ -201,9 +205,11 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
                                 url={url}
                                 loading={loading}
                                 saveAsSource={saveAsSource}
+                                gitlabToken={gitlabToken}
                                 onUrlChange={(v) => { setUrl(v); setImportResult(null); }}
                                 onImport={() => handleImport(url)}
                                 onSaveAsSourceChange={setSaveAsSource}
+                                onGitlabTokenChange={setGitlabToken}
                             />
                             <p className="text-[11px] text-muted-foreground">
                                 {selectedFormat.supportedVersions}
@@ -310,14 +316,18 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     );
 }
 
-function UrlInput({ url, loading, saveAsSource, onUrlChange, onImport, onSaveAsSourceChange }: {
+function UrlInput({ url, loading, saveAsSource, gitlabToken, onUrlChange, onImport, onSaveAsSourceChange, onGitlabTokenChange }: {
     url: string;
     loading: boolean;
     saveAsSource: boolean;
+    gitlabToken: string;
     onUrlChange: (v: string) => void;
     onImport: () => void;
     onSaveAsSourceChange: (v: boolean) => void;
+    onGitlabTokenChange: (v: string) => void;
 }) {
+    const isGitLab = useMemo(() => isGitLabUrl(url), [url]);
+
     return (
         <div className="space-y-3 min-h-40">
             <div className="flex gap-2 items-center h-full">
@@ -336,6 +346,20 @@ function UrlInput({ url, loading, saveAsSource, onUrlChange, onImport, onSaveAsS
                     {loading ? 'Importing…' : 'Import'}
                 </Button>
             </div>
+            {isGitLab && (
+                <div className="space-y-1">
+                    <Input
+                        type="password"
+                        value={gitlabToken}
+                        onChange={(e) => onGitlabTokenChange(e.target.value)}
+                        placeholder="GitLab Personal Access Token"
+                        disabled={loading}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                        Required for private repositories. Token is stored securely in app data.
+                    </p>
+                </div>
+            )}
             <label className="flex items-center gap-2.5 cursor-pointer select-none w-fit">
                 <Switch
                     size="sm"

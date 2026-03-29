@@ -11,6 +11,7 @@ import { NewProjectDialog } from "./components/new-project-dialog";
 import { importOpenApiFromUrl, importPostmanCollection } from "./lib/data/import/import-folder";
 import DefaultFileStorage from "./lib/data/files/file-default";
 import { addSource } from "./lib/data/sources/sources";
+import { setSourceToken } from "./lib/data/store/credential-store";
 import { checkSources, PendingSourceChanges } from "./lib/data/sources/source-checker";
 import { applySourceChanges } from "./lib/data/sources/source-applier";
 import { importPostmanZip } from "./lib/data/import/import-postman-zip";
@@ -155,7 +156,7 @@ function AppShell() {
                 }}
             />
             <ImportDialog
-                onImport={async (format, source, saveAsSource) => {
+                onImport={async (format, source, saveAsSource, token) => {
                     if (format === 'postman' && source instanceof File) {
                         if (source.name.endsWith('.zip')) {
                             return importPostmanZip(source, project.collectionsPath)
@@ -163,11 +164,19 @@ function AppShell() {
                         return importPostmanCollection(source, project.collectionsPath)
                     }
                     if (format === 'openapi' && typeof source === 'string') {
-                        const result = await importOpenApiFromUrl(source, project.collectionsPath)
+                        const result = await importOpenApiFromUrl(source, project.collectionsPath, token)
                         if (saveAsSource && result.rootFolderName) {
                             const specPath = pathOf(project.collectionsPath, result.rootFolderName, 'source.json')
                             await DefaultFileStorage.getInstance().create(specPath, result.specJson)
-                            await addSource(project.path, { type: 'open-api', url: source, path: result.rootFolderName })
+                            if (token) {
+                                await setSourceToken(project.path, result.rootFolderName, token)
+                            }
+                            await addSource(project.path, {
+                                type: 'open-api',
+                                url: source,
+                                path: result.rootFolderName,
+                                authType: token ? 'gitlab-pat' : undefined,
+                            })
                         }
                         return result
                     }

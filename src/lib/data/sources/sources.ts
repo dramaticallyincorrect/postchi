@@ -5,11 +5,15 @@ import { postchiDirName, sourcesFileName } from "../project/project"
 
 export type SourceType = 'open-api';
 
+export type SourceAuthType = 'gitlab-pat';
+
 export type Source = {
     type: SourceType;
     url: string;
     /** Path of the folder that holds this source's requests, relative to the collections folder */
     path: string;
+    /** Auth type required to fetch this source. Token is stored separately in the credential store. */
+    authType?: SourceAuthType;
 };
 
 export type SourcesConfig = {
