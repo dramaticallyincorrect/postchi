@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronRightIcon, DiffIcon, FolderIcon, MinusIcon, PlusIcon, RefreshCwIcon } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -62,7 +63,7 @@ function buildDiffTree(changes: SourceChange[], sourceFolderName: string): DiffT
 type Selection = { source: Source; change: SourceChange }
 
 
-export function SourceChangesButton({ changes }: { changes: PendingSourceChanges[] }) {
+export function SourceChangesButton({ changes, onApply }: { changes: PendingSourceChanges[], onApply: () => Promise<void> }) {
     const [open, setOpen] = useState(false)
 
     const totalCount = changes.reduce((sum, s) => sum + s.changes.length, 0)
@@ -79,18 +80,20 @@ export function SourceChangesButton({ changes }: { changes: PendingSourceChanges
                 <RefreshCwIcon className="size-3" />
                 {totalCount} {totalCount === 1 ? 'change' : 'changes'}
             </Button>
-            <SourceChangesDialog open={open} onClose={() => setOpen(false)} changes={changes} />
+            <SourceChangesDialog open={open} onClose={() => setOpen(false)} changes={changes} onApply={onApply} />
         </>
     )
 }
 
 
-function SourceChangesDialog({ open, onClose, changes }: {
+function SourceChangesDialog({ open, onClose, changes, onApply }: {
     open: boolean
     onClose: () => void
     changes: PendingSourceChanges[]
+    onApply: () => Promise<void>
 }) {
     const [selected, setSelected] = useState<Selection | null>(null)
+    const [applying, setApplying] = useState(false)
 
     useEffect(() => {
         if (open && changes.length > 0 && changes[0].changes.length > 0) {
@@ -98,36 +101,59 @@ function SourceChangesDialog({ open, onClose, changes }: {
         }
     }, [open])
 
+    const handleApply = async () => {
+        setApplying(true)
+        try {
+            await onApply()
+            onClose()
+        } catch {
+            toast.error('Failed to apply changes')
+        } finally {
+            setApplying(false)
+        }
+    }
+
     return (
         <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-            <DialogContent className="sm:max-w-5xl p-0 gap-0 h-[80vh]">
-                <ResizablePanelGroup orientation="horizontal" className="w-full h-full">
+            <DialogContent className="sm:max-w-5xl p-0 gap-0 h-[80vh] flex flex-col">
+                <div className="flex-1 min-h-0">
+                    <ResizablePanelGroup orientation="horizontal" className="w-full h-full">
 
-                    <ResizablePanel defaultSize="30%" className="bg-background-panel">
-                        <ScrollArea className="h-full">
-                            <div className="py-2">
-                                {changes.map((pending) => (
-                                    <SourceSection
-                                        key={pending.source.path}
-                                        pending={pending}
-                                        selected={selected}
-                                        onSelect={setSelected}
-                                    />
-                                ))}
-                            </div>
-                        </ScrollArea>
-                    </ResizablePanel>
+                        <ResizablePanel defaultSize="30%" className="bg-background-panel">
+                            <ScrollArea className="h-full">
+                                <div className="py-2">
+                                    {changes.map((pending) => (
+                                        <SourceSection
+                                            key={pending.source.path}
+                                            pending={pending}
+                                            selected={selected}
+                                            onSelect={setSelected}
+                                        />
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </ResizablePanel>
 
-                    <ResizableHandle className="w-px bg-muted" />
+                        <ResizableHandle className="w-px bg-muted" />
 
-                    <ResizablePanel className="bg-background-panel">
-                        {selected
-                            ? <DiffView change={selected.change} />
-                            : <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Select a file to view changes</div>
+                        <ResizablePanel className="bg-background-panel">
+                            {selected
+                                ? <DiffView change={selected.change} />
+                                : <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Select a file to view changes</div>
+                            }
+                        </ResizablePanel>
+
+                    </ResizablePanelGroup>
+                </div>
+
+                <div className="flex items-center justify-end px-4 py-2 border-t border-muted">
+                    <Button size="sm" onClick={handleApply} disabled={applying}>
+                        {applying
+                            ? <><RefreshCwIcon className="size-3 animate-spin mr-1" />Applying...</>
+                            : 'Apply All Changes'
                         }
-                    </ResizablePanel>
-
-                </ResizablePanelGroup>
+                    </Button>
+                </div>
             </DialogContent>
         </Dialog>
     )

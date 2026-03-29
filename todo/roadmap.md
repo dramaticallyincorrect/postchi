@@ -5,8 +5,8 @@
    2. ~~check for updates~~
    3. ~~show indicator in title bar~~
    4. ~~show diff~~
-   5. warn local changes
-      1. map what we can to new changes, ie parameter or variable values
+   5. ~~warn local changes~~ ~~no warning changes are preserved~~
+      1. ~~map what we can to new changes, ie parameter or variable values~~
    6. git ignored?
       1. what happends if we don't?
       2. if we were, retrieve the spec from remote on project import?

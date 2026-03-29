@@ -8,6 +8,7 @@ import { FileType } from "../supported-filetypes"
 import { Source, readSources } from "./sources"
 import { Project } from "../project/project"
 import { OpenAPIV3 } from "openapi-types"
+import { mergeRequestContent } from "./source-merger"
 
 export const SOURCE_SPEC_FILENAME = 'source.json'
 
@@ -24,6 +25,7 @@ export type SourceChange = {
 export type PendingSourceChanges = {
     source: Source
     changes: SourceChange[]
+    remoteDoc: OpenAPIV3.Document
 }
 
 export async function checkSources(
@@ -41,9 +43,12 @@ export async function checkSources(
 
             const remoteDoc = await fetchOpenApiSpec(source.url)
 
-            const changes = diffSources(localDoc, remoteDoc, sourceFolderPath)
+            const changes = await enrichModifiedWithDiskContent(
+                diffSources(localDoc, remoteDoc, sourceFolderPath),
+                fileStorage
+            )
             if (changes.length > 0) {
-                results.push({ source, changes })
+                results.push({ source, changes, remoteDoc })
             }
         } catch (e) {
             console.error(`[sources] Failed to check source "${source.url}":`, e)
@@ -96,6 +101,25 @@ function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string,
         }
     }
     return map
+}
+
+async function enrichModifiedWithDiskContent(
+    changes: SourceChange[],
+    fileStorage: FileStorage
+): Promise<SourceChange[]> {
+    return Promise.all(changes.map(async (change) => {
+        if (change.kind !== 'modified') return change
+        try {
+            const diskContent = await fileStorage.readText(change.path)
+            return {
+                ...change,
+                oldContent: diskContent,
+                newContent: mergeRequestContent(diskContent, change.newContent ?? ''),
+            }
+        } catch {
+            return change
+        }
+    }))
 }
 
 function diffMaps(remote: Map<string, string>, local: Map<string, string>): SourceChange[] {

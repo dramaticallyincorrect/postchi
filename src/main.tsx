@@ -12,6 +12,7 @@ import { importOpenApiFromUrl, importPostmanCollection } from "./lib/data/import
 import DefaultFileStorage from "./lib/data/files/file-default";
 import { addSource } from "./lib/data/sources/sources";
 import { checkSources, PendingSourceChanges } from "./lib/data/sources/source-checker";
+import { applySourceChanges } from "./lib/data/sources/source-applier";
 import { importPostmanZip } from "./lib/data/import/import-postman-zip";
 import { pathOf } from "./lib/data/files/join";
 import { loadStore } from "./lib/data/store/store";
@@ -126,7 +127,17 @@ function AppShell() {
 
     return (
         <LicenseContext.Provider value={{ isPro, refreshLicense }}>
-            <App key={project.path} project={project} isTemp={project.path === tempPath} pendingSourceChanges={pendingSourceChanges} />
+            <App
+                key={project.path}
+                project={project}
+                isTemp={project.path === tempPath}
+                pendingSourceChanges={pendingSourceChanges}
+                onApply={async () => {
+                    await applySourceChanges(pendingSourceChanges, project)
+                    setPendingSourceChanges([])
+                    checkSources(project).then(setPendingSourceChanges).catch(() => { })
+                }}
+            />
             <ImportDialog
                 onImport={async (format, source, saveAsSource) => {
                     if (format === 'postman' && source instanceof File) {
