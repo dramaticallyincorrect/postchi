@@ -45,7 +45,7 @@ export async function createProjectFolder(path: string, fileStorage: FileStorage
     return fileStorage.mkdir(path)
 }
 
-function sanitizeFilename(name: string): string {
+export function sanitizeFilename(name: string): string {
     // Strip characters illegal on Windows, macOS, or Linux
     // Windows: \ / : * ? " < > |
     // macOS/Linux: / and null byte

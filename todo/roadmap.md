@@ -2,7 +2,7 @@
 
 1. Sources
    1. ~~parse open api spec~~
-   2. check for updates
+   2. ~~check for updates~~
    3. show indicator in title bar
    4. show diff
    5. warn local changes

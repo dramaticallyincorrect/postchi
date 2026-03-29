@@ -1,5 +1,5 @@
 import { convertPostmanCollectionToPostchi, ImportedFolder, ImportedRequest } from "./postman/postman-parser";
-import { convertOpenApiToPostchi } from "./open-api/open-api-parser";
+import { convertDocumentToFolder, fetchOpenApiSpec } from "./open-api/open-api-parser";
 import { pathOf } from "../files/join";
 import { createHttpRequest, createProjectFolder } from "../project/project";
 
@@ -11,9 +11,16 @@ export async function importPostmanCollection(file: File, root: string): Promise
     return importFolderInto(rootFolder, root);
 }
 
-export async function importOpenApiFromUrl(url: string, root: string): Promise<ImportResult> {
-    const rootFolder = await convertOpenApiToPostchi(url);
-    return importFolderInto(rootFolder, root);
+export async function importOpenApiFromUrl(url: string, root: string): Promise<ImportOpenApiResult> {
+    console.log(`Fetching OpenAPI spec from ${url}...`);
+    const doc = await fetchOpenApiSpec(url);
+    const rootFolder = convertDocumentToFolder(doc);
+    const result = await importFolderInto(rootFolder, root);
+    return { ...result, specJson: JSON.stringify(doc, null, 2) };
+}
+
+export type ImportOpenApiResult = ImportResult & {
+    specJson: string;
 }
 
 export async function importFolderInto(folder: ImportedFolder, root: string): Promise<ImportResult> {

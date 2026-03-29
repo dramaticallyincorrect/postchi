@@ -1,4 +1,4 @@
-import { dereference } from '@readme/openapi-parser';
+import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
 import { ImportedFolder, ImportedRequest } from '../postman/postman-parser';
 
@@ -14,11 +14,15 @@ type OperationTuple = {
 };
 
 export async function convertOpenApiToPostchi(filePath: string): Promise<ImportedFolder> {
-    const doc = await dereference(filePath) as OpenAPIV3.Document;
+    const doc = await SwaggerParser.dereference(filePath) as OpenAPIV3.Document;
     return convertDocumentToFolder(doc);
 }
 
-function convertDocumentToFolder(doc: OpenAPIV3.Document): ImportedFolder {
+export async function fetchOpenApiSpec(url: string): Promise<OpenAPIV3.Document> {
+    return await SwaggerParser.dereference(url) as OpenAPIV3.Document;
+}
+
+export function convertDocumentToFolder(doc: OpenAPIV3.Document): ImportedFolder {
     const tagBuckets = new Map<string, OperationTuple[]>();
     const untagged: OperationTuple[] = [];
 
