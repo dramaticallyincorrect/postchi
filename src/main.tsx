@@ -23,12 +23,14 @@ import { LicenseDialog } from "./components/license-dialog"
 import { LicenseContext } from "./lib/license/license-context"
 import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/license";
 import { AboutDialog } from "./about/about-dialog";
-import { SettingsDialog } from "./components/settings-dialog";
+import { openSettingsWindow } from "./lib/windows/window-manager";
+import { SettingsWindow } from "./settings/settings-window";
 import { Toaster } from "@/components/ui/sonner";
 import { PostHogProvider } from "posthog-js/react";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { setActiveProject } from "./lib/project-state";
 import { ThemeProvider } from "./theme-context/theme-context";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -39,21 +41,29 @@ const options = {
     autocapture: false,
 } as const
 
-const tempPath = await getDefaultProjectPath()
+const windowLabel = isTauri() ? getCurrentWebviewWindow().label : 'main'
 
-const store = await loadStore(SETTINGS_STORE)
-const lastPath = await store.get<string>(LAST_PROJECT_KEY) ?? tempPath
+let tempPath = ''
+let initialProject: Project | null = null
+let initialLicenseStatus: Awaited<ReturnType<typeof getInitialLicenseStatus>> = 'free'
 
-const initialProject = await createProject(lastPath)
+if (windowLabel === 'main') {
+    tempPath = await getDefaultProjectPath()
 
-setActiveProject(initialProject)
+    const store = await loadStore(SETTINGS_STORE)
+    const lastPath = await store.get<string>(LAST_PROJECT_KEY) ?? tempPath
 
-const initialLicenseStatus = await getInitialLicenseStatus()
+    initialProject = await createProject(lastPath)
 
-await initMenu(lastPath === tempPath)
+    setActiveProject(initialProject)
+
+    initialLicenseStatus = await getInitialLicenseStatus()
+
+    await initMenu(lastPath === tempPath)
+}
 
 function AppShell() {
-    const [project, setProject] = useState<Project>(initialProject)
+    const [project, setProject] = useState<Project>(initialProject!)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
     const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
     const [pendingSourceChanges, setPendingSourceChanges] = useState<PendingSourceChanges[]>([])
@@ -119,6 +129,12 @@ function AppShell() {
                     await switchProject(await copyProject(project, selected))
                     break
                 }
+                case MenuActions.SETTINGS: {
+                    if (isTauri()) {
+                        await openSettingsWindow()
+                    }
+                    break
+                }
             }
         })
 
@@ -175,22 +191,29 @@ function AppShell() {
                 }}
             />
             <AboutDialog />
-            <SettingsDialog />
             <Toaster />
         </LicenseContext.Provider>
     )
 }
 
 
+function RootComponent() {
+    if (windowLabel === 'settings') {
+        return <SettingsWindow />
+    }
+    return (
+        <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
+            <AppShell />
+        </PostHogProvider>
+    )
+}
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
         <ThemeProvider>
             <TooltipProvider>
-                <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
-                    <AppShell />
-                </PostHogProvider>
+                <RootComponent />
             </TooltipProvider>
         </ThemeProvider>
-
     </React.StrictMode>,
 );
