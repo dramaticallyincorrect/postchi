@@ -9,6 +9,7 @@ import { initMenu } from "./lib/menu/project-menu";
 import { ImportDialog } from "./components/import-dialog";
 import { NewProjectDialog } from "./components/new-project-dialog";
 import { importOpenApiFromUrl, importPostmanCollection } from "./lib/data/import/import-folder";
+import { addSource } from "./lib/data/sources/sources";
 import { importPostmanZip } from "./lib/data/import/import-postman-zip";
 import { pathOf } from "./lib/data/files/join";
 import { loadStore } from "./lib/data/store/store";
@@ -117,7 +118,7 @@ function AppShell() {
         <LicenseContext.Provider value={{ isPro, refreshLicense }}>
             <App key={project.path} project={project} isTemp={project.path === tempPath} />
             <ImportDialog
-                onImport={async (format, source) => {
+                onImport={async (format, source, saveAsSource) => {
                     if (format === 'postman' && source instanceof File) {
                         if (source.name.endsWith('.zip')) {
                             return importPostmanZip(source, project.collectionsPath)
@@ -125,9 +126,13 @@ function AppShell() {
                         return importPostmanCollection(source, project.collectionsPath)
                     }
                     if (format === 'openapi' && typeof source === 'string') {
-                        return importOpenApiFromUrl(source, project.collectionsPath)
+                        const result = await importOpenApiFromUrl(source, project.collectionsPath)
+                        if (saveAsSource && result.rootFolderName) {
+                            await addSource(project.path, { type: 'open-api', url: source, path: result.rootFolderName })
+                        }
+                        return result
                     }
-                    return { count: 0, skippedRequests: [] }
+                    return { count: 0, skippedRequests: [], rootFolderName: ''}
                 }}
             />
             <NewProjectDialog

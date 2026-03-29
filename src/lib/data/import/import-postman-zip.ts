@@ -8,7 +8,7 @@ export async function importPostmanZip(file: File, root: string): Promise<Import
         name => /\/collection\/[^/]+\.json$/.test(name)
     );
 
-    const result: ImportResult = { count: 0, skippedRequests: [] };
+    const result: ImportResult = { count: 0, skippedRequests: [], rootFolderName: '' };
     for (const path of collectionFiles) {
         try {
             const content = await zip.files[path].async('string');

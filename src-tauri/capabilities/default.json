@@ -31,10 +31,14 @@
     "fs:write-all",
     "fs:allow-watch",
     "fs:allow-unwatch",
+    "fs:allow-exists",
+    "fs:allow-mkdir",
     {
       "identifier": "fs:scope",
       "allow": [
-        "**"
+        "**",
+        "**/.*",
+        "**/.*/**"
       ]
     },
     "log:default",

@@ -20,7 +20,7 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
     const folderPath = pathOf(root, folder.name);
     await createProjectFolder(folderPath);
 
-    let result: ImportResult = { count: 0, skippedRequests: [] };
+    let result: ImportResult = { count: 0, skippedRequests: [], rootFolderName: folder.name };
 
     for (const item of folder.items) {
         if ('request' in item) {
@@ -44,4 +44,6 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
 export type ImportResult = {
     count: number;
     skippedRequests: string[];
+    /** Name of the top-level folder created during import, relative to the collections root */
+    rootFolderName: string;
 }

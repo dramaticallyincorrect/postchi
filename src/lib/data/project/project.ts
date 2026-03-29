@@ -8,6 +8,7 @@ import { FileType } from "../supported-filetypes"
 export type Project = {
     name: string
     path: string
+    postchiPath: string
     envPath: string
     secretsPath: string
     collectionsPath: string
@@ -19,11 +20,14 @@ export async function createProject(path: string, fileStorage: FileStorage = Def
     await fileStorage.mkdir(path)
     await fileStorage.mkdir(pathOf(path, collectionsDirName))
     await fileStorage.mkdir(pathOf(path, actionsDirName))
+    await fileStorage.mkdir(pathOf(path, postchiDirName))
     await createIfNotExists(pathOf(path, environmentsName + envExtension), fileStorage)
     await createIfNotExists(pathOf(path, secretsName + envExtension), fileStorage)
+    await createIfNotExists(pathOf(path, postchiDirName, sourcesFileName), fileStorage, JSON.stringify({ sources: [] }, null, 2))
     return {
         name,
         path,
+        postchiPath: pathOf(path, postchiDirName),
         envPath: pathOf(path, environmentsName + envExtension),
         secretsPath: pathOf(path, secretsName + envExtension),
         collectionsPath: pathOf(path, collectionsDirName),
@@ -102,6 +106,8 @@ const actionsDirName = "actions"
 const environmentsName = "environments"
 const secretsName = "secrets"
 const envExtension = '.cenv'
+export const postchiDirName = ".postchi"
+export const sourcesFileName = "sources.json"
 
 export async function getDefaultProjectPath(): Promise<string> {
     if (isTauri()) {

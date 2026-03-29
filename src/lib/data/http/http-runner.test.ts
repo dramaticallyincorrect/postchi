@@ -30,6 +30,7 @@ describe('execute http template', () => {
         setActiveProject({
             name: 'Test Project',
             path: root,
+            postchiPath: '',
             envPath: envPath,
             secretsPath: '',
             collectionsPath: '',

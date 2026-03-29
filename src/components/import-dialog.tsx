@@ -8,6 +8,7 @@ import { ImportResult } from '@/lib/data/import/import-folder';
 import { MenuActions } from '@/lib/menu/menu-events';
 import { useMenuTrigger } from '@/lib/hooks/use-menu-trigger';
 import { Input } from './ui/input';
+import { Switch } from './ui/switch';
 
 
 function PostmanIcon({ className }: { className?: string }) {
@@ -65,7 +66,7 @@ const FORMAT_INFO: FormatInfo[] = [
 
 
 interface ImportDialogProps {
-    onImport: (format: ImportFormat, source: File | string) => Promise<ImportResult>;
+    onImport: (format: ImportFormat, source: File | string, saveAsSource: boolean) => Promise<ImportResult>;
 }
 
 export function ImportDialog({ onImport }: ImportDialogProps) {
@@ -76,6 +77,7 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     const [loading, setLoading] = useState(false);
     const [rejectedFile, setRejectedFile] = useState(false);
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
+    const [saveAsSource, setSaveAsSource] = useState(false);
 
     const accept = useMemo(() => selectedFormat.accept ?? {}, [selectedFormat]);
 
@@ -99,12 +101,13 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
         setUrl('');
         setRejectedFile(false);
         setImportResult(null);
+        setSaveAsSource(false);
     };
 
     const handleImport = async (source: File | string) => {
         setLoading(true);
         try {
-            const result = await onImport(selectedFormat.format, source);
+            const result = await onImport(selectedFormat.format, source, saveAsSource);
             setImportResult(result);
         } finally {
             setLoading(false);
@@ -118,6 +121,7 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
         setUrl('');
         setRejectedFile(false);
         setImportResult(null);
+        setSaveAsSource(false);
     };
 
     // TODO: extract file size formatting to a util function
@@ -196,8 +200,10 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
                             <UrlInput
                                 url={url}
                                 loading={loading}
+                                saveAsSource={saveAsSource}
                                 onUrlChange={(v) => { setUrl(v); setImportResult(null); }}
                                 onImport={() => handleImport(url)}
+                                onSaveAsSourceChange={setSaveAsSource}
                             />
                             <p className="text-[11px] text-muted-foreground">
                                 {selectedFormat.supportedVersions}
@@ -304,11 +310,13 @@ export function ImportDialog({ onImport }: ImportDialogProps) {
     );
 }
 
-function UrlInput({ url, loading, onUrlChange, onImport }: {
+function UrlInput({ url, loading, saveAsSource, onUrlChange, onImport, onSaveAsSourceChange }: {
     url: string;
     loading: boolean;
+    saveAsSource: boolean;
     onUrlChange: (v: string) => void;
     onImport: () => void;
+    onSaveAsSourceChange: (v: boolean) => void;
 }) {
     return (
         <div className="space-y-3 min-h-40">
@@ -328,6 +336,15 @@ function UrlInput({ url, loading, onUrlChange, onImport }: {
                     {loading ? 'Importing…' : 'Import'}
                 </Button>
             </div>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none w-fit">
+                <Switch
+                    size="sm"
+                    checked={saveAsSource}
+                    onCheckedChange={onSaveAsSourceChange}
+                    disabled={loading}
+                />
+                <span className="text-[12px] text-muted-foreground">Track as source</span>
+            </label>
         </div>
     );
 }
