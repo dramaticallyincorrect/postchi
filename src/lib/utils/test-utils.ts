@@ -1,7 +1,7 @@
 import { fs } from "memfs"
-import { pathOf } from "../data/files/join"
-import { FileItem, FileTreeItem, FolderItem } from "../data/project-files"
-import { filenameWithoutExtension } from "../data/files/file-utils/file-utils"
+import { pathOf } from "../storage/files/join"
+import { FileItem, FileTreeItem, FolderItem } from "../../postchi/project/project-files"
+import { filenameWithoutExtension } from "../storage/files/file-utils/file-utils"
 
 export const whitespaces = [' ', '  ', '   ', '\t', ' \t\t']
 export const newlines = ['\n', '\n\n', '\n\n\n']

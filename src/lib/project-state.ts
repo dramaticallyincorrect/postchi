@@ -1,5 +1,5 @@
-import { ProjectEnvironment } from '@/active-environment/environment-context'
-import type { Project } from '@/lib/data/project/project'
+import { ProjectEnvironment } from '@/app/active-environment/environment-context'
+import { Project } from '@/postchi/project/project'
 
 let _project: Project | null = null
 let _activeEnvironment: ProjectEnvironment = { name: '', variables: [], secrets: [] }

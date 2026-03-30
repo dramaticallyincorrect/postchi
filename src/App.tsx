@@ -6,7 +6,7 @@ import {
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { useEffect, useMemo, useState } from 'react';
-import { useTheme } from './theme-context/theme-context';
+import { useTheme } from './app/theme/theme-context';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -14,29 +14,29 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from './components/ui/dropdown-menu';
-import { FileTree } from './components/FileTree';
-import { collectHttpFiles, FileItem } from './lib/data/project-files';
-import HttpRequestResponse from './http/http-request-response';
-import { ActiveEnvironment } from './active-environment/active-environment';
-import { Project } from './lib/data/project/project';
-import { getFileTypeFromPath } from './lib/data/file-type-recognizer';
-import { FileType } from './lib/data/supported-filetypes';
-import { EnvironmentEditor } from './editors/environment-editor';
-import { ScriptEditor } from './editors/script-editor';
-import { EnvironmentProvider } from './active-environment/environment-context';
+import { FileTree } from './app/project/FileTree';
+import { collectHttpFiles, FileItem } from './postchi/project/project-files';
+import HttpRequestResponse from './app/editors/http/http-request-response';
+import { ActiveEnvironment } from './app/active-environment/active-environment';
+import { EnvironmentEditor } from './app/editors/environment-editor';
+import { ScriptEditor } from './app/editors/scripts/script-editor';
+import { EnvironmentProvider } from './app/active-environment/environment-context';
 import MsWindowControls from './components/window-controls';
 import { isDesktopMac, isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
-import { useFileTree } from './lib/hooks/use-file-tree';
-import { useFileWatch } from './lib/hooks/file-watch';
-import { FileWatchEventType } from './lib/data/files/file';
-import { projectMenuItems } from './lib/menu/project-menu'
-import usePersistentState from './lib/hooks/persistent-state';
+import { FileWatchEventType } from './lib/storage/files/file';
+import { projectMenuItems } from './app/menu/project-menu'
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
-import { QuickActionsButton } from './lib/quick-actions/quick-action';
-import { SourceChangesButton } from './components/source-changes-dialog';
-import { PendingSourceChanges } from './lib/data/sources/source-checker';
+import { QuickActionsButton } from './app/quick-actions/quick-action';
+import { SourceChangesButton } from './app/sources/source-changes-dialog';
+import usePersistentState from './hooks/persistent-state';
+import { useFileWatch } from './hooks/file-watch';
+import { getFileTypeFromPath } from './postchi/project/file-types/file-type-recognizer';
+import { PendingSourceChanges } from './postchi/sources/source-checker';
+import { FileType } from './postchi/project/file-types/supported-filetypes';
+import { Project } from './postchi/project/project';
+import { useFileTree } from './hooks/use-file-tree';
 
 export default function App({ project, isTemp, pendingSourceChanges, onApply }: { project: Project, isTemp: boolean, pendingSourceChanges: PendingSourceChanges[], onApply: () => Promise<void> }) {
 

@@ -36,7 +36,7 @@
    7. the common flow (run the token request) will be handled by pin request feature
 5. search
    1. recent requests
-6. reorganize packages
+6. ~~reorganize packages~~
 7.  file tree
     1. rename
     2. view options

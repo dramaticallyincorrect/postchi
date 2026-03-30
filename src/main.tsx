@@ -2,37 +2,37 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./App.css";
-import { copyProject, createProject, createOrOverrideFolderSettings, getDefaultProjectPath, Project } from "./lib/data/project/project";
 import { isTauri } from "@tauri-apps/api/core";
-import { MenuActions, onMenuEvent } from "./lib/menu/menu-events";
-import { initMenu } from "./lib/menu/project-menu";
-import { ImportDialog } from "./components/import-dialog";
-import { NewProjectDialog } from "./components/new-project-dialog";
-import { importOpenApiFromUrl, importPostmanCollection, importAutoFromFile } from "./lib/data/import/import-folder";
-import { appendEnvironmentVariables } from "./lib/environments/env-writer";
-import DefaultFileStorage from "./lib/data/files/file-default";
-import { addSource } from "./lib/data/sources/sources";
-import { setSourceToken } from "./lib/data/store/credential-store";
-import { checkSources, PendingSourceChanges } from "./lib/data/sources/source-checker";
-import { applySourceChanges } from "./lib/data/sources/source-applier";
-import { importPostmanZip } from "./lib/data/import/import-postman-zip";
-import { pathOf } from "./lib/data/files/join";
-import { loadStore } from "./lib/data/store/store";
-import { checkForUpdate } from "./lib/updater/updater";
-import { UpdateDialog } from "./components/update-dialog";
+import { MenuActions, onMenuEvent } from "./app/menu/menu-events";
+import { initMenu } from "./app/menu/project-menu";
+import { ImportDialog } from "./app/import/import-dialog";
+import { NewProjectDialog } from "./app/project/new-project-dialog";
+import DefaultFileStorage from "./lib/storage/files/file-default";
+import { setSourceToken } from "./lib/storage/store/credential-store";
+import { pathOf } from "./lib/storage/files/join";
+import { loadStore } from "./lib/storage/store/store";
+import { checkForUpdate } from "./app/updater/updater";
+import { UpdateDialog } from "./app/updater/update-dialog";
 import { Update } from "@tauri-apps/plugin-updater";
-import { LicenseDialog } from "./components/license-dialog"
-import { LicenseContext } from "./lib/license/license-context"
-import { getInitialLicenseStatus, validateLicenseStatus } from "./lib/license/license";
-import { AboutDialog } from "./about/about-dialog";
-import { openSettingsWindow } from "./lib/windows/window-manager";
-import { SettingsWindow } from "./settings/settings-window";
+import { LicenseDialog } from "./app/license/license-dialog"
+import { LicenseContext } from "./app/license/license-context"
+import { AboutDialog } from "./app/about/about-dialog";
+import { SettingsWindow } from "./app/settings/settings-window";
 import { Toaster } from "@/components/ui/sonner";
 import { PostHogProvider } from "posthog-js/react";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { setActiveProject } from "./lib/project-state";
-import { ThemeProvider } from "./theme-context/theme-context";
+import { ThemeProvider } from "./app/theme/theme-context";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { openSettingsWindow } from "./app/windows/window-manager";
+import { appendEnvironmentVariables } from "./postchi/environments/env-writer";
+import { importAutoFromFile, importPostmanCollection, importOpenApiFromUrl } from "./postchi/import/import-folder";
+import { importPostmanZip } from "./postchi/import/import-postman-zip";
+import { getInitialLicenseStatus, validateLicenseStatus } from "./postchi/license/license";
+import { getDefaultProjectPath, createProject, copyProject, createOrOverrideFolderSettings, Project } from "./postchi/project/project";
+import { applySourceChanges } from "./postchi/sources/source-applier";
+import { PendingSourceChanges, checkSources } from "./postchi/sources/source-checker";
+import { addSource } from "./postchi/sources/sources";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'

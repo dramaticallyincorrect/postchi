@@ -8,7 +8,7 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command'
-import { FileItem } from '@/lib/data/project-files'
+import { FileItem } from '@/postchi/project/project-files'
 
 type Props = {
     open: boolean
