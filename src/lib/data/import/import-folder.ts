@@ -1,5 +1,5 @@
 import { convertPostmanCollectionToPostchi, ImportedFolder, ImportedRequest } from "./postman/postman-parser";
-import { convertDocumentToFolder, fetchOpenApiSpec } from "./open-api/open-api-parser";
+import { convertDocumentToFolder, fetchOpenApiSpec, fetchOpenApiSpecFromFile } from "./open-api/open-api-parser";
 import { pathOf } from "../files/join";
 import { createHttpRequest, createProjectFolder } from "../project/project";
 import { OpenAPIV3 } from "openapi-types";
@@ -10,6 +10,30 @@ export async function importPostmanCollection(file: File, root: string): Promise
     const postmanData = JSON.parse(content);
     const rootFolder = convertPostmanCollectionToPostchi(postmanData);
     return importFolderInto(rootFolder, root);
+}
+
+export async function importOpenApiFromFile(file: File, root: string): Promise<ImportOpenApiResult> {
+    const doc = await fetchOpenApiSpecFromFile(file);
+    const rootFolder = convertDocumentToFolder(doc);
+    const result = await importFolderInto(rootFolder, root);
+    return { ...result, specJson: JSON.stringify(doc, null, 2), servers: doc.servers ?? [] };
+}
+
+export async function importAutoFromFile(file: File, root: string): Promise<ImportResult | ImportOpenApiResult> {
+    const content = await file.text();
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        // Not JSON — must be YAML OpenAPI
+        return importOpenApiFromFile(file, root);
+    }
+    // Detect Postman by schema field
+    const schema = (parsed as Record<string, unknown> & { info?: { schema?: unknown } })?.info?.schema ?? '';
+    if (typeof schema === 'string' && schema.includes('postman')) {
+        return importPostmanCollection(file, root);
+    }
+    return importOpenApiFromFile(file, root);
 }
 
 export async function importOpenApiFromUrl(url: string, root: string, token?: string): Promise<ImportOpenApiResult> {

@@ -8,7 +8,7 @@ import { MenuActions, onMenuEvent } from "./lib/menu/menu-events";
 import { initMenu } from "./lib/menu/project-menu";
 import { ImportDialog } from "./components/import-dialog";
 import { NewProjectDialog } from "./components/new-project-dialog";
-import { importOpenApiFromUrl, importPostmanCollection } from "./lib/data/import/import-folder";
+import { importOpenApiFromUrl, importPostmanCollection, importAutoFromFile } from "./lib/data/import/import-folder";
 import { appendEnvironmentVariables } from "./lib/environments/env-writer";
 import DefaultFileStorage from "./lib/data/files/file-default";
 import { addSource } from "./lib/data/sources/sources";
@@ -167,6 +167,9 @@ function AppShell() {
                     );
                 }}
                 onImport={async (format, source, saveAsSource, token) => {
+                    if (format === 'auto' && source instanceof File) {
+                        return importAutoFromFile(source, project.collectionsPath)
+                    }
                     if (format === 'postman' && source instanceof File) {
                         if (source.name.endsWith('.zip')) {
                             return importPostmanZip(source, project.collectionsPath)

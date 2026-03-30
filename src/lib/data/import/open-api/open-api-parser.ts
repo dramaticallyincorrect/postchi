@@ -1,5 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
+import * as yaml from 'js-yaml';
 import { isGitLabUrl, fetchWithGitLabAuth } from '../../integrations/gitlab';
 import { ImportedFolder, ImportedRequest } from '../postman/postman-parser';
 
@@ -17,6 +18,17 @@ type OperationTuple = {
 export async function convertOpenApiToPostchi(filePath: string): Promise<ImportedFolder> {
     const doc = await SwaggerParser.dereference(filePath) as OpenAPIV3.Document;
     return convertDocumentToFolder(doc);
+}
+
+export async function fetchOpenApiSpecFromFile(file: File): Promise<OpenAPIV3.Document> {
+    const content = await file.text();
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        parsed = yaml.load(content);
+    }
+    return SwaggerParser.dereference(parsed as OpenAPIV3.Document) as Promise<OpenAPIV3.Document>;
 }
 
 export async function fetchOpenApiSpec(url: string, token?: string): Promise<OpenAPIV3.Document> {

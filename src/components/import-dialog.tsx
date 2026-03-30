@@ -2,13 +2,12 @@ import { useState, useCallback, useMemo } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, X, AlertCircle, TriangleAlert, CircleCheck, Server } from 'lucide-react';
+import { FileText, X, AlertCircle, TriangleAlert, CircleCheck, Server, ServerIcon, ImportIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImportResult, ImportOpenApiResult } from '@/lib/data/import/import-folder';
 import { MenuActions } from '@/lib/menu/menu-events';
 import { useMenuTrigger } from '@/lib/hooks/use-menu-trigger';
 import { Input } from './ui/input';
-import { Switch } from './ui/switch';
 import { isGitLabUrl } from '@/lib/data/integrations/gitlab';
 
 export type ServerMapping = {
@@ -17,80 +16,33 @@ export type ServerMapping = {
     varName: string;
 }
 
-
-function PostmanIcon({ className }: { className?: string }) {
-    return (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={className}>
-            <rect x="1.5" y="2.5" width="13" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.25" />
-            <path d="M4.5 8h7M4.5 5.5h7M4.5 10.5h4.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-        </svg>
-    );
-}
-
-function OpenApiIcon({ className }: { className?: string }) {
-    return (
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={className}>
-            <path d="M8 1.5L2 5v6l6 3.5L14 11V5L8 1.5z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
-            <path d="M8 1.5v13M2 5l6 3.5M14 5L8 8.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-        </svg>
-    );
-}
-
-
-type FormatInfo = {
-    format: ImportFormat;
-    label: string;
-    hint: string;
-    inputType: 'file' | 'url';
-    accept?: Record<string, string[]>;
-    acceptedExtensions?: string[];
-    supportedVersions: string;
-    icon: React.ReactNode;
-}
-
-type ImportFormat = 'postman' | 'openapi';
-
-const FORMAT_INFO: FormatInfo[] = [
-    {
-        format: 'postman',
-        label: 'Postman',
-        hint: '.json / .zip',
-        inputType: 'file',
-        accept: { 'application/json': ['.json'], 'application/zip': ['.zip'] },
-        acceptedExtensions: ['.json', '.zip'],
-        supportedVersions: 'Supports Postman Collection v2.0/v2.1 (.json) or Data Export (.zip)',
-        icon: <PostmanIcon />,
-    },
-    {
-        format: 'openapi',
-        label: 'OpenAPI',
-        hint: 'v3.0 · URL',
-        inputType: 'url',
-        supportedVersions: 'Supports  Swagger 2.0, OpenAPI 3.0 and v3.1 — enter a public spec URL',
-        icon: <OpenApiIcon />,
-    },
-]
-
+type ImportFormat = 'postman' | 'openapi' | 'auto';
+type ImportMode = 'live-source' | 'one-time';
 
 interface ImportDialogProps {
     onImport: (format: ImportFormat, source: File | string, saveAsSource: boolean, token?: string) => Promise<ImportResult>;
     onSetupServers?: (mappings: ServerMapping[], folderName: string) => Promise<void>;
 }
 
+const ONE_TIME_ACCEPT = {
+    'application/json': ['.json'],
+    'application/zip': ['.zip'],
+    'application/x-yaml': ['.yaml', '.yml'],
+    'text/yaml': ['.yaml', '.yml'],
+};
+const ONE_TIME_EXTENSIONS = ['.json', '.zip', '.yaml', '.yml'];
+
 export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
     const [open, setOpen] = useMenuTrigger(MenuActions.IMPORT_PROJECT);
-    const [selectedFormat, setSelectedFormat] = useState<FormatInfo>(FORMAT_INFO[0]);
+    const [mode, setMode] = useState<ImportMode>('live-source');
     const [file, setFile] = useState<File | null>(null);
     const [url, setUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [rejectedFile, setRejectedFile] = useState(false);
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
-    const [saveAsSource, setSaveAsSource] = useState(false);
     const [gitlabToken, setGitlabToken] = useState('');
     const [serverMappings, setServerMappings] = useState<ServerMapping[] | null>(null);
     const [applyingServers, setApplyingServers] = useState(false);
-
-    const accept = useMemo(() => selectedFormat.accept ?? {}, [selectedFormat]);
 
     const onDrop = useCallback((accepted: File[], rejected: FileRejection[]) => {
         if (accepted[0]) {
@@ -100,19 +52,18 @@ export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
     }, []);
 
     const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
-        accept,
+        accept: ONE_TIME_ACCEPT,
         maxFiles: 1,
         onDrop,
-        disabled: loading || selectedFormat.inputType === 'url',
+        disabled: loading || mode === 'live-source',
     });
 
-    const handleFormatChange = (f: FormatInfo) => {
-        setSelectedFormat(f);
+    const handleModeChange = (m: ImportMode) => {
+        setMode(m);
         setFile(null);
         setUrl('');
         setRejectedFile(false);
         setImportResult(null);
-        setSaveAsSource(false);
         setGitlabToken('');
         setServerMappings(null);
     };
@@ -120,7 +71,9 @@ export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
     const handleImport = async (source: File | string) => {
         setLoading(true);
         try {
-            const result = await onImport(selectedFormat.format, source, saveAsSource, gitlabToken || undefined);
+            const saveAsSource = mode === 'live-source';
+            const format: ImportFormat = source instanceof File ? 'auto' : 'openapi';
+            const result = await onImport(format, source, saveAsSource, gitlabToken || undefined);
             const openApiResult = result as ImportOpenApiResult;
             if (
                 onSetupServers &&
@@ -147,12 +100,10 @@ export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
         setUrl('');
         setRejectedFile(false);
         setImportResult(null);
-        setSaveAsSource(false);
         setGitlabToken('');
         setServerMappings(null);
     };
 
-    // TODO: extract file size formatting to a util function
     const fileSize = file
         ? file.size < 1024
             ? `${file.size} B`
@@ -181,17 +132,30 @@ export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
 
                     <div className="space-y-2">
                         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                            Format
+                            Import type
                         </p>
                         <div className="flex gap-2">
-                            {FORMAT_INFO.map((format) => {
-                                const active = format.format === selectedFormat.format;
+                            {([
+                                {
+                                    mode: 'live-source' as ImportMode,
+                                    label: 'Live Source',
+                                    hint: 'Always in sync',
+                                    icon: <ServerIcon />,
+                                },
+                                {
+                                    mode: 'one-time' as ImportMode,
+                                    label: 'One Time Import',
+                                    hint: 'Postman - OpenAPI',
+                                    icon: <ImportIcon />,
+                                },
+                            ] as const).map((item) => {
+                                const active = item.mode === mode;
                                 return (
                                     <button
-                                        key={format.format}
+                                        key={item.mode}
                                         type="button"
                                         disabled={loading}
-                                        onClick={() => handleFormatChange(format)}
+                                        onClick={() => handleModeChange(item.mode)}
                                         className={cn(
                                             'relative flex flex-1 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-all duration-100 disabled:pointer-events-none',
                                             active
@@ -205,14 +169,14 @@ export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
                                                 ? 'border-primary/30 bg-primary/10 text-primary'
                                                 : 'border-border/60 bg-muted/60 text-muted-foreground',
                                         )}>
-                                            {format.icon}
+                                            {item.icon}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[13px] font-medium leading-none mb-1 text-foreground">
-                                                {format.label}
+                                                {item.label}
                                             </p>
                                             <p className="text-[11px] leading-none text-muted-foreground">
-                                                {format.hint}
+                                                {item.hint}
                                             </p>
                                         </div>
                                     </button>
@@ -222,114 +186,34 @@ export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
                     </div>
                 </div>
 
-                <div className="px-5 py-4 space-y-2">
-                    {selectedFormat.inputType === 'url' ? (
-                        <div>
-                            <UrlInput
-                                url={url}
-                                loading={loading}
-                                saveAsSource={saveAsSource}
-                                gitlabToken={gitlabToken}
-                                onUrlChange={(v) => { setUrl(v); setImportResult(null); }}
-                                onImport={() => handleImport(url)}
-                                onSaveAsSourceChange={setSaveAsSource}
-                                onGitlabTokenChange={setGitlabToken}
-                            />
-                            <p className="text-[11px] text-muted-foreground">
-                                {selectedFormat.supportedVersions}
-                            </p>
-                        </div>
-
+                <div className="px-5 py-4 space-y-3">
+                    {mode === 'live-source' ? (
+                        <LiveSourceInput
+                            url={url}
+                            loading={loading}
+                            gitlabToken={gitlabToken}
+                            onUrlChange={(v) => { setUrl(v); setImportResult(null); }}
+                            onImport={() => handleImport(url)}
+                            onGitlabTokenChange={setGitlabToken}
+                        />
                     ) : (
-                        <>
-                            <div
-                                {...getRootProps()}
-                                className={cn(
-                                    'relative flex min-h-38 flex-col items-center justify-center rounded-lg border-[1.5px] border-dashed px-4 text-center transition-all duration-150',
-                                    loading ? 'cursor-default opacity-40 pointer-events-none' : 'cursor-pointer',
-                                    dropZoneBorder,
-                                )}
-                            >
-                                <input {...getInputProps()} />
-
-                                {isDragActive && !isDragReject && (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="rounded-lg border border-primary/30 bg-primary/10 p-2">
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-primary">
-                                                <path d="M10 3v10M5 8l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M3 16h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                            </svg>
-                                        </div>
-                                        <p className="text-[13px] font-medium text-primary">Drop to import</p>
-                                    </div>
-                                )}
-
-                                {isDragReject && (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <AlertCircle className="h-5 w-5 text-destructive" />
-                                        <p className="text-[13px] font-medium text-destructive">
-                                            Only {selectedFormat.acceptedExtensions?.join(', ')} files are supported
-                                        </p>
-                                    </div>
-                                )}
-
-                                {!isDragActive && file && (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="inline-flex items-center gap-2 rounded-md border border-border/50 bg-muted/60 px-3 py-1.5">
-                                            <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                                            <span className="max-w-50 truncate text-[13px] font-medium text-foreground">
-                                                {file.name}
-                                            </span>
-                                            {fileSize && (
-                                                <span className="text-[11px] text-muted-foreground">{fileSize}</span>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={(e) => { e.stopPropagation(); setFile(null); setRejectedFile(false); setImportResult(null); }}
-                                                className="ml-0.5 rounded text-muted-foreground hover:text-destructive transition-colors"
-                                            >
-                                                <X className="h-3 w-3" />
-                                            </button>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            Drop to replace or{' '}
-                                            <span className="text-primary">browse</span>
-                                        </p>
-                                    </div>
-                                )}
-
-                                {!isDragActive && !file && (
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="rounded-lg border border-border/60 bg-muted/60 p-2">
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-muted-foreground">
-                                                <path d="M10 3v10M5 8l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M3 16h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p className="text-[13px] font-medium text-foreground">
-                                                Drop your {selectedFormat.acceptedExtensions?.join(' or ')} file here
-                                            </p>
-                                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                                or <span className="text-primary">browse files</span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className={cn(
-                                'flex items-center justify-center gap-1.5 text-[11px] transition-colors duration-150',
-                                rejectedFile && !isDragActive ? 'text-destructive' : 'text-muted-foreground',
-                            )}>
-                                {rejectedFile && !isDragActive && <AlertCircle className="h-3 w-3 shrink-0" />}
-                                <span>
-                                    {rejectedFile && !isDragActive
-                                        ? `Only ${selectedFormat.acceptedExtensions?.join(', ')} files are supported`
-                                        : selectedFormat.supportedVersions}
-                                </span>
-                            </div>
-                        </>
+                        <OneTimeImportInput
+                            file={file}
+                            fileSize={fileSize}
+                            url={url}
+                            loading={loading}
+                            gitlabToken={gitlabToken}
+                            isDragActive={isDragActive}
+                            isDragReject={isDragReject}
+                            rejectedFile={rejectedFile}
+                            dropZoneBorder={dropZoneBorder}
+                            getRootProps={getRootProps}
+                            getInputProps={getInputProps}
+                            onClearFile={() => { setFile(null); setRejectedFile(false); setImportResult(null); }}
+                            onUrlChange={(v) => { setUrl(v); setImportResult(null); }}
+                            onImportUrl={() => handleImport(url)}
+                            onGitlabTokenChange={setGitlabToken}
+                        />
                     )}
                 </div>
 
@@ -357,27 +241,28 @@ export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
     );
 }
 
-function UrlInput({ url, loading, saveAsSource, gitlabToken, onUrlChange, onImport, onSaveAsSourceChange, onGitlabTokenChange }: {
+function LiveSourceInput({ url, loading, gitlabToken, onUrlChange, onImport, onGitlabTokenChange }: {
     url: string;
     loading: boolean;
-    saveAsSource: boolean;
     gitlabToken: string;
     onUrlChange: (v: string) => void;
     onImport: () => void;
-    onSaveAsSourceChange: (v: boolean) => void;
     onGitlabTokenChange: (v: string) => void;
 }) {
     const isGitLab = useMemo(() => isGitLabUrl(url), [url]);
 
     return (
-        <div className="space-y-3 min-h-40">
-            <div className="flex gap-2 items-center h-full">
+        <div className="space-y-3 min-h-64.5">
+        <p className="text-[12px] bg-success/73 px-2 py-2 rounded text-foreground">
+                Live sources stay in sync — whenever the spec at your URL changes, you'll be notified to review the changes.
+            </p>
+            <div className="flex gap-2 items-center">
                 <Input
                     type="url"
                     value={url}
                     onChange={(e) => onUrlChange(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && url.trim()) onImport(); }}
-                    placeholder="/openapi.(yaml|json)"
+                    placeholder="https://example.com/openapi"
                     disabled={loading}
                 />
                 <Button
@@ -401,15 +286,173 @@ function UrlInput({ url, loading, saveAsSource, gitlabToken, onUrlChange, onImpo
                     </p>
                 </div>
             )}
-            <label className="flex items-center gap-2.5 cursor-pointer select-none w-fit">
-                <Switch
-                    size="sm"
-                    checked={saveAsSource}
-                    onCheckedChange={onSaveAsSourceChange}
-                    disabled={loading}
-                />
-                <span className="text-[12px] text-muted-foreground">Track as source</span>
-            </label>
+            <p className="text-[11px] text-muted-foreground">
+                Supports Swagger 2.0, OpenAPI 3.0 and v3.1 — tracked and kept in sync automatically
+            </p>
+        </div>
+    );
+}
+
+function OneTimeImportInput({
+    file, fileSize, url, loading, gitlabToken,
+    isDragActive, isDragReject, rejectedFile, dropZoneBorder,
+    getRootProps, getInputProps,
+    onClearFile, onUrlChange, onImportUrl, onGitlabTokenChange,
+}: {
+    file: File | null;
+    fileSize: string | null;
+    url: string;
+    loading: boolean;
+    gitlabToken: string;
+    isDragActive: boolean;
+    isDragReject: boolean;
+    rejectedFile: boolean;
+    dropZoneBorder: string;
+    getRootProps: () => Record<string, unknown>;
+    getInputProps: () => Record<string, unknown>;
+    onClearFile: () => void;
+    onUrlChange: (v: string) => void;
+    onImportUrl: () => void;
+    onGitlabTokenChange: (v: string) => void;
+}) {
+    const isGitLab = useMemo(() => isGitLabUrl(url), [url]);
+
+    return (
+        <div className="space-y-3">
+            {/* File dropzone */}
+            <div>
+                <div
+                    {...getRootProps()}
+                    className={cn(
+                        'relative flex min-h-32 flex-col items-center justify-center rounded-lg border-[1.5px] border-dashed px-4 text-center transition-all duration-150',
+                        loading ? 'cursor-default opacity-40 pointer-events-none' : 'cursor-pointer',
+                        dropZoneBorder,
+                    )}
+                >
+                    <input {...getInputProps()} />
+
+                    {isDragActive && !isDragReject && (
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="rounded-lg border border-primary/30 bg-primary/10 p-2">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-primary">
+                                    <path d="M10 3v10M5 8l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M3 16h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                            </div>
+                            <p className="text-[13px] font-medium text-primary">Drop to import</p>
+                        </div>
+                    )}
+
+                    {isDragReject && (
+                        <div className="flex flex-col items-center gap-2">
+                            <AlertCircle className="h-5 w-5 text-destructive" />
+                            <p className="text-[13px] font-medium text-destructive">
+                                Only {ONE_TIME_EXTENSIONS.join(', ')} files are supported
+                            </p>
+                        </div>
+                    )}
+
+                    {!isDragActive && file && (
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="inline-flex items-center gap-2 rounded-md border border-border/50 bg-muted/60 px-3 py-1.5">
+                                <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <span className="max-w-50 truncate text-[13px] font-medium text-foreground">
+                                    {file.name}
+                                </span>
+                                {fileSize && (
+                                    <span className="text-[11px] text-muted-foreground">{fileSize}</span>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); onClearFile(); }}
+                                    className="ml-0.5 rounded text-muted-foreground hover:text-destructive transition-colors"
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Drop to replace or{' '}
+                                <span className="text-primary">browse</span>
+                            </p>
+                        </div>
+                    )}
+
+                    {!isDragActive && !file && (
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="rounded-lg border border-border/60 bg-muted/60 p-2">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-muted-foreground">
+                                    <path d="M10 3v10M5 8l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M3 16h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-[13px] font-medium text-foreground">
+                                    Drop your file here
+                                </p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    or <span className="text-primary">browse files</span>
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className={cn(
+                    'flex items-center justify-center gap-1.5 mt-1.5 text-[11px] transition-colors duration-150',
+                    rejectedFile && !isDragActive ? 'text-destructive' : 'text-muted-foreground',
+                )}>
+                    {rejectedFile && !isDragActive && <AlertCircle className="h-3 w-3 shrink-0" />}
+                    <span>
+                        {rejectedFile && !isDragActive
+                            ? `Only ${ONE_TIME_EXTENSIONS.join(', ')} files are supported`
+                            : 'Postman collection (.json, .zip) or OpenAPI spec (.yaml, .json)'}
+                    </span>
+                </div>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+                <div className="flex-1 border-t border-border/50" />
+                <span className="text-[11px] text-muted-foreground">or import from URL</span>
+                <div className="flex-1 border-t border-border/50" />
+            </div>
+
+            {/* URL input */}
+            <div className="space-y-2">
+                <div className="flex gap-2 items-center">
+                    <Input
+                        type="url"
+                        value={url}
+                        onChange={(e) => onUrlChange(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && url.trim()) onImportUrl(); }}
+                        placeholder="/openapi.(yaml|json)"
+                        disabled={loading}
+                    />
+                    <Button
+                        onClick={onImportUrl}
+                        disabled={loading || !url.trim()}
+                    >
+                        {loading ? 'Importing…' : 'Import'}
+                    </Button>
+                </div>
+                {isGitLab && (
+                    <div className="space-y-1">
+                        <Input
+                            type="password"
+                            value={gitlabToken}
+                            onChange={(e) => onGitlabTokenChange(e.target.value)}
+                            placeholder="GitLab Personal Access Token"
+                            disabled={loading}
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                            Required for private repositories. Token is stored securely in app data.
+                        </p>
+                    </div>
+                )}
+                <p className="text-[11px] text-muted-foreground">
+                    Supports Swagger 2.0, OpenAPI 3.0 and v3.1
+                </p>
+            </div>
         </div>
     );
 }
