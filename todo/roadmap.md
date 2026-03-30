@@ -1,27 +1,31 @@
 # Roadmap
 
 1. Sources
-   1. ~~parse open api spec~~
-   2. ~~check for updates~~
-   3. ~~show indicator in title bar~~
-   4. ~~show diff~~
-   5. ~~warn local changes~~ ~~no warning changes are preserved~~
-      1. ~~map what we can to new changes, ie parameter or variable values~~
-   6. ~~file tree icon~~
-   7. authentication
+   1. authentication
       1. ~~giltab~~
       2. github
       3. general
-   8. settings
+   2. settings
       1. servers
       2. info
          1. version
          2. description
-   9.  git ignored?
+   3. spec integration
+      1. lint
+      2. autocomplete
+   4.  git ignored?
       1. what happends if we don't?
       2. if we were, retrieve the spec from remote on project import?
 2. back and forward recent requests
 3. end to end tests
+   1. import
+      1. postman
+      2. open api
+      3. open api source
+   2. source changes apply
+   3. send request
+      1. normal
+      2. base path + env change
 4. actions - pin rethink
    1. remove titlebar new action when no action exists
    2. always show actions folder
