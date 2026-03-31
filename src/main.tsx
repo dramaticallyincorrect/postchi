@@ -5,10 +5,8 @@ import "./App.css";
 import { isTauri } from "@tauri-apps/api/core";
 import { MenuActions, onMenuEvent } from "./app/menu/menu-events";
 import { initMenu } from "./app/menu/project-menu";
-import { ImportDialog } from "./app/import/import-dialog";
+import { ImportData } from "./app/import/import-dialog";
 import { NewProjectDialog } from "./app/project/new-project-dialog";
-import DefaultFileStorage from "./lib/storage/files/file-default";
-import { setSourceToken } from "./lib/storage/store/credential-store";
 import { pathOf } from "./lib/storage/files/join";
 import { loadStore } from "./lib/storage/store/store";
 import { checkForUpdate } from "./app/updater/updater";
@@ -25,14 +23,10 @@ import { setActiveProject } from "./lib/project-state";
 import { ThemeProvider } from "./app/theme/theme-context";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { openSettingsWindow } from "./app/windows/window-manager";
-import { appendEnvironmentVariables } from "./postchi/environments/env-writer";
-import { importAutoFromFile, importPostmanCollection, importOpenApiFromUrl } from "./postchi/import/import-folder";
-import { importPostmanZip } from "./postchi/import/import-postman-zip";
 import { getInitialLicenseStatus, validateLicenseStatus } from "./postchi/license/license";
-import { getDefaultProjectPath, createProject, copyProject, createOrOverrideFolderSettings, Project } from "./postchi/project/project";
+import { getDefaultProjectPath, createProject, copyProject, Project } from "./postchi/project/project";
 import { applySourceChanges } from "./postchi/sources/source-applier";
 import { PendingSourceChanges, checkSources } from "./postchi/sources/source-checker";
-import { addSource } from "./postchi/sources/sources";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -156,46 +150,7 @@ function AppShell() {
                     checkSources(project).then(setPendingSourceChanges).catch(() => { })
                 }}
             />
-            <ImportDialog
-                onSetupServers={async (mappings, folderName) => {
-                    const folderPath = pathOf(project.collectionsPath, folderName);
-                    const varName = mappings[0]?.varName ?? 'API_BASE_URL';
-                    await createOrOverrideFolderSettings(folderPath, { baseUrl: `<${varName}>` });
-                    await appendEnvironmentVariables(
-                        project.envPath,
-                        mappings.map(m => ({ envName: m.envName, key: m.varName, value: m.url }))
-                    );
-                }}
-                onImport={async (format, source, saveAsSource, token) => {
-                    if (format === 'auto' && source instanceof File) {
-                        return importAutoFromFile(source, project.collectionsPath)
-                    }
-                    if (format === 'postman' && source instanceof File) {
-                        if (source.name.endsWith('.zip')) {
-                            return importPostmanZip(source, project.collectionsPath)
-                        }
-                        return importPostmanCollection(source, project.collectionsPath)
-                    }
-                    if (format === 'openapi' && typeof source === 'string') {
-                        const result = await importOpenApiFromUrl(source, project.collectionsPath, token)
-                        if (saveAsSource && result.rootFolderName) {
-                            const specPath = pathOf(project.collectionsPath, result.rootFolderName, 'source.json')
-                            await DefaultFileStorage.getInstance().create(specPath, result.specJson)
-                            if (token) {
-                                await setSourceToken(project.path, result.rootFolderName, token)
-                            }
-                            await addSource(project.path, {
-                                type: 'open-api',
-                                url: source,
-                                path: result.rootFolderName,
-                                authType: token ? 'gitlab-pat' : undefined,
-                            })
-                        }
-                        return result
-                    }
-                    return { count: 0, skippedRequests: [], rootFolderName: ''}
-                }}
-            />
+            <ImportData project={project} />
             <NewProjectDialog
                 onConfirm={async (name, parentFolder) => {
                     const destPath = pathOf(parentFolder, name)

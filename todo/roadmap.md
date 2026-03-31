@@ -5,15 +5,29 @@
       1. ~~giltab~~
       2. github
       3. general
-   2. settings
+   2. unit tests
+   3. test parse failures
+   4. auth
+      1. requires spec integration
+      2. no auth header in request
+      3. auth methods as part of source info
+      4. shown in settings
+         1. basic
+            1. username, password -> literal or variable
+            2. bearer - > literal or variable
+      5. values
+      6. execution
+         1. find if auth is required from the spec at execution time
+         2. look in the source settings for auth value
+   5. settings
       1. servers
       2. info
          1. version
          2. description
-   3. spec integration
+   6. spec integration
       1. lint
       2. autocomplete
-   4.  git ignored?
+   7.  git ignored?
       1. what happends if we don't?
       2. if we were, retrieve the spec from remote on project import?
 2. back and forward recent requests
@@ -76,3 +90,5 @@
     4. none json body in response view
 15. octet stream body
 16. run a task to change the base path for every request to relative
+17. bugs
+    1.  + not being accepted in header value

@@ -2,13 +2,20 @@ import { useState, useCallback, useMemo } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileText, X, AlertCircle, TriangleAlert, CircleCheck, Server, ServerIcon, ImportIcon } from 'lucide-react';
+import { FileText, X, AlertCircle, TriangleAlert, CircleCheck, Server, ServerIcon, ImportIcon, Import } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MenuActions } from '@/app/menu/menu-events';
 import { useMenuTrigger } from '@/hooks/use-menu-trigger';
 import { Input } from '../../components/ui/input';
 import { isGitLabUrl } from '@/lib/storage/integrations/gitlab';
-import { ImportOpenApiResult, ImportResult } from '@/postchi/import/import-folder';
+import { importAutoFromFile, importOpenApiFromUrl, ImportOpenApiResult, importPostmanCollection, ImportResult } from '@/postchi/import/import-folder';
+import { pathOf } from '@/lib/storage/files/join';
+import { createOrOverrideFolderSettings, Project } from '@/postchi/project/project';
+import { appendEnvironmentVariables } from '@/postchi/environments/env-writer';
+import { importPostmanZip } from '@/postchi/import/import-postman-zip';
+import DefaultFileStorage from '@/lib/storage/files/file-default';
+import { setSourceToken } from '@/lib/storage/store/credential-store';
+import { addSource } from '@/postchi/sources/sources';
 
 export type ServerMapping = {
     url: string;
@@ -32,7 +39,53 @@ const ONE_TIME_ACCEPT = {
 };
 const ONE_TIME_EXTENSIONS = ['.json', '.zip', '.yaml', '.yml'];
 
-export function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
+export const ImportData = ({ project }: { project: Project }) => {
+    return <ImportDialog
+        onSetupServers={async (mappings, folderName) => {
+            const folderPath = pathOf(project.collectionsPath, folderName);
+            const varName = mappings[0]?.varName ?? 'API_BASE_URL';
+            await createOrOverrideFolderSettings(folderPath, { baseUrl: `<${varName}>` });
+            await appendEnvironmentVariables(
+                project.envPath,
+                mappings.map(m => ({ envName: m.envName, key: m.varName, value: m.url }))
+            );
+        }}
+
+        onImport={async (format, source, saveAsSource, token) => {
+            if (format === 'auto' && source instanceof File) {
+                return importAutoFromFile(source, project.collectionsPath)
+            }
+            if (format === 'postman' && source instanceof File) {
+                if (source.name.endsWith('.zip')) {
+                    return importPostmanZip(source, project.collectionsPath)
+                }
+                return importPostmanCollection(source, project.collectionsPath)
+            }
+            if (format === 'openapi' && typeof source === 'string') {
+                const result = await importOpenApiFromUrl(source, project.collectionsPath, token)
+                if (saveAsSource && result.rootFolderName) {
+                    const specPath = pathOf(project.collectionsPath, result.rootFolderName, 'source.json')
+                    await DefaultFileStorage.getInstance().create(specPath, result.specJson)
+                    if (token) {
+                        await setSourceToken(project.path, result.rootFolderName, token)
+                    }
+                    await addSource(project.path, {
+                        type: 'open-api',
+                        url: source,
+                        path: result.rootFolderName,
+                        authType: token ? 'gitlab-pat' : undefined,
+                    })
+                }
+                return result
+            }
+            return { count: 0, skippedRequests: [], rootFolderName: '' }
+        }}
+    />
+}
+
+
+
+function ImportDialog({ onImport, onSetupServers }: ImportDialogProps) {
     const [open, setOpen] = useMenuTrigger(MenuActions.IMPORT_PROJECT);
     const [mode, setMode] = useState<ImportMode>('live-source');
     const [file, setFile] = useState<File | null>(null);
@@ -253,7 +306,7 @@ function LiveSourceInput({ url, loading, gitlabToken, onUrlChange, onImport, onG
 
     return (
         <div className="space-y-3 min-h-64.5">
-        <p className="text-[12px] bg-success/73 px-2 py-2 rounded text-foreground">
+            <p className="text-[12px] bg-success/73 px-2 py-2 rounded text-foreground">
                 Live sources stay in sync — whenever the spec at your URL changes, you'll be notified to review the changes.
             </p>
             <div className="flex gap-2 items-center">
