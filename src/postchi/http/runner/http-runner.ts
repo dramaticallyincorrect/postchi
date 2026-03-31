@@ -9,6 +9,7 @@ import { executeAfterScript } from '../scripts/after/after-script-executor';
 import { executeBeforeScript } from '../scripts/before/before-script-executor';
 import { persistMutations } from '../scripts/persist-mutations';
 import { buildScriptResponse } from '../scripts/script-types';
+import { resolveRequestAuth } from './auth-resolver';
 
 export class ExecutionError {
     type: 'network' | 'template' | 'abort' | 'script';
@@ -41,6 +42,11 @@ export default function executeHttpTemplate(
 
         if (!request || 'message' in request) {
             return reject(new ExecutionError('template', request.message));
+        }
+
+        const authHeaders = await resolveRequestAuth(templatePath, vars)
+        for (const header of authHeaders) {
+            request.headers.push(header)
         }
 
         let finalRequest: HttpRequest;

@@ -1,8 +1,10 @@
 import { convertPostmanCollectionToPostchi, ImportedFolder, ImportedRequest } from "./postman/postman-parser";
 import { convertDocumentToFolder, fetchOpenApiSpec, fetchOpenApiSpecFromFile } from "./open-api/open-api-parser";
-import { createHttpRequest, createProjectFolder } from "../project/project";
+import { createHttpRequest, createProjectFolder, sanitizeFilename } from "../project/project";
 import { OpenAPIV3 } from "openapi-types";
 import { pathOf } from "@/lib/storage/files/join";
+import { REQUEST_SPEC_FILENAME_SUFFIX } from "../sources/request-spec";
+import DefaultFileStorage from "@/lib/storage/files/file-default";
 
 // TODO: handle import failure
 export async function importPostmanCollection(file: File, root: string): Promise<ImportResult> {
@@ -60,6 +62,10 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
             const request = item as ImportedRequest;
             try {
                 await createHttpRequest(folderPath, request.name, request.request);
+                if (request.spec) {
+                    const specFilename = sanitizeFilename(request.name) + REQUEST_SPEC_FILENAME_SUFFIX
+                    await DefaultFileStorage.getInstance().create(pathOf(folderPath, specFilename), JSON.stringify(request.spec, null, 2))
+                }
                 result.count++;
             } catch (e) {
                 console.error(`Failed to import request ${request.name}:`, e);

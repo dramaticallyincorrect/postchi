@@ -77,6 +77,18 @@ export async function createOrOverrideFolderSettings(folderPath: string, setting
     return fileStorage.create(path, JSON.stringify(settings)).then(() => path)
 }
 
+export async function patchFolderSettings(folderPath: string, patch: Partial<FolderSettings>, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<void> {
+    const settingsPath = pathOf(folderPath, 'settings.json')
+    let existing: FolderSettings = { baseUrl: '' }
+    try {
+        const content = await fileStorage.readText(settingsPath)
+        existing = JSON.parse(content) as FolderSettings
+    } catch {
+        // file doesn't exist yet, start from default
+    }
+    await fileStorage.create(settingsPath, JSON.stringify({ ...existing, ...patch }, null, 2))
+}
+
 export async function readFolderSettings(folderPath: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<FolderSettings> {
     const content = await fileStorage.readText(pathOf(folderPath, 'settings.json'))
     return JSON.parse(content) as FolderSettings
@@ -90,8 +102,38 @@ export async function readSettingsForRequest(requestPath: string): Promise<Folde
     return JSON.parse(content.value) as FolderSettings
 }
 
+// Mirrors OpenAPI SecuritySchemeObject, with *Variable fields for env variable references
+
+export type HttpBearerAuth = {
+    type: 'http'
+    scheme: 'bearer'
+    tokenVariable: string
+}
+
+export type HttpBasicAuth = {
+    type: 'http'
+    scheme: 'basic'
+    usernameVariable: string
+    passwordVariable: string
+}
+
+export type ApiKeyAuth = {
+    type: 'apiKey'
+    name: string                // header/query/cookie name from spec
+    in: 'header' | 'query' | 'cookie'
+    keyVariable: string
+}
+
+export type AuthMethod = HttpBearerAuth | HttpBasicAuth | ApiKeyAuth
+
+// Mirrors OpenAPI SecurityRequirementObject: all named schemes must be satisfied (AND)
+export type SecurityRequirement = Record<string, AuthMethod>
+
 export type FolderSettings = {
     baseUrl: string
+    // Mirrors OpenAPI document/operation-level `security`:
+    // array items are OR (any one can satisfy); within each item, all entries are AND
+    security?: SecurityRequirement[]
 }
 
 export async function createQuickAction(actionsPath: string, name: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {

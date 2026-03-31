@@ -1,4 +1,4 @@
-import { fetchOpenApiSpec, convertDocumentToFolder } from "../import/open-api/open-api-parser"
+import { fetchOpenApiSpec, convertDocumentToFolder, buildRequestSpec, getRequestName } from "../import/open-api/open-api-parser"
 import { ImportedFolder, ImportedRequest } from "../import/postman/postman-parser"
 import { sanitizeFilename } from "../project/project"
 import { Source, readSources } from "./sources"
@@ -10,6 +10,7 @@ import DefaultFileStorage from "@/lib/storage/files/file-default"
 import { pathOf } from "@/lib/storage/files/join"
 import { getSourceToken } from "@/lib/storage/store/credential-store"
 import { FileType } from "../project/file-types/supported-filetypes"
+import { RequestSpec } from "./request-spec"
 
 export const SOURCE_SPEC_FILENAME = 'source.json'
 
@@ -20,6 +21,7 @@ export type SourceChange = {
     path: string
     oldContent?: string
     newContent?: string
+    spec?: RequestSpec  // present for 'added' and 'modified'
 }
 
 export type PendingSourceChanges = {
@@ -62,7 +64,8 @@ export async function checkSources(
 
 export function diffSources(documentA: OpenAPIV3.Document, documentB: OpenAPIV3.Document, sourceFolderPath = ''): SourceChange[] {
     try {
-        const localMap = flattenImportedFolder(convertDocumentToFolder(documentA), sourceFolderPath)
+        const localFlat = flattenImportedFolder(convertDocumentToFolder(documentA), sourceFolderPath)
+        const localMap = new Map<string, string>([...localFlat].map(([p, e]) => [p, e.content]))
         const remoteMap = flattenImportedFolder(convertDocumentToFolder(documentB), sourceFolderPath)
         return diffMaps(remoteMap, localMap)
     } catch (e) {
@@ -106,36 +109,38 @@ async function collectDiskFiles(
     }
 }
 
-/** Flatten an ImportedFolder into a map of relative path → request content.
+type FlattenedEntry = { content: string; spec?: RequestSpec }
+
+/** Flatten an ImportedFolder into a map of path → { content, spec }.
  *  The root folder is not included as a prefix — its items are the root level. */
-function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string, string> {
-    const map = new Map<string, string>()
+function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string, FlattenedEntry> {
+    const map = new Map<string, FlattenedEntry>()
     for (const item of folder.items) {
         if ('request' in item) {
             const req = item as ImportedRequest
             const filename = sanitizeFilename(req.name) + FileType.HTTP
-            map.set(pathOf(prefix, filename), req.request)
+            map.set(pathOf(prefix, filename), { content: req.request, spec: req.spec })
         } else {
             const sub = item as ImportedFolder
             const subPrefix = pathOf(prefix, sanitizeFilename(sub.name))
-            for (const [p, c] of flattenImportedFolder(sub, subPrefix)) {
-                map.set(p, c)
+            for (const [p, e] of flattenImportedFolder(sub, subPrefix)) {
+                map.set(p, e)
             }
         }
     }
     return map
 }
 
-function diffMaps(remote: Map<string, string>, local: Map<string, string>): SourceChange[] {
+function diffMaps(remote: Map<string, FlattenedEntry>, local: Map<string, string>): SourceChange[] {
     const changes: SourceChange[] = []
 
-    for (const [path, newContent] of remote) {
+    for (const [path, { content: newContent, spec }] of remote) {
         if (!local.has(path)) {
-            changes.push({ kind: 'added', path, newContent })
+            changes.push({ kind: 'added', path, newContent, spec })
         } else {
             const merged = mergeRequestContent(local.get(path) ?? '', newContent ?? '')
             if (local.get(path) !== merged) {
-                changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent: merged })
+                changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent: merged, spec })
             }
         }
     }

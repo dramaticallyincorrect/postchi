@@ -10,7 +10,9 @@ import { Input } from '../../components/ui/input';
 import { isGitLabUrl } from '@/lib/storage/integrations/gitlab';
 import { importAutoFromFile, importOpenApiFromUrl, ImportOpenApiResult, importPostmanCollection, ImportResult } from '@/postchi/import/import-folder';
 import { pathOf } from '@/lib/storage/files/join';
-import { createOrOverrideFolderSettings, Project } from '@/postchi/project/project';
+import { createOrOverrideFolderSettings, patchFolderSettings, Project } from '@/postchi/project/project';
+import { extractGlobalSecurity } from '@/postchi/import/open-api/open-api-parser';
+import { OpenAPIV3 } from 'openapi-types';
 import { appendEnvironmentVariables } from '@/postchi/environments/env-writer';
 import { importPostmanZip } from '@/postchi/import/import-postman-zip';
 import DefaultFileStorage from '@/lib/storage/files/file-default';
@@ -44,7 +46,7 @@ export const ImportData = ({ project }: { project: Project }) => {
         onSetupServers={async (mappings, folderName) => {
             const folderPath = pathOf(project.collectionsPath, folderName);
             const varName = mappings[0]?.varName ?? 'API_BASE_URL';
-            await createOrOverrideFolderSettings(folderPath, { baseUrl: `<${varName}>` });
+            await patchFolderSettings(folderPath, { baseUrl: `<${varName}>` });
             await appendEnvironmentVariables(
                 project.envPath,
                 mappings.map(m => ({ envName: m.envName, key: m.varName, value: m.url }))
@@ -64,7 +66,8 @@ export const ImportData = ({ project }: { project: Project }) => {
             if (format === 'openapi' && typeof source === 'string') {
                 const result = await importOpenApiFromUrl(source, project.collectionsPath, token)
                 if (saveAsSource && result.rootFolderName) {
-                    const specPath = pathOf(project.collectionsPath, result.rootFolderName, 'source.json')
+                    const folderPath = pathOf(project.collectionsPath, result.rootFolderName)
+                    const specPath = pathOf(folderPath, 'source.json')
                     await DefaultFileStorage.getInstance().create(specPath, result.specJson)
                     if (token) {
                         await setSourceToken(project.path, result.rootFolderName, token)
@@ -75,6 +78,11 @@ export const ImportData = ({ project }: { project: Project }) => {
                         path: result.rootFolderName,
                         authType: token ? 'gitlab-pat' : undefined,
                     })
+                    const doc = JSON.parse(result.specJson) as OpenAPIV3.Document
+                    const security = extractGlobalSecurity(doc)
+                    if (security) {
+                        await patchFolderSettings(folderPath, { security })
+                    }
                 }
                 return result
             }

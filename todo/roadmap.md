@@ -50,8 +50,12 @@
    7. the common flow (run the token request) will be handled by pin request feature
 5. search
    1. recent requests
-6. ~~reorganize packages~~
-7.  file tree
+6. security
+   1. store credentials in keychain
+   2. stripout auth from history by default
+      1. setting to override it
+7. ~~reorganize packages~~
+8.  file tree
     1. rename
     2. view options
        1. show/hide scripts
@@ -62,19 +66,19 @@
        1. pinned items have an execute button
        2. shift+mod+enter for first pinned
        3. play icon on pinned items
-8.  scripts
+9.  scripts
     1. single source to derive execution and auto complete options from
-9.  quick actions
+10. quick actions
     1. set from file tree
-10. import
+11. import
     1. postman
          1. open folder after import
     2. open api
-11. auto complete
+12. auto complete
       1. context aware values
-12. save file  
+13. save file  
     1. when closing the app
-13. errors
+14. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -83,12 +87,12 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-14. last
+15. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
-15. octet stream body
-16. run a task to change the base path for every request to relative
-17. bugs
+16. octet stream body
+17. run a task to change the base path for every request to relative
+18. bugs
     1.  + not being accepted in header value

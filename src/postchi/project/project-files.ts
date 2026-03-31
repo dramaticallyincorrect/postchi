@@ -4,6 +4,7 @@ import { trimExtension } from '../../lib/storage/files/file-utils/file-utils';
 import { pathOf } from '../../lib/storage/files/join';
 import { afterScriptPath } from '../http/scripts/after/after-script-executor';
 import { beforeScriptPath } from '../http/scripts/before/before-script-executor';
+import { REQUEST_SPEC_FILENAME_SUFFIX } from '../sources/request-spec';
 import { readSources } from '../sources/sources';
 import { FileType } from './file-types/supported-filetypes';
 import { Project } from './project';
@@ -70,7 +71,13 @@ function markSourceFolders(items: FileTreeItem[], sourcePaths: Set<string>): voi
 
 async function readItems(path: string, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
     return storage.readDirectory(path).then(entries => {
-        const filtered = entries.filter(entry => !entry.filename.startsWith('.') && entry.filename !== 'settings.json' && !entry.filename.endsWith('.after.js') && !entry.filename.endsWith('.before.js'))
+        const filtered = entries.filter(entry => !entry.filename.startsWith('.') &&
+            entry.filename !== 'settings.json' &&
+            !entry.filename.endsWith(FileType.AFTER_SCRIPT) &&
+            !entry.filename.endsWith(FileType.BEFORE_SCRIPT) &&
+            !entry.filename.endsWith(REQUEST_SPEC_FILENAME_SUFFIX)
+        )
+        
         const files = filtered.filter(e => !e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
         const folders = filtered.filter(e => e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
 

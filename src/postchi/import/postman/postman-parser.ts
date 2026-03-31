@@ -111,4 +111,5 @@ export type ImportedFolder = {
 export type ImportedRequest = {
     name: string;
     request: string;
+    spec?: import('@/postchi/sources/request-spec').RequestSpec;
 }

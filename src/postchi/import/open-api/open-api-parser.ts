@@ -3,6 +3,8 @@ import { OpenAPIV3 } from 'openapi-types';
 import * as yaml from 'js-yaml';
 import { ImportedFolder, ImportedRequest } from '../postman/postman-parser';
 import { fetchWithGitLabAuth, isGitLabUrl } from '@/lib/storage/integrations/gitlab';
+import { ApiKeyAuth, AuthMethod, HttpBasicAuth, HttpBearerAuth, SecurityRequirement } from '@/postchi/project/project';
+import { RequestSpec } from '@/postchi/sources/request-spec';
 
 const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'patch', 'options', 'head', 'trace'] as const;
 
@@ -87,10 +89,11 @@ function convertOperationToRequest(tuple: OperationTuple): ImportedRequest {
     return {
         name: getRequestName(tuple.operation, tuple.method, tuple.pathPattern),
         request: buildRequestText(tuple),
+        spec: buildRequestSpec(tuple.method, tuple.pathPattern, tuple.operation),
     };
 }
 
-function getRequestName(operation: OpenAPIV3.OperationObject, method: string, pathPattern: string): string {
+export function getRequestName(operation: OpenAPIV3.OperationObject, method: string, pathPattern: string): string {
     if (operation.summary?.trim()) return operation.summary.trim();
     if (operation.operationId) return operation.operationId;
     return `${method.toUpperCase()} ${pathPattern}`;
@@ -203,4 +206,68 @@ function isParameterObject(p: OpenAPIV3.ReferenceObject | OpenAPIV3.ParameterObj
 
 function isRequestBodyObject(rb: OpenAPIV3.ReferenceObject | OpenAPIV3.RequestBodyObject): rb is OpenAPIV3.RequestBodyObject {
     return !('$ref' in rb);
+}
+
+function schemeToAuthMethod(schemeName: string, scheme: OpenAPIV3.SecuritySchemeObject): AuthMethod | undefined {
+    if (scheme.type === 'http') {
+        if (scheme.scheme === 'bearer') {
+            return { type: 'http', scheme: 'bearer', tokenVariable: `${schemeName.toUpperCase()}_TOKEN` } satisfies HttpBearerAuth
+        }
+        if (scheme.scheme === 'basic') {
+            return {
+                type: 'http',
+                scheme: 'basic',
+                usernameVariable: `${schemeName.toUpperCase()}_USERNAME`,
+                passwordVariable: `${schemeName.toUpperCase()}_PASSWORD`,
+            } satisfies HttpBasicAuth
+        }
+    }
+    if (scheme.type === 'apiKey') {
+        return {
+            type: 'apiKey',
+            name: scheme.name,
+            in: scheme.in as 'header' | 'query' | 'cookie',
+            keyVariable: `${schemeName.toUpperCase()}_KEY`,
+        } satisfies ApiKeyAuth
+    }
+    return undefined
+}
+
+export function extractGlobalSecurity(doc: OpenAPIV3.Document): SecurityRequirement[] | undefined {
+    if (!doc.security?.length || !doc.components?.securitySchemes) return undefined
+
+    const schemes = doc.components.securitySchemes
+
+    const requirements: SecurityRequirement[] = []
+
+    for (const requirementObj of doc.security) {
+        const requirement: SecurityRequirement = {}
+        for (const [schemeName, _scopes] of Object.entries(requirementObj)) {
+            const schemeOrRef = schemes[schemeName]
+            if (!schemeOrRef || '$ref' in schemeOrRef) continue
+            const authMethod = schemeToAuthMethod(schemeName, schemeOrRef)
+            if (authMethod) {
+                requirement[schemeName] = authMethod
+            }
+        }
+        if (Object.keys(requirement).length > 0) {
+            requirements.push(requirement)
+        }
+    }
+
+    return requirements.length > 0 ? requirements : undefined
+}
+
+export function buildRequestSpec(
+    method: string,
+    pathPattern: string,
+    operation: OpenAPIV3.OperationObject
+): RequestSpec {
+    const op: OpenAPIV3.OperationObject = { ...operation }
+    // Only include security if it was explicitly set on the operation.
+    // Absent security = inherits folder settings. Present (including []) = override.
+    if (operation.security === undefined) {
+        delete op.security
+    }
+    return { method, path: pathPattern, operation: op }
 }

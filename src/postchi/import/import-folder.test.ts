@@ -48,7 +48,7 @@ describe('import', () => {
         const importResult = await importFolderInto(folder, root)
 
         expect(expectedFileTree.every(entry => fs.existsSync(entry.path))).toBe(true)
-        expect(importResult).toEqual({ count: 2, skipped: 0 })
+        expect(importResult).toEqual({ count: 2, skippedRequests: [], rootFolderName: 'Root Folder' })
 
     })
 
@@ -85,7 +85,7 @@ describe('import', () => {
         })
 
         const importResult = await importPostmanCollection(new File([JSON.stringify(postmanData.toJSON())], 'postman.json'), root)
-        expect(importResult).toEqual({ count: 2, skipped: 0 })
+        expect(importResult).toEqual({ count: 2, skippedRequests: [], rootFolderName: 'Root Folder' })
 
 
         const expectedFileTree = parseFileTree(expected, root)

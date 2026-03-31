@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { convertOpenApiToPostchi, convertDocumentToFolder } from "./open-api-parser";
+import { convertOpenApiToPostchi, convertDocumentToFolder, extractGlobalSecurity, buildRequestSpec } from "./open-api-parser";
 import { ImportedFolder, ImportedRequest } from "../postman/postman-parser";
+import { OpenAPIV3 } from "openapi-types";
 import fs from "fs/promises";
 
 const SPEC_PATH = '/tmp/petstore.yaml';
@@ -127,6 +128,288 @@ describe('query param value generation', () => {
 
     const req = doc.items.find(isRequest) as ImportedRequest
     expect(req.request).toContain('status=<status>')
+  })
+})
+
+const ok200 = { '200': { description: 'OK' } }
+
+function makeDoc(overrides: Partial<OpenAPIV3.Document> = {}): OpenAPIV3.Document {
+  return {
+    openapi: '3.0.0',
+    info: { title: 'Test', version: '1.0.0' },
+    paths: {},
+    ...overrides,
+  }
+}
+
+
+describe('extractGlobalSecurity', () => {
+  it('returns undefined when there is no security field', () => {
+    const doc = makeDoc()
+    expect(extractGlobalSecurity(doc)).toBeUndefined()
+  })
+
+  it('returns undefined when security array is empty', () => {
+    const doc = makeDoc({
+      security: [],
+      components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } } },
+    })
+    expect(extractGlobalSecurity(doc)).toBeUndefined()
+  })
+
+  it('returns undefined when there are no securitySchemes', () => {
+    const doc = makeDoc({ security: [{ bearerAuth: [] }] })
+    expect(extractGlobalSecurity(doc)).toBeUndefined()
+  })
+
+  it('maps http bearer scheme', () => {
+    const doc = makeDoc({
+      security: [{ bearerAuth: [] }],
+      components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } } },
+    })
+    expect(extractGlobalSecurity(doc)).toEqual([
+      { bearerAuth: { type: 'http', scheme: 'bearer', tokenVariable: 'BEARERAUTH_TOKEN' } },
+    ])
+  })
+
+  it('maps http basic scheme', () => {
+    const doc = makeDoc({
+      security: [{ basicAuth: [] }],
+      components: { securitySchemes: { basicAuth: { type: 'http', scheme: 'basic' } } },
+    })
+    expect(extractGlobalSecurity(doc)).toEqual([
+      {
+        basicAuth: {
+          type: 'http',
+          scheme: 'basic',
+          usernameVariable: 'BASICAUTH_USERNAME',
+          passwordVariable: 'BASICAUTH_PASSWORD',
+        },
+      },
+    ])
+  })
+
+  it('maps apiKey scheme with header placement', () => {
+    const doc = makeDoc({
+      security: [{ apiKey: [] }],
+      components: { securitySchemes: { apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header' } } },
+    })
+    expect(extractGlobalSecurity(doc)).toEqual([
+      { apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header', keyVariable: 'APIKEY_KEY' } },
+    ])
+  })
+
+  it('skips oauth2 schemes (not supported yet)', () => {
+    const doc = makeDoc({
+      security: [{ oauth2: [] }],
+      components: {
+        securitySchemes: {
+          oauth2: { type: 'oauth2', flows: {} },
+        },
+      },
+    })
+    expect(extractGlobalSecurity(doc)).toBeUndefined()
+  })
+
+  it('returns undefined when all schemes in all requirements are unsupported', () => {
+    const doc = makeDoc({
+      security: [{ oauth2: [] }, { oauth2: [] }],
+      components: { securitySchemes: { oauth2: { type: 'oauth2', flows: {} } } },
+    })
+    expect(extractGlobalSecurity(doc)).toBeUndefined()
+  })
+
+  it('supports OR: multiple requirements each become a separate SecurityRequirement', () => {
+    const doc = makeDoc({
+      security: [{ bearerAuth: [] }, { apiKey: [] }],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: 'http', scheme: 'bearer' },
+          apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header' },
+        },
+      },
+    })
+    const result = extractGlobalSecurity(doc)
+    expect(result).toHaveLength(2)
+    expect(result![0]).toHaveProperty('bearerAuth')
+    expect(result![1]).toHaveProperty('apiKey')
+  })
+
+  it('supports AND: multiple schemes within one requirement become keys in the same SecurityRequirement', () => {
+    const doc = makeDoc({
+      security: [{ bearerAuth: [], apiKey: [] }],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: 'http', scheme: 'bearer' },
+          apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header' },
+        },
+      },
+    })
+    const result = extractGlobalSecurity(doc)
+    expect(result).toHaveLength(1)
+    expect(result![0]).toHaveProperty('bearerAuth')
+    expect(result![0]).toHaveProperty('apiKey')
+  })
+
+  it('skips unsupported schemes but keeps supported ones in the same requirement', () => {
+    const doc = makeDoc({
+      security: [{ bearerAuth: [], oauth2: [] }],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: 'http', scheme: 'bearer' },
+          oauth2: { type: 'oauth2', flows: {} },
+        },
+      },
+    })
+    const result = extractGlobalSecurity(doc)
+    expect(result).toHaveLength(1)
+    expect(result![0]).toHaveProperty('bearerAuth')
+    expect(result![0]).not.toHaveProperty('oauth2')
+  })
+
+  it('returns undefined for the petstore spec which has no global security', async () => {
+    const doc = await import('fs/promises').then(fs =>
+      fs.readFile('/tmp/petstore.yaml', 'utf-8').then(content => {
+        // petstore has no top-level `security` field, only per-operation
+        const SwaggerParser = require('@apidevtools/swagger-parser')
+        return SwaggerParser.dereference(
+          require('js-yaml').load(content) as OpenAPIV3.Document
+        ) as Promise<OpenAPIV3.Document>
+      })
+    )
+    expect(extractGlobalSecurity(doc)).toBeUndefined()
+  })
+})
+
+describe('buildRequestSpec', () => {
+  it('includes method and path', () => {
+    const operation: OpenAPIV3.OperationObject = { responses: ok200 }
+    const spec = buildRequestSpec('get', '/pets', operation)
+    expect(spec.method).toBe('get')
+    expect(spec.path).toBe('/pets')
+  })
+
+  it('omits security when the operation does not explicitly set it', () => {
+    const operation: OpenAPIV3.OperationObject = { responses: ok200 }
+    const spec = buildRequestSpec('get', '/pets', operation)
+    expect('security' in spec.operation).toBe(false)
+  })
+
+  it('preserves security when explicitly set to a non-empty array (operation override)', () => {
+    const operation: OpenAPIV3.OperationObject = {
+      security: [{ apiKey: [] }],
+      responses: ok200,
+    }
+    const spec = buildRequestSpec('get', '/pets', operation)
+    expect(spec.operation.security).toEqual([{ apiKey: [] }])
+  })
+
+  it('preserves security when explicitly set to an empty array (explicit no-auth)', () => {
+    const operation: OpenAPIV3.OperationObject = {
+      security: [],
+      responses: ok200,
+    }
+    const spec = buildRequestSpec('get', '/public', operation)
+    expect(spec.operation.security).toEqual([])
+  })
+
+  it('does not mutate the original operation object', () => {
+    const operation: OpenAPIV3.OperationObject = { responses: ok200 }
+    buildRequestSpec('get', '/pets', operation)
+    expect('security' in operation).toBe(false)
+  })
+})
+
+
+describe('request spec field on imported requests', () => {
+  it('attaches a spec to every imported request', () => {
+    const doc = makeDoc({
+      paths: {
+        '/pets': {
+          get: { summary: 'List Pets', responses: ok200 },
+        },
+      },
+    })
+    const folder = convertDocumentToFolder(doc)
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.spec).toBeDefined()
+    expect(req.spec!.method).toBe('get')
+    expect(req.spec!.path).toBe('/pets')
+  })
+
+  it('spec.operation.security is absent for operations without explicit security', () => {
+    const doc = makeDoc({
+      security: [{ bearerAuth: [] }],
+      components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } } },
+      paths: {
+        '/pets': {
+          get: { summary: 'List Pets', responses: ok200 },
+          // no operation-level security → inherits doc.security
+        },
+      },
+    })
+    const folder = convertDocumentToFolder(doc)
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect('security' in req.spec!.operation).toBe(false)
+  })
+
+  it('spec.operation.security is present for operations with an explicit override', () => {
+    const doc = makeDoc({
+      security: [{ bearerAuth: [] }],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: 'http', scheme: 'bearer' },
+          apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header' },
+        },
+      },
+      paths: {
+        '/pets': {
+          get: {
+            summary: 'List Pets',
+            security: [{ apiKey: [] }],  // explicit override
+            responses: ok200,
+          },
+        },
+      },
+    })
+    const folder = convertDocumentToFolder(doc)
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.spec!.operation.security).toEqual([{ apiKey: [] }])
+  })
+
+  it('spec.operation.security is an empty array for operations that opt out of auth', () => {
+    const doc = makeDoc({
+      security: [{ bearerAuth: [] }],
+      components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } } },
+      paths: {
+        '/public': {
+          get: {
+            summary: 'Public endpoint',
+            security: [],  // explicit no-auth
+            responses: ok200,
+          },
+        },
+      },
+    })
+    const folder = convertDocumentToFolder(doc)
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.spec!.operation.security).toEqual([])
+  })
+
+  it('petstore: GET /pet/{petId} has explicit security in its spec (api_key override)', async () => {
+    const result = await convertOpenApiToPostchi('/tmp/petstore.yaml')
+    const petFolder = result.items.find(i => isFolder(i) && i.name === 'pet') as ImportedFolder
+    const getPetById = petFolder.items.find(i => isRequest(i) && i.name === 'Find pet by ID.') as ImportedRequest
+    expect(getPetById.spec).toBeDefined()
+    expect(getPetById.spec!.operation.security).toBeDefined()
+  })
+
+  it('petstore: GET /store/inventory has explicit security in its spec (api_key only)', async () => {
+    const result = await convertOpenApiToPostchi('/tmp/petstore.yaml')
+    const storeFolder = result.items.find(i => isFolder(i) && i.name === 'store') as ImportedFolder
+    const getInventory = storeFolder.items.find(i => isRequest(i) && i.name === 'Returns pet inventories by status.') as ImportedRequest
+    expect(getInventory.spec).toBeDefined()
+    expect(getInventory.spec!.operation.security).toEqual([{ api_key: [] }])
   })
 })
 
