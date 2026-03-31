@@ -1,7 +1,6 @@
 import DefaultFileStorage from '@/lib/storage/files/file-default'
 import { Project } from '../project/project'
 import { PendingSourceChanges, SOURCE_SPEC_FILENAME } from './source-checker'
-import { mergeRequestContent } from './source-merger'
 import { pathOf } from '@/lib/storage/files/join'
 
 export async function applySourceChanges(
@@ -23,8 +22,7 @@ export async function applySourceChanges(
                     break
                 }
                 case 'modified': {
-                    const merged = mergeRequestContent(change.oldContent ?? '', change.newContent ?? '')
-                    await fileStorage.writeText(change.path, merged)
+                    await fileStorage.writeText(change.path, change.newContent ?? '')
                     break
                 }
             }

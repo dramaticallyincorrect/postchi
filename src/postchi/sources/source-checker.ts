@@ -17,7 +17,6 @@ export type ChangeKind = 'added' | 'removed' | 'modified'
 
 export type SourceChange = {
     kind: ChangeKind
-    /** Path of the derived request file relative to the source's root folder */
     path: string
     oldContent?: string
     newContent?: string
@@ -31,7 +30,7 @@ export type PendingSourceChanges = {
 
 export async function checkSources(
     project: Project,
-    fileStorage: FileStorage = DefaultFileStorage.getInstance()
+    fileStorage = DefaultFileStorage.getInstance()
 ): Promise<PendingSourceChanges[]> {
     const config = await readSources(project.path, fileStorage)
     const results: PendingSourceChanges[] = []
@@ -133,8 +132,11 @@ function diffMaps(remote: Map<string, string>, local: Map<string, string>): Sour
     for (const [path, newContent] of remote) {
         if (!local.has(path)) {
             changes.push({ kind: 'added', path, newContent })
-        } else if (local.get(path) !== mergeRequestContent(local.get(path) ?? '', newContent ?? '')) {
-            changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent })
+        } else {
+            const merged = mergeRequestContent(local.get(path) ?? '', newContent ?? '')
+            if (local.get(path) !== merged) {
+                changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent: merged })
+            }
         }
     }
 
