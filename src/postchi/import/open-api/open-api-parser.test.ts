@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { convertOpenApiToPostchi } from "./open-api-parser";
+import { convertOpenApiToPostchi, convertDocumentToFolder } from "./open-api-parser";
 import { ImportedFolder, ImportedRequest } from "../postman/postman-parser";
 import fs from "fs/promises";
 
@@ -87,8 +87,48 @@ describe('open api parser', () => {
 
 });
 
+describe('query param value generation', () => {
+  const ok200 = { '200': { description: 'OK' } }
 
+  it('uses schema.example as the query param value when present', () => {
+    const doc = convertDocumentToFolder({
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0.0' },
+      paths: {
+        '/pets': {
+          get: {
+            summary: 'List Pets',
+            parameters: [{ name: 'status', in: 'query', schema: { type: 'string', example: 'available' } }],
+            responses: ok200
+          }
+        }
+      }
+    })
 
+    const req = doc.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('status=available')
+    expect(req.request).not.toContain('status=<status>')
+  })
+
+  it('falls back to <name> placeholder when schema.example is absent', () => {
+    const doc = convertDocumentToFolder({
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0.0' },
+      paths: {
+        '/pets': {
+          get: {
+            summary: 'List Pets',
+            parameters: [{ name: 'status', in: 'query', schema: { type: 'string' } }],
+            responses: ok200
+          }
+        }
+      }
+    })
+
+    const req = doc.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('status=<status>')
+  })
+})
 
 const spec = `
 openapi: 3.0.4

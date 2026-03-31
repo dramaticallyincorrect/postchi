@@ -112,7 +112,11 @@ function buildRequestText(tuple: OperationTuple): string {
 
     // Build URL: relative path with {param} → <param>, then append query string
     const path = pathPattern.replace(/\{(\w+)\}/g, '<$1>');
-    const queryString = queryParams.map(p => `${p.name}=<${p.name}>`).join('&');
+    const queryString = queryParams.map(p => {
+        const schema = p.schema as OpenAPIV3.SchemaObject | undefined
+        const value = schema?.example !== undefined ? String(schema.example) : `<${p.name}>`
+        return `${p.name}=${value}`
+    }).join('&');
     const url = queryString ? `${path}?${queryString}` : path;
 
     const headers: string[] = headerParams.map(p => `${p.name}: <${p.name}>`);
