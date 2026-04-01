@@ -22,9 +22,9 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { setActiveProject } from "./lib/project-state";
 import { ThemeProvider } from "./app/theme/theme-context";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { openSettingsWindow } from "./app/windows/window-manager";
+import { openImportWindow, openSettingsWindow } from "./app/windows/window-manager";
 import { getInitialLicenseStatus, validateLicenseStatus } from "./postchi/license/license";
-import { getDefaultProjectPath, createProject, copyProject, Project } from "./postchi/project/project";
+import { getDefaultProjectPath, createProject, copyProject, Project, projectForPath } from "./postchi/project/project";
 import { applySourceChanges } from "./postchi/sources/source-applier";
 import { PendingSourceChanges, checkSources } from "./postchi/sources/source-checker";
 
@@ -131,6 +131,9 @@ function AppShell() {
                     }
                     break
                 }
+                case MenuActions.IMPORT_PROJECT: {
+                    await openImportWindow(project.path)
+                }
             }
         })
 
@@ -150,7 +153,6 @@ function AppShell() {
                     checkSources(project).then(setPendingSourceChanges).catch(() => { })
                 }}
             />
-            <ImportData project={project} />
             <NewProjectDialog
                 onConfirm={async (name, parentFolder) => {
                     const destPath = pathOf(parentFolder, name)
@@ -177,6 +179,9 @@ function AppShell() {
 function RootComponent() {
     if (windowLabel === 'settings') {
         return <SettingsWindow />
+    } else if (windowLabel === 'import') {
+        const projectPath = new URLSearchParams(window.location.search).get('project')
+        return <ImportData project={projectForPath(projectPath!)} />
     }
     return (
         <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>

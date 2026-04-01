@@ -1,4 +1,4 @@
-import { fetchOpenApiSpec, convertDocumentToFolder, buildRequestSpec, getRequestName } from "../import/open-api/open-api-parser"
+import { fetchOpenApiSpec, convertDocumentToFolder } from "../import/open-api/open-api-parser"
 import { ImportedFolder, ImportedRequest } from "../import/postman/postman-parser"
 import { sanitizeFilename } from "../project/project"
 import { Source, readSources } from "./sources"

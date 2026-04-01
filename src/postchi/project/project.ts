@@ -35,6 +35,18 @@ export async function createProject(path: string, fileStorage: FileStorage = Def
     };
 }
 
+export function projectForPath(path: string): Project {
+    return {
+        name: path.split('/').filter(Boolean).pop() ?? path,
+        path,
+        postchiPath: pathOf(path, postchiDirName),
+        envPath: pathOf(path, environmentsName + envExtension),
+        secretsPath: pathOf(path, secretsName + envExtension),
+        collectionsPath: pathOf(path, collectionsDirName),
+        actionsPath: pathOf(path, actionsDirName),
+    }
+}
+
 async function createIfNotExists(path: string, fileStorage: FileStorage, content?: string): Promise<void> {
     if (!await fileStorage.exists(path)) {
         await fileStorage.create(path, content)
