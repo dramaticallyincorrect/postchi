@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AuthMethod, FolderSettings, HttpBearerAuth, HttpBasicAuth, ApiKeyAuth, patchFolderSettings, readFolderSettings } from "@/postchi/project/project";
+import { AuthMethod, FolderSettings, HttpBearerAuth, HttpBasicAuth, ApiKeyAuth, patchFolderSettings, readFolderSettings, SecurityRequirement } from "@/postchi/project/project";
 import { useEnvironment } from "@/app/active-environment/environment-context";
+import { SecurityStep } from "../import/import-dialog";
 
 const isValidBaseUrl = (url: string): boolean => {
     if (url === '') return true;
@@ -117,11 +118,14 @@ export const FolderSettingsDialog = ({ folderPath, onClose }: { folderPath: stri
     const [apiKeyName, setApiKeyName] = useState('');
     const [apiKeyIn, setApiKeyIn] = useState<'header' | 'query' | 'cookie'>('header');
     const [apiKeyVariable, setApiKeyVariable] = useState('');
+    const [security, setSecurity] = useState<SecurityRequirement[]>([]);
+    
 
     useEffect(() => {
         readFolderSettings(folderPath).then(settings => {
             setBaseUrl(settings.baseUrl);
             const method = firstAuthMethod(settings.security);
+            setSecurity(settings.security ?? []);
             setAuthType(getAuthType(settings.security));
             setSchemeName(firstSchemeName(settings.security));
             if (method) {
@@ -184,59 +188,9 @@ export const FolderSettingsDialog = ({ folderPath, onClose }: { folderPath: stri
 
                     <div className="space-y-2">
                         <Label>Authentication</Label>
-                        <Select value={authType} onValueChange={v => setAuthType(v as AuthType)}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                <SelectItem value="bearer">Bearer Token</SelectItem>
-                                <SelectItem value="basic">Basic Auth</SelectItem>
-                                <SelectItem value="apiKey">API Key</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <SecurityStep security={security} onChange={v => setAuthType(getAuthType(v))} existingVarNames={[]} disabled={false} />
                     </div>
 
-                    {authType === 'bearer' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="bearerToken">Token variable</Label>
-                            <VarSelect id="bearerToken" value={bearerToken} onChange={setBearerToken} />
-                        </div>
-                    )}
-
-                    {authType === 'basic' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="basicUsername">Username variable</Label>
-                            <VarSelect id="basicUsername" value={basicUsername} onChange={setBasicUsername} />
-                            <Label htmlFor="basicPassword">Password variable</Label>
-                            <VarSelect id="basicPassword" value={basicPassword} onChange={setBasicPassword} />
-                        </div>
-                    )}
-
-                    {authType === 'apiKey' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="apiKeyName">Header / query / cookie name</Label>
-                            <Input
-                                id="apiKeyName"
-                                placeholder="X-Api-Key"
-                                value={apiKeyName}
-                                onChange={e => setApiKeyName(e.target.value)}
-                            />
-                            <Label>Send as</Label>
-                            <Select value={apiKeyIn} onValueChange={v => setApiKeyIn(v as 'header' | 'query' | 'cookie')}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="header">Header</SelectItem>
-                                    <SelectItem value="query">Query param</SelectItem>
-                                    <SelectItem value="cookie">Cookie</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Label htmlFor="apiKeyVariable">Key variable</Label>
-                            <VarSelect id="apiKeyVariable" value={apiKeyVariable} onChange={setApiKeyVariable} />
-                        </div>
-                    )}
                 </div>
 
                 <DialogFooter className="bg-background border-none">

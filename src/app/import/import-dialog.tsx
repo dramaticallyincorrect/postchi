@@ -14,6 +14,7 @@ import { pathOf } from '@/lib/storage/files/join';
 import { patchFolderSettings, Project, SecurityRequirement, HttpBearerAuth, HttpBasicAuth, ApiKeyAuth, AuthMethod } from '@/postchi/project/project';
 import { extractGlobalSecurity, fetchOpenApiSpec, convertDocumentToFolder } from '@/postchi/import/open-api/open-api-parser';
 import { OpenAPIV3 } from 'openapi-types';
+import * as yaml from 'js-yaml';
 import { appendEnvironmentVariables } from '@/postchi/environments/env-writer';
 import DefaultFileStorage from '@/lib/storage/files/file-default';
 import { setSourceToken } from '@/lib/storage/store/credential-store';
@@ -167,13 +168,13 @@ function ModeSelect({ onSelect }: { onSelect: (mode: 'live-source' | 'one-time')
 async function importLive(project: Project, doc: OpenAPIV3.Document, url: string, token: string | undefined, serverMappings: ServerMapping[], security: SecurityRequirement[]) {
     const rootFolder = convertDocumentToFolder(doc);
     const result = await importFolderInto(rootFolder, project.collectionsPath);
-    const specJson = JSON.stringify(doc, null, 2);
+    const specYaml = yaml.dump(doc);
 
     if (result.rootFolderName) {
         const folderPath = pathOf(project.collectionsPath, result.rootFolderName);
         await DefaultFileStorage.getInstance().create(
-            pathOf(folderPath, 'source.json'),
-            specJson,
+            pathOf(folderPath, 'source.yaml'),
+            specYaml,
         );
         if (token) {
             await setSourceToken(project.path, result.rootFolderName, token);
@@ -385,6 +386,9 @@ const LiveImport = ({ onCancel, existingVarNames, existingEnvNames, project }: {
                     </>
                 }
             >
+                <p className="text-[12px] text-muted-foreground leading-relaxed mb-3">
+                    These auth schemes were found in the spec.
+                </p>
                 <SecurityStep
                     security={securityConfig}
                     onChange={setSecurityConfig}
@@ -549,7 +553,7 @@ function ServerStep({
     );
 }
 
-function SecurityStep({
+export function SecurityStep({
     security, onChange, existingVarNames, disabled,
 }: {
     security: SecurityRequirement[];
@@ -565,15 +569,11 @@ function SecurityStep({
 
     return (
         <div className="space-y-3">
-            <p className="text-[12px] text-muted-foreground leading-relaxed">
-                Set the environment variable names for each auth scheme. These will be referenced in requests — add the actual values to your env file.
-            </p>
             <div className="space-y-2">
                 {security.map((req, reqIdx) =>
                     Object.entries(req).map(([schemeName, method]) => (
                         <SchemeConfig
                             key={`${reqIdx}-${schemeName}`}
-                            schemeName={schemeName}
                             method={method}
                             existingVarNames={existingVarNames}
                             disabled={disabled}
@@ -587,9 +587,8 @@ function SecurityStep({
 }
 
 function SchemeConfig({
-    schemeName, method, existingVarNames, disabled, onChange,
+    method, existingVarNames, disabled, onChange,
 }: {
-    schemeName: string;
     method: AuthMethod;
     existingVarNames: string[];
     disabled: boolean;
@@ -604,8 +603,7 @@ function SchemeConfig({
         <div className="rounded-lg border border-border bg-card p-4 space-y-3">
             <div className="flex items-center gap-2">
                 <Shield className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-[13px] font-medium">{schemeName}</span>
-                <span className="text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                <span className="text-[11px] text-foreground bg-muted px-1.5 py-0.5 rounded">
                     {authLabel}
                 </span>
             </div>
