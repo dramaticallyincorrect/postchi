@@ -48,7 +48,7 @@ export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
 }) => {
 
     return (
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full font-sans text-foreground/64 ">
             {items.map((item) => (
                 <FileTreeEntry
                     key={item.path}
@@ -156,7 +156,7 @@ const FolderNode = ({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="group text-muted-foreground data-[state=open]:hover:text-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                                    className="data-[state=open]:hover:text-foreground data-[state=open]:text-current group hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                                     onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                                 >
                                     <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
@@ -265,7 +265,7 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                         onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                         className={cn(
                             "w-full justify-start gap-2 transition-none",
-                            selectedPath === item.path ? "text-foreground bg-muted" : "text-muted-foreground hover:bg-muted"
+                            selectedPath === item.path ? "text-foreground bg-muted" : "hover:bg-muted"
                         )}
                     >
                         {icon}
