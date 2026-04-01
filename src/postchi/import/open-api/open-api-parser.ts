@@ -15,6 +15,7 @@ type OperationTuple = {
     method: string;
     operation: OpenAPIV3.OperationObject;
     pathLevelParams: (OpenAPIV3.ReferenceObject | OpenAPIV3.ParameterObject)[];
+    securitySchemes: Record<string, OpenAPIV3.SecuritySchemeObject | OpenAPIV3.ReferenceObject>;
 };
 
 export async function convertOpenApiToPostchi(filePath: string): Promise<ImportedFolder> {
@@ -44,6 +45,7 @@ export async function fetchOpenApiSpec(url: string, token?: string): Promise<Ope
 export function convertDocumentToFolder(doc: OpenAPIV3.Document): ImportedFolder {
     const tagBuckets = new Map<string, OperationTuple[]>();
     const untagged: OperationTuple[] = [];
+    const securitySchemes = doc.components?.securitySchemes ?? {};
 
     for (const [pathPattern, pathItem] of Object.entries(doc.paths ?? {})) {
         if (!pathItem) continue;
@@ -53,7 +55,7 @@ export function convertDocumentToFolder(doc: OpenAPIV3.Document): ImportedFolder
             const operation = pathItem[method as HttpMethod] as OpenAPIV3.OperationObject | undefined;
             if (!operation) continue;
 
-            const tuple: OperationTuple = { pathPattern, method, operation, pathLevelParams };
+            const tuple: OperationTuple = { pathPattern, method, operation, pathLevelParams, securitySchemes };
             const firstTag = operation.tags?.[0];
 
             if (firstTag) {
@@ -99,8 +101,38 @@ export function getRequestName(operation: OpenAPIV3.OperationObject, method: str
     return `${method.toUpperCase()} ${pathPattern}`;
 }
 
+function resolveSecurityForRequestText(
+    security: OpenAPIV3.SecurityRequirementObject[],
+    securitySchemes: Record<string, OpenAPIV3.SecuritySchemeObject | OpenAPIV3.ReferenceObject>,
+): { authHeaders: string[]; authQueryParams: string[] } {
+    if (security.length === 0) return { authHeaders: [], authQueryParams: [] }
+
+    const authHeaders: string[] = []
+    const authQueryParams: string[] = []
+
+    for (const [schemeName] of Object.entries(security[0])) {
+        const schemeOrRef = securitySchemes[schemeName]
+        if (!schemeOrRef || '$ref' in schemeOrRef) continue
+
+        const authMethod = schemeToAuthMethod(schemeName, schemeOrRef)
+        if (!authMethod) continue
+
+        if (authMethod.type === 'http' && authMethod.scheme === 'bearer') {
+            authHeaders.push(`Authorization: bearer(<${authMethod.tokenVariable}>)`)
+        } else if (authMethod.type === 'http' && authMethod.scheme === 'basic') {
+            authHeaders.push(`Authorization: basicAuth(<${authMethod.usernameVariable}>,<${authMethod.passwordVariable}>)`)
+        } else if (authMethod.type === 'apiKey' && authMethod.in === 'header') {
+            authHeaders.push(`${authMethod.name}: <${authMethod.keyVariable}>`)
+        } else if (authMethod.type === 'apiKey' && authMethod.in === 'query') {
+            authQueryParams.push(`${authMethod.name}=<${authMethod.keyVariable}>`)
+        }
+    }
+
+    return { authHeaders, authQueryParams }
+}
+
 function buildRequestText(tuple: OperationTuple): string {
-    const { pathPattern, method, operation, pathLevelParams } = tuple;
+    const { pathPattern, method, operation, pathLevelParams, securitySchemes } = tuple;
 
     // Merge path-level and operation-level params; operation-level wins on (name, in) conflict
     const paramMap = new Map<string, OpenAPIV3.ParameterObject>();
@@ -113,16 +145,25 @@ function buildRequestText(tuple: OperationTuple): string {
     const queryParams = params.filter(p => p.in === 'query');
     const headerParams = params.filter(p => p.in === 'header');
 
+    const authForText = operation.security !== undefined
+        ? resolveSecurityForRequestText(operation.security, securitySchemes)
+        : { authHeaders: [], authQueryParams: [] }
+
     // Build URL: relative path with {param} → <param>, then append query string
     const path = pathPattern.replace(/\{(\w+)\}/g, '<$1>');
-    const queryString = queryParams.map(p => {
-        const schema = p.schema as OpenAPIV3.SchemaObject | undefined
-        const value = schema?.example !== undefined ? String(schema.example) : `<${p.name}>`
-        return `${p.name}=${value}`
-    }).join('&');
+    const allQueryParts = [
+        ...queryParams.map(p => {
+            const schema = p.schema as OpenAPIV3.SchemaObject | undefined
+            const value = schema?.example !== undefined ? String(schema.example) : `<${p.name}>`
+            return `${p.name}=${value}`
+        }),
+        ...authForText.authQueryParams,
+    ]
+    const queryString = allQueryParts.join('&');
     const url = queryString ? `${path}?${queryString}` : path;
 
     const headers: string[] = headerParams.map(p => `${p.name}: <${p.name}>`);
+    headers.push(...authForText.authHeaders);
 
     const requestBody = operation.requestBody;
     const body = requestBody && isRequestBodyObject(requestBody)

@@ -413,6 +413,115 @@ describe('request spec field on imported requests', () => {
   })
 })
 
+describe('adds auth header to request when security override exists on request itself', () => {
+  function makeDocWithOperationSecurity(
+    operationSecurity: OpenAPIV3.SecurityRequirementObject[],
+    securitySchemes: Record<string, OpenAPIV3.SecuritySchemeObject>,
+  ) {
+    return convertDocumentToFolder({
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0.0' },
+      components: { securitySchemes },
+      paths: {
+        '/pets': {
+          get: { summary: 'List Pets', security: operationSecurity, responses: ok200 },
+        },
+      },
+    })
+  }
+
+  it('bearer', () => {
+    const folder = makeDocWithOperationSecurity(
+      [{ bearerAuth: [] }],
+      { bearerAuth: { type: 'http', scheme: 'bearer' } },
+    )
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('Authorization: bearer(<BEARERAUTH_TOKEN>)')
+  })
+
+  it('basic', () => {
+    const folder = makeDocWithOperationSecurity(
+      [{ basicAuth: [] }],
+      { basicAuth: { type: 'http', scheme: 'basic' } },
+    )
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('Authorization: basicAuth(<BASICAUTH_USERNAME>,<BASICAUTH_PASSWORD>)')
+  })
+
+  it('apiKey-in-header', () => {
+    const folder = makeDocWithOperationSecurity(
+      [{ apiKey: [] }],
+      { apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header' } },
+    )
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('X-API-Key: <APIKEY_KEY>')
+  })
+
+  it('apiKey-in-query', () => {
+    const folder = makeDocWithOperationSecurity(
+      [{ apiKey: [] }],
+      { apiKey: { type: 'apiKey', name: 'api_key', in: 'query' } },
+    )
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('api_key=<APIKEY_KEY>')
+  })
+
+  it('no security', () => {
+    const folder = convertDocumentToFolder({
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0.0' },
+      security: [{ bearerAuth: [] }],
+      components: { securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } } },
+      paths: {
+        '/pets': {
+          get: { summary: 'List Pets', responses: ok200 },
+        },
+      },
+    })
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).not.toContain('Authorization')
+  })
+
+  it('empty security', () => {
+    const folder = makeDocWithOperationSecurity(
+      [],
+      { bearerAuth: { type: 'http', scheme: 'bearer' } },
+    )
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).not.toContain('Authorization')
+  })
+
+  it('uses first OR-requirement only when multiple requirements exist', () => {
+    const folder = makeDocWithOperationSecurity(
+      [{ bearerAuth: [] }, { apiKey: [] }],
+      {
+        bearerAuth: { type: 'http', scheme: 'bearer' },
+        apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header' },
+      },
+    )
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('Authorization: bearer(<BEARERAUTH_TOKEN>)')
+    expect(req.request).not.toContain('X-API-Key')
+  })
+
+  it('multiple required auth', () => {
+    const folder = makeDocWithOperationSecurity(
+      [{ bearerAuth: [], apiKey: [] }],
+      { apiKey: { type: 'apiKey', name: 'X-API-Key', in: 'header' }, bearerAuth: { type: 'http', scheme: 'bearer' } },
+    )
+    const req = folder.items.find(isRequest) as ImportedRequest
+    expect(req.request).toContain('X-API-Key: <APIKEY_KEY>')
+    expect(req.request).toContain('Authorization: bearer(<BEARERAUTH_TOKEN>)')
+  })
+
+  it('petstore: GET /store/inventory request text includes api_key header', async () => {
+    const result = await convertOpenApiToPostchi('/tmp/petstore.yaml')
+    const storeFolder = result.items.find(i => isFolder(i) && i.name === 'store') as ImportedFolder
+    const getInventory = storeFolder.items.find(i => isRequest(i) && i.name === 'Returns pet inventories by status.') as ImportedRequest
+    expect(getInventory.request).toContain('api_key: <API_KEY_KEY>')
+  })
+})
+
 const spec = `
 openapi: 3.0.4
 info:
