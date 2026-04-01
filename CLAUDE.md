@@ -2,13 +2,17 @@
 
 ## Tech Stack
 
-postchi is written in typescripts using tauri and react. shadcn is used for the ui library.
+postchi is written in typescripts using tauri and react. shadcn is used for the ui library. and also pnpm.
 
 ## Style of coding
 
 1. prefer functional programming over oop
 2. testable without mocks as much as possible
 3. use data and network abstractions in src/lib to be able to run the app in the browser aswell
+4. don't use comment markers in code or tests, no // helpers etc
+5. prefer self contained react components that handle their states internally and expose data
+6. prefer components with few states prefarably less than 3
+7. prefer hooks over direct useEffect
 
 ## File Structure
 
