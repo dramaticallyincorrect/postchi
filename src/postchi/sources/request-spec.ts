@@ -1,9 +1,9 @@
 import { OpenAPIV3 } from 'openapi-types'
 
 export type RequestSpec = {
-    method: string                        // e.g. "get"
-    path: string                          // e.g. "/pets/{petId}"
-    operation: OpenAPIV3.OperationObject  // resolved (no $refs); includes security only if explicitly set on operation
+    method: string
+    path: string
+    operation: Omit<OpenAPIV3.OperationObject, 'responses' | 'callbacks'>
 }
 
 // e.g. "List all pets.get" → "List all pets.spec.yaml"

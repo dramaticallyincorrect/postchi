@@ -311,10 +311,10 @@ export function buildRequestSpec(
     pathPattern: string,
     operation: OpenAPIV3.OperationObject
 ): RequestSpec {
-    const op: OpenAPIV3.OperationObject = { ...operation }
-    // Only include security if it was explicitly set on the operation.
-    // Absent security = inherits folder settings. Present (including []) = override.
-    if (operation.security === undefined) {
+    const { responses: _r, callbacks: _c, ...rest } = operation
+    const op: RequestSpec['operation'] = rest
+    // Absent security = inherits folder settings. Present (including []) = operation-level override.
+    if (op.security === undefined) {
         delete op.security
     }
     return { method, path: pathPattern, operation: op }

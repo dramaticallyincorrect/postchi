@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { fs } from 'memfs'
+import * as yaml from 'js-yaml'
 import { resolveRequestAuth } from './auth-resolver'
 import { pathOf } from '@/lib/storage/files/join'
 import { FolderSettings } from '@/postchi/project/project'
@@ -7,7 +8,7 @@ import { RequestSpec } from '@/postchi/sources/request-spec'
 
 const root = '/auth-resolver-test'
 const requestPath = pathOf(root, 'request.get')
-const specPath = pathOf(root, 'request.spec.json')
+const specPath = pathOf(root, 'request.spec.yaml')
 const settingsPath = pathOf(root, 'settings.json')
 
 function writeSettings(settings: FolderSettings) {
@@ -15,7 +16,7 @@ function writeSettings(settings: FolderSettings) {
 }
 
 function writeSpec(spec: Partial<RequestSpec> & { operation: RequestSpec['operation'] }) {
-    fs.writeFileSync(specPath, JSON.stringify(spec))
+    fs.writeFileSync(specPath, yaml.dump(spec))
 }
 
 beforeEach(() => {
@@ -264,7 +265,7 @@ describe('spec file override', () => {
         writeSpec({
             method: 'get',
             path: '/pets',
-            operation: { security: [{ apiKey: [] }], responses: {} },
+            operation: { security: [{ apiKey: [] }] },
         })
         const result = await resolveRequestAuth(requestPath, new Map([['MY_TOKEN', 'tok']]))
         expect(result).toEqual([])
@@ -274,7 +275,7 @@ describe('spec file override', () => {
         writeSpec({
             method: 'get',
             path: '/public',
-            operation: { security: [], responses: {} },
+            operation: { security: [] },
         })
         const result = await resolveRequestAuth(requestPath, new Map([['MY_TOKEN', 'tok']]))
         expect(result).toEqual([])
@@ -285,7 +286,7 @@ describe('spec file override', () => {
             method: 'get',
             path: '/pets',
             // No security field — inherits folder auth
-            operation: { responses: {} },
+            operation: {},
         })
         const result = await resolveRequestAuth(requestPath, new Map([['MY_TOKEN', 'tok']]))
         expect(result).toEqual([['Authorization', 'Bearer tok']])
