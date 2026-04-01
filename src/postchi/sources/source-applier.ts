@@ -1,6 +1,7 @@
 import DefaultFileStorage from '@/lib/storage/files/file-default'
 import { patchFolderSettings, Project } from '../project/project'
 import { PendingSourceChanges, SOURCE_SPEC_FILENAME } from './source-checker'
+import * as yaml from 'js-yaml'
 import { pathOf } from '@/lib/storage/files/join'
 import { extractGlobalSecurity } from '../import/open-api/open-api-parser'
 import { REQUEST_SPEC_FILENAME_SUFFIX } from './request-spec'
@@ -20,7 +21,7 @@ export async function applySourceChanges(
                     await fileStorage.create(change.path, change.newContent ?? '')
                     if (change.spec) {
                         const specFilePath = change.path.replace(new RegExp(`\\${FileType.HTTP}$`), REQUEST_SPEC_FILENAME_SUFFIX)
-                        await fileStorage.create(specFilePath, JSON.stringify(change.spec, null, 2))
+                        await fileStorage.create(specFilePath, yaml.dump(change.spec))
                     }
                     break
                 }
@@ -34,7 +35,7 @@ export async function applySourceChanges(
                     await fileStorage.writeText(change.path, change.newContent ?? '')
                     if (change.spec) {
                         const specFilePath = change.path.replace(new RegExp(`\\${FileType.HTTP}$`), REQUEST_SPEC_FILENAME_SUFFIX)
-                        await fileStorage.writeText(specFilePath, JSON.stringify(change.spec, null, 2))
+                        await fileStorage.writeText(specFilePath, yaml.dump(change.spec))
                     }
                     break
                 }
@@ -42,7 +43,7 @@ export async function applySourceChanges(
         }
 
         const specPath = pathOf(project.collectionsPath, source.path, SOURCE_SPEC_FILENAME)
-        await fileStorage.writeText(specPath, JSON.stringify(remoteDoc, null, 2))
+        await fileStorage.writeText(specPath, yaml.dump(remoteDoc))
 
         const security = extractGlobalSecurity(remoteDoc)
         if (security) {

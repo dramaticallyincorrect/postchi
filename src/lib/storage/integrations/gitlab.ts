@@ -53,12 +53,12 @@ export function toGitLabApiUrl(url: string): string {
     return `${parsed.origin}/api/v4/projects/${encodedProject}/repository/files/${encodedFilePath}/raw?ref=${encodeURIComponent(ref)}`
 }
 
-export async function fetchWithGitLabAuth(url: string, token: string): Promise<unknown> {
+export async function fetchWithGitLabAuth(url: string, token: string | undefined): Promise<unknown> {
     const client = createHttpClient()
     const request: HttpRequest = {
         method: 'GET',
         url: toGitLabApiUrl(url),
-        headers: [['PRIVATE-TOKEN', token]],
+        headers: token ? [['PRIVATE-TOKEN', token]] : [],
         body: '',
     }
 
@@ -72,6 +72,98 @@ export async function fetchWithGitLabAuth(url: string, token: string): Promise<u
 
     if (response.status === 401) {
         throw new Error('GitLab authentication failed — check your token')
+    }
+    if (response.status === 404) {
+        throw new Error('Spec not found at that URL')
+    }
+    if (response.status < 200 || response.status >= 300) {
+        throw new Error(`Failed to fetch spec: ${response.status}`)
+    }
+
+    const text = typeof response.body === 'string'
+        ? response.body
+        : new TextDecoder().decode(response.body)
+
+    try {
+        return JSON.parse(text)
+    } catch {
+        return jsYaml.load(text)
+    }
+}
+
+async function fetchGithubFile(url: string): Promise<unknown> {
+    const parsed = new URL(url)
+    const pathname = parsed.pathname
+
+    // Convert github.com browse URL to API URL
+    // https://github.com/{owner}/{repo}/blob/{branch}/{filepath} -> https://api.github.com/repos/{owner}/{repo}/contents/{filepath}?ref={branch}
+    const match = pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/)
+    if (!match) return url
+
+    const [, owner, repo, branch, filepath] = match
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filepath}?ref=${branch}`
+
+    const client = createHttpClient()
+    const request: HttpRequest = {
+        method: 'GET',
+        url: apiUrl,
+        headers: [['Accept', 'application/vnd.github.v3.raw']],
+        body: '',
+    }
+
+    const result = await client.fetch(request, new AbortController().signal)
+
+    if (result.isErr) {
+        throw new Error(`Failed to fetch spec: ${result.error.message}`)
+    }
+
+    const response = result.value
+
+    if (response.status === 401) {
+        throw new Error('authentication failed — check your token')
+    }
+    if (response.status === 404) {
+        throw new Error('Spec not found at that URL')
+    }
+    if (response.status < 200 || response.status >= 300) {
+        throw new Error(`Failed to fetch spec: ${response.status}`)
+    }
+
+    const text = typeof response.body === 'string'
+        ? response.body
+        : new TextDecoder().decode(response.body)
+
+    try {
+        return JSON.parse(text)
+    } catch {
+        return jsYaml.load(text)
+    }
+}
+
+
+export async function fetchSpec(url: string): Promise<unknown> {
+    const client = createHttpClient()
+    const headers: [string, string][] = []
+    if (url.includes('github.com')) {
+        return await fetchGithubFile(url)
+    }
+    const request: HttpRequest = {
+        method: 'GET',
+        url: url,
+        headers: headers,
+        body: '',
+    }
+
+    const result = await client.fetch(request, new AbortController().signal)
+
+    if (result.isErr) {
+        throw new Error(`Failed to fetch spec: ${result.error.message}`)
+    }
+
+    const response = result.value
+
+    if (response.status === 401) {
+        throw new Error('authentication failed — check your token')
     }
     if (response.status === 404) {
         throw new Error('Spec not found at that URL')

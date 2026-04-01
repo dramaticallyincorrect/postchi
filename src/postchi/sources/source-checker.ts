@@ -12,7 +12,7 @@ import { getSourceToken } from "@/lib/storage/store/credential-store"
 import { FileType } from "../project/file-types/supported-filetypes"
 import { RequestSpec } from "./request-spec"
 
-export const SOURCE_SPEC_FILENAME = 'source.json'
+export const SOURCE_SPEC_FILENAME = 'source.yaml'
 
 export type ChangeKind = 'added' | 'removed' | 'modified'
 

@@ -1,6 +1,7 @@
 import { readSettingsForRequest, AuthMethod, SecurityRequirement } from '@/postchi/project/project'
 import { RequestSpec, REQUEST_SPEC_FILENAME_SUFFIX } from '@/postchi/sources/request-spec'
 import DefaultFileStorage from '@/lib/storage/files/file-default'
+import * as yaml from 'js-yaml'
 import { filenameWithoutExtension } from '@/lib/storage/files/file-utils/file-utils'
 import { pathOf } from '@/lib/storage/files/join'
 import { parentDir } from '@/lib/storage/files/file-utils/file-utils'
@@ -28,7 +29,7 @@ export async function resolveRequestAuth(
     )
     try {
         const specContent = await fileStorage.readText(specPath)
-        const spec = JSON.parse(specContent) as RequestSpec
+        const spec = yaml.load(specContent) as RequestSpec
         if (spec.operation.security !== undefined) {
             // Operation explicitly defines its own security (or opts out with [])
             return []

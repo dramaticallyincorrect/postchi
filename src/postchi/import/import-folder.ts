@@ -5,6 +5,7 @@ import { OpenAPIV3 } from "openapi-types";
 import { pathOf } from "@/lib/storage/files/join";
 import { REQUEST_SPEC_FILENAME_SUFFIX } from "../sources/request-spec";
 import DefaultFileStorage from "@/lib/storage/files/file-default";
+import * as yaml from 'js-yaml';
 
 // TODO: handle import failure
 export async function importPostmanCollection(file: File, root: string): Promise<ImportResult> {
@@ -18,7 +19,7 @@ export async function importOpenApiFromFile(file: File, root: string): Promise<I
     const doc = await fetchOpenApiSpecFromFile(file);
     const rootFolder = convertDocumentToFolder(doc);
     const result = await importFolderInto(rootFolder, root);
-    return { ...result, specJson: JSON.stringify(doc, null, 2), servers: doc.servers ?? [] };
+    return { ...result, specYaml: yaml.dump(doc), servers: doc.servers ?? [] };
 }
 
 export async function importAutoFromFile(file: File, root: string): Promise<ImportResult | ImportOpenApiResult> {
@@ -43,11 +44,11 @@ export async function importOpenApiFromUrl(url: string, root: string, token?: st
     const doc = await fetchOpenApiSpec(url, token);
     const rootFolder = convertDocumentToFolder(doc);
     const result = await importFolderInto(rootFolder, root);
-    return { ...result, specJson: JSON.stringify(doc, null, 2), servers: doc.servers ?? [] };
+    return { ...result, specYaml: yaml.dump(doc), servers: doc.servers ?? [] };
 }
 
 export type ImportOpenApiResult = ImportResult & {
-    specJson: string;
+    specYaml: string;
     servers: OpenAPIV3.ServerObject[];
 }
 
@@ -64,7 +65,7 @@ export async function importFolderInto(folder: ImportedFolder, root: string): Pr
                 await createHttpRequest(folderPath, request.name, request.request);
                 if (request.spec) {
                     const specFilename = sanitizeFilename(request.name) + REQUEST_SPEC_FILENAME_SUFFIX
-                    await DefaultFileStorage.getInstance().create(pathOf(folderPath, specFilename), JSON.stringify(request.spec, null, 2))
+                    await DefaultFileStorage.getInstance().create(pathOf(folderPath, specFilename), yaml.dump(request.spec))
                 }
                 result.count++;
             } catch (e) {
