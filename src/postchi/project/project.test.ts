@@ -1,6 +1,6 @@
 import { fs } from "memfs";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createOrOverrideFolderSettings, createHttpRequest, createProjectFolder, readFolderSettings, readSettingsForRequest } from "./project";
+import { createHttpRequest, createProjectFolder, readFolderSettings, readSettingsForRequest, patchFolderSettings, FolderSettings } from "./project";
 import { createFileTree, parseFileTree } from "@/lib/utils/test-utils";
 import { pathOf } from "@/lib/storage/files/join";
 import { FileType } from "./file-types/supported-filetypes";
@@ -24,16 +24,16 @@ describe('project file creation', () => {
 
     describe('settings', () => {
         it('creates when none exists', async () => {
-            await createOrOverrideFolderSettings(root);
+            await patchFolderSettings(root, {});
             const stats = fs.statSync(pathOf(root, 'settings.json'));
             expect(stats.isFile()).toBe(true);
         })
 
         it('overrides when already exists', async () => {
             fs.writeFileSync(pathOf(root, 'settings.json'), JSON.stringify({ baseUrl: 'https://getpostchi.org' }))
-            await createOrOverrideFolderSettings(root, { baseUrl: 'https://new-url.com' })
-            const content = fs.readFileSync(pathOf(root, 'settings.json'), 'utf-8')
-            expect(content).toBe(JSON.stringify({ baseUrl: 'https://new-url.com' }))
+            await patchFolderSettings(root, { baseUrl: 'https://new-url.com' })
+            const content = await readFolderSettings(root)
+            expect(content).toStrictEqual({ baseUrl: 'https://new-url.com' })
         })
     })
 

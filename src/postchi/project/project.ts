@@ -84,11 +84,6 @@ export async function createHttpRequest(dir: string, name: string, content: stri
     return path
 }
 
-export async function createOrOverrideFolderSettings(folderPath: string, settings: FolderSettings = { baseUrl: '' }, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<string> {
-    const path = pathOf(folderPath, 'settings.json')
-    return fileStorage.create(path, JSON.stringify(settings)).then(() => path)
-}
-
 export async function patchFolderSettings(folderPath: string, patch: Partial<FolderSettings>, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<void> {
     const settingsPath = pathOf(folderPath, 'settings.json')
     let existing: FolderSettings = { baseUrl: '' }
@@ -131,20 +126,17 @@ export type HttpBasicAuth = {
 
 export type ApiKeyAuth = {
     type: 'apiKey'
-    name: string                // header/query/cookie name from spec
+    name: string
     in: 'header' | 'query' | 'cookie'
     keyVariable: string
 }
 
 export type AuthMethod = HttpBearerAuth | HttpBasicAuth | ApiKeyAuth
 
-// Mirrors OpenAPI SecurityRequirementObject: all named schemes must be satisfied (AND)
 export type SecurityRequirement = Record<string, AuthMethod>
 
 export type FolderSettings = {
     baseUrl: string
-    // Mirrors OpenAPI document/operation-level `security`:
-    // array items are OR (any one can satisfy); within each item, all entries are AND
     security?: SecurityRequirement[]
 }
 
