@@ -148,74 +148,72 @@ const FolderNode = ({
 
     return (
         <>
-            <Dialog open={dialogType !== null} onOpenChange={(open) => !open && setDialogType(null)}>
-                <ContextMenu>
-                    <Collapsible open={open} onOpenChange={setOpen}>
-                        <ContextMenuTrigger>
-                            <CollapsibleTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="data-[state=open]:hover:text-foreground data-[state=open]:text-current group hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
-                                    onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
-                                >
-                                    <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
-                                    {isSource ? <ServerIcon /> : <FolderIcon />}
-                                    {folder.name}
-                                </Button>
-                            </CollapsibleTrigger>
-                        </ContextMenuTrigger>
-                        <CollapsibleContent className="ml-4.5">
-                            <div className="flex flex-col gap-1">
-                                {folder.items.map((child) => (
-                                    <FileTreeEntry
-                                        key={child.path}
-                                        item={child}
-                                        actionsPath={actionsPath}
-                                        onItemClick={onItemClick}
-                                        selectedPath={selectedPath}
-                                    />
-                                ))}
-                            </div>
-                        </CollapsibleContent>
-                    </Collapsible>
-                    <ContextMenuContent className="w-50">
-                        {isActionsFolder ? (
-                            <>
-                                <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><ZapIcon className="size-4" />New Action</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                                <ContextMenuSeparator />
-                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4" />{revealLabel}</ContextMenuItem>
-                            </>
-                        ) : (
-                            <>
-                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}><FilePlus2Icon className="size-4 mx-1" />New Request</ContextMenuItem>
-                                <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}><FolderPlusIcon className="size-4 mx-1" />New Folder</ContextMenuItem>
-                                <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                                <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                                <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><Settings2Icon className="size-4 mx-1" />Settings</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                                <ContextMenuSeparator />
-                                <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
-                                <ContextMenuItem onClick={deleteItem} variant="destructive">
-                                    <TrashIcon className="size-4 mx-1" />Delete
-                                    <DeleteIcon className="size-4 ml-auto" />
-                                </ContextMenuItem>
-                            </>
-                        )}
-                    </ContextMenuContent>
-                </ContextMenu>
-                {dialogType !== null && (
-                    <NewFileDialog
-                        onConfirm={(name) => onNewFile(name, dialogType)}
-                        type={dialogType}
-                    />
-                )}
-                {settingsDialog && (
-                    <FolderSettingsDialog
-                        folderPath={folder.path}
-                        onClose={() => setSettingsDialog(false)}
-                    />
-                )}
-            </Dialog>
+            <ContextMenu>
+                <Collapsible open={open} onOpenChange={setOpen}>
+                    <ContextMenuTrigger>
+                        <CollapsibleTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="data-[state=open]:hover:text-foreground data-[state=open]:text-current group hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                                onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
+                            >
+                                <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
+                                {isSource ? <ServerIcon /> : <FolderIcon />}
+                                {folder.name}
+                            </Button>
+                        </CollapsibleTrigger>
+                    </ContextMenuTrigger>
+                    <CollapsibleContent className="ml-4.5">
+                        <div className="flex flex-col gap-1">
+                            {folder.items.map((child) => (
+                                <FileTreeEntry
+                                    key={child.path}
+                                    item={child}
+                                    actionsPath={actionsPath}
+                                    onItemClick={onItemClick}
+                                    selectedPath={selectedPath}
+                                />
+                            ))}
+                        </div>
+                    </CollapsibleContent>
+                </Collapsible>
+                <ContextMenuContent className="w-50">
+                    {isActionsFolder ? (
+                        <>
+                            <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><ZapIcon className="size-4" />New Action</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4" />{revealLabel}</ContextMenuItem>
+                        </>
+                    ) : (
+                        <>
+                            <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}><FilePlus2Icon className="size-4 mx-1" />New Request</ContextMenuItem>
+                            <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}><FolderPlusIcon className="size-4 mx-1" />New Folder</ContextMenuItem>
+                            <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><Settings2Icon className="size-4 mx-1" />Settings</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
+                            <ContextMenuItem onClick={deleteItem} variant="destructive">
+                                <TrashIcon className="size-4 mx-1" />Delete
+                                <DeleteIcon className="size-4 ml-auto" />
+                            </ContextMenuItem>
+                        </>
+                    )}
+                </ContextMenuContent>
+            </ContextMenu>
+            {dialogType !== null && (
+                <NewFileDialog
+                    onConfirm={(name) => onNewFile(name, dialogType)}
+                    type={dialogType}
+                />
+            )}
+            {settingsDialog && (
+                <FolderSettingsDialog
+                    folderPath={folder.path}
+                    onClose={() => setSettingsDialog(false)}
+                />
+            )}
             {isActionsFolder && (
                 <NewQuickActionDialog
                     open={quickActionDialogOpen}

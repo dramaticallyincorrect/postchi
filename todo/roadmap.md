@@ -28,8 +28,9 @@
          1. version
          2. description
       3. auth
-         1. can be configured
+         1. ~~can be configured~~
          2. cannot change the auth method itself, only what is in the spec
+         3. convert to variable syntax on save
    8. spec integration
       1. lint
       2. autocomplete

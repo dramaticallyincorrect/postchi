@@ -24,6 +24,7 @@ import MsWindowControls from '@/components/window-controls';
 import parseEnvironments from '@/postchi/environments/parser/environments-parser';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { OneTimeImport } from './one-time-import';
+import { LabeledVarInput, VarInput } from '../components/variable-selector';
 
 export type ServerMapping = {
     url: string;
@@ -617,7 +618,7 @@ function SchemeConfig({
                 />
             )}
             {method.type === 'http' && method.scheme === 'basic' && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-row gap-3">
                     <LabeledVarInput
                         label="Username Variable"
                         value={method.usernameVariable}
@@ -647,54 +648,7 @@ function SchemeConfig({
     );
 }
 
-function LabeledVarInput({
-    label, value, existingVarNames, disabled, onChange,
-}: {
-    label: string;
-    value: string;
-    existingVarNames: string[];
-    disabled: boolean;
-    onChange: (v: string) => void;
-}) {
-    return (
-        <div className="space-y-1">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</p>
-            <VarInput
-                value={value}
-                onChange={onChange}
-                existingVarNames={existingVarNames}
-                disabled={disabled}
-            />
-        </div>
-    );
-}
 
-function VarInput({
-    value, onChange, existingVarNames, disabled, placeholder,
-}: {
-    value: string;
-    onChange: (v: string) => void;
-    existingVarNames: string[];
-    disabled: boolean;
-    placeholder?: string;
-}) {
-    const listId = useId();
-    return (
-        <>
-            <Input
-                list={listId}
-                value={value}
-                onChange={e => onChange(e.target.value)}
-                disabled={disabled}
-                className="h-8 text-[12px] font-mono"
-                placeholder={placeholder}
-            />
-            <datalist id={listId}>
-                {existingVarNames.map(name => <option key={name} value={name} />)}
-            </datalist>
-        </>
-    );
-}
 
 function LiveResultStep({ result }: { result: ImportResult | null }) {
     const [showSkipped, setShowSkipped] = useState(false);
