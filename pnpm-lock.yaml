@@ -122,6 +122,9 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      perfect-debounce:
+        specifier: ^2.1.0
+        version: 2.1.0
       posthog-js:
         specifier: ^1.363.4
         version: 1.363.4
@@ -3558,6 +3561,9 @@ packages:
   pbkdf2@3.1.5:
     resolution: {integrity: sha512-Q3CG/cYvCO1ye4QKkuH7EXxs3VC/rI1/trd+qX2+PolbaKG0H+bgcZzrTt96mMyRtejk+JMCiLUn3y29W8qmFQ==}
     engines: {node: '>= 0.10'}
+
+  perfect-debounce@2.1.0:
+    resolution: {integrity: sha512-LjgdTytVFXeUgtHZr9WYViYSM/g8MkcTPYDlPa3cDqMirHjKiSZPYd6DoL7pK8AJQr+uWkQvCjHNdiMqsrJs+g==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -7802,6 +7808,8 @@ snapshots:
       safe-buffer: 5.2.1
       sha.js: 2.4.12
       to-buffer: 1.2.2
+
+  perfect-debounce@2.1.0: {}
 
   picocolors@1.1.1: {}
 

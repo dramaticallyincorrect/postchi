@@ -11,6 +11,8 @@ import { getActiveProject } from "@/lib/project-state";
 import { LabeledVarInput } from "../components/variable-selector";
 import { Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { debounce } from "perfect-debounce";
+import { cn } from "@/lib/utils";
 
 const isValidBaseUrl = (url: string): boolean => {
     if (url === '' || isVariable(url)) return true;
@@ -48,6 +50,11 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
         });
     }, [folderPath]);
 
+    const saveBaseUrl = useMemo(() => debounce(async (baseUrl: string) => {
+        console.log('Saving base URL:', baseUrl);
+        await patchFolderSettings(folderPath, { baseUrl });
+    }, 300), [folderPath]);
+
     const saveAuthentication = async (securities: SecurityRequirement[]) => {
         await patchFolderSettings(folderPath, { security: securities });
         setSecurity(securities);
@@ -60,7 +67,7 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
             className="w-full h-full">
             <ResizablePanel defaultSize="50%" className='bg-background-panel'>
                 <div className="h-full flex flex-col items-center justify-center">
-                    <div className="sm:max-w-162 min-w-75">
+                    <div className="sm:max-w-162 min-w-75 w-full">
                         <div className="my-8">
                             <div>{filename(folderPath)} Settings</div>
                         </div>
@@ -69,16 +76,22 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
                             <div className="space-y-2">
                                 <Label htmlFor="baseUrl">Base URL</Label>
                                 <Input
-                                    onBlur={() => {
-                                        if (!isValidBaseUrl(baseUrl)) setBaseUrlError('Must be an absolute HTTP/HTTPS URL');
-                                        else setBaseUrlError(null);
-                                    }}
                                     id="baseUrl"
                                     placeholder="https://api.example.com"
                                     value={baseUrl}
-                                    onChange={e => setBaseUrl(e.target.value)}
+                                    onChange={e => {
+                                        setBaseUrl(e.target.value);
+                                        if (isValidBaseUrl(e.target.value)) {
+                                            setBaseUrlError(null);
+                                            saveBaseUrl(e.target.value);
+                                        } else {
+                                            setBaseUrlError('Invalid URL. Must be a variable or start with http:// or https://');
+                                        }
+                                    }}
                                 />
-                                {baseUrlError && <p className="text-sm text-red-500">{baseUrlError}</p>}
+                                <p className={cn("text-sm text-destructive", !baseUrlError && "text-transparent")}>
+                                    {baseUrlError || 'Placeholder for error message'}
+                                </p>
                             </div>
 
                             <div className="space-y-2" hidden={security.length === 0}>
