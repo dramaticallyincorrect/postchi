@@ -7,7 +7,7 @@ import { FileRejection, useDropzone } from "react-dropzone";
 import { importPostmanZip } from "@/postchi/import/import-postman-zip";
 import { useCallback, useState } from "react";
 
-export const OneTimeImport = ({ onCancel, rootPath }: { onCancel: () => void; rootPath: string },) => {
+export const OneTimeImport = ({ rootPath }: { onCancel: () => void; rootPath: string },) => {
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [rejectedFile, setRejectedFile] = useState(false);
@@ -62,8 +62,6 @@ export const OneTimeImport = ({ onCancel, rootPath }: { onCancel: () => void; ro
 
     return (
         <WizardLayout
-            title="One Time Import"
-            onBack={onCancel}
             actions={null}
         >
             <div className="space-y-4">

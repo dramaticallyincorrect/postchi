@@ -10,12 +10,10 @@ import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/postchi/project/project-files"
 import { ContextMenu, ContextMenuContent, ContextMenuGroup, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "../../components/ui/context-menu"
 import { FileDialogType, NewFileDialog } from "@/app/file-dialogs/new-file-dialog"
-import { Dialog } from "../../components/ui/dialog"
 import DefaultFileStorage from "@/lib/storage/files/file-default"
 import { pathOf } from "@/lib/storage/files/join"
 import { useEffect, useMemo, useState } from "react"
 import { useLicense } from "@/app/license/license-context"
-import { FolderSettingsDialog } from "@/app/folder-setting/folder-settings-dialog"
 import { NewQuickActionDialog } from "../../components/new-quick-action-dialog"
 import FileJavascriptIcon from "../../components/icons/file-js"
 import { isTauri } from "@tauri-apps/api/core"
@@ -25,6 +23,7 @@ import { afterScriptPath } from "@/postchi/http/scripts/after/after-script-execu
 import { beforeScriptPath } from "@/postchi/http/scripts/before/before-script-executor"
 import { createHttpRequest, createQuickAction } from "@/postchi/project/project"
 import { FileType } from "@/postchi/project/file-types/supported-filetypes"
+import { usePanel } from "./panel-context"
 
 const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
 
@@ -85,7 +84,7 @@ const FolderNode = ({
     const isActionsFolder = folder.path === actionsPath;
     const isSource = folder.isSource;
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
-    const [settingsDialog, setSettingsDialog] = useState<boolean>(false);
+    const { openView } = usePanel()
     const [open, setOpen] = useState(() => isAncestor(folder.path, selectedPath));
     const { isPro } = useLicense();
 
@@ -114,7 +113,12 @@ const FolderNode = ({
 
     const onSettingsClick = () => {
         if (!isPro) { openLicenseDialog(); return; }
-        setSettingsDialog(true);
+        openView({
+            type: 'FOLDER_SETTINGS',
+            params: {
+                path: folder.path
+            }
+        })
     }
 
     const addFolderBeforeScript = () => {
@@ -206,12 +210,6 @@ const FolderNode = ({
                 <NewFileDialog
                     onConfirm={(name) => onNewFile(name, dialogType)}
                     type={dialogType}
-                />
-            )}
-            {settingsDialog && (
-                <FolderSettingsDialog
-                    folderPath={folder.path}
-                    onClose={() => setSettingsDialog(false)}
                 />
             )}
             {isActionsFolder && (

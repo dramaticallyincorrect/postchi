@@ -1,40 +1,19 @@
 # Roadmap
 
 1. Sources
-   1. authentication
-      1. ~~giltab~~
-      2. github
-      3. general
-   2. ~~unit tests~~
+   1. ~~ui redesign~~
+   2. authentication
+      1. github
+      2. general
    3. test parse failures
    4. prefer default value over name
    5. refactor
-      1. break live source steps out into components, handle state inside each
-   6. auth
-      1. ~~requires spec integration~~
-      2. ~~no auth header in request~~
-      3. ~~auth methods as part of source info~~
-      4. ~~if spec auth exists and no global auth exists, add auth directly to request~~
-      5. shown in settings
-         1. basic
-            1. username, password -> literal or variable
-            2. bearer - > literal or variable
-      6. execution
-         1. ~~find if auth is required from the spec at execution time~~
-         2. ~~look in the source settings for auth value~~
-   7. settings
-      1. servers
-      2. info
-         1. version
-         2. description
-      3. auth
-         1. ~~can be configured~~
-         2. cannot change the auth method itself, only what is in the spec
-         3. convert to variable syntax on save
-   8. spec integration
+      1. folder settings auth resolver, take request returned authenticated
+      2. break live source steps out into components, handle state inside each
+   6. spec integration
       1. lint
       2. autocomplete
-   9.  git ignored?
+   7.  git ignored?
       1. what happends if we don't?
       2. if we were, retrieve the spec from remote on project import?
 2. back and forward recent requests
@@ -61,8 +40,7 @@
    1. store credentials in keychain
    2. stripout auth from history by default
       1. setting to override it
-7. ~~reorganize packages~~
-8.  file tree
+7.  file tree
     1. rename
     2. view options
        1. show/hide scripts
@@ -73,19 +51,17 @@
        1. pinned items have an execute button
        2. shift+mod+enter for first pinned
        3. play icon on pinned items
-9.  scripts
+8.  scripts
     1. single source to derive execution and auto complete options from
-10. quick actions
-    1. set from file tree
-11. import
+9.  import
     1. postman
          1. open folder after import
     2. open api
-12. auto complete
+10. auto complete
       1. context aware values
-13. save file  
+11. save file  
     1. when closing the app
-14. errors
+12. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -94,12 +70,12 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-15. last
+13. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
-16. octet stream body
-17. run a task to change the base path for every request to relative
-18. bugs
+14. octet stream body
+15. run a task to change the base path for every request to relative
+16. bugs
     1.  + not being accepted in header value

@@ -30,6 +30,7 @@ export async function resolveRequestAuth(
     try {
         const specContent = await fileStorage.readText(specPath)
         const spec = yaml.load(specContent) as RequestSpec
+        //TODO: if template has auth header, skip auth resolution other wise check spec, if spec has auth, resolve it from settings
         if (spec.operation.security !== undefined) {
             // Operation explicitly defines its own security (or opts out with [])
             return []

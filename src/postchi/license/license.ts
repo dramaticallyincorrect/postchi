@@ -58,7 +58,6 @@ export async function getInitialLicenseStatus(): Promise<LicenseStatus> {
 }
 
 export async function validateLicenseStatus(): Promise<LicenseStatus> {
-
     const lastValidation = await getLastLicenseValidationDate()
     const now = new Date()
     if (lastValidation) {

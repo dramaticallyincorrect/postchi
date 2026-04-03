@@ -114,3 +114,46 @@ nested
         })
     })
 })
+
+describe('patchFolderSettings', () => {
+    it('creates settings when none exists', async () => {
+        const folderPath = root
+        const patch = { baseUrl: 'https://getpostchi.org' }
+        await patchFolderSettings(folderPath, patch)
+        const content = await readFolderSettings(folderPath)
+        expect(content).toStrictEqual(patch)
+    })
+
+    it('converts security values to variable', async () => {
+        const folderPath = root
+        const patch: FolderSettings = {
+            baseUrl: 'https://getpostchi.org', security: [
+                {
+                    'MyAuth': {
+                        type: 'http',
+                        scheme: 'bearer',
+                        tokenVariable: 'MY_TOKEN'
+                    }
+                }
+            ]
+        }
+
+        const expected: FolderSettings = {
+            baseUrl: 'https://getpostchi.org', security: [
+                {
+                    'MyAuth': {
+                        type: 'http',
+                        scheme: 'bearer',
+                        tokenVariable: '<MY_TOKEN>'
+                    }
+                }
+            ]
+        }
+        await patchFolderSettings(folderPath, patch)
+        const content = await readFolderSettings(folderPath)
+        expect(content).toStrictEqual(expected)
+    })
+
+
+
+})

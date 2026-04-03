@@ -5,7 +5,6 @@ import "./App.css";
 import { isTauri } from "@tauri-apps/api/core";
 import { MenuActions, onMenuEvent } from "./app/menu/menu-events";
 import { initMenu } from "./app/menu/project-menu";
-import { ImportData } from "./app/import/import-dialog";
 import { NewProjectDialog } from "./app/project/new-project-dialog";
 import { pathOf } from "./lib/storage/files/join";
 import { loadStore } from "./lib/storage/store/store";
@@ -22,11 +21,14 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { setActiveProject } from "./lib/project-state";
 import { ThemeProvider } from "./app/theme/theme-context";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { openImportWindow, openSettingsWindow } from "./app/windows/window-manager";
+import { openSettingsWindow } from "./app/windows/window-manager";
 import { getInitialLicenseStatus, validateLicenseStatus } from "./postchi/license/license";
-import { getDefaultProjectPath, createProject, copyProject, Project, projectForPath } from "./postchi/project/project";
+import { getDefaultProjectPath, createProject, copyProject, Project, createTestProject } from "./postchi/project/project";
 import { applySourceChanges } from "./postchi/sources/source-applier";
 import { PendingSourceChanges, checkSources } from "./postchi/sources/source-checker";
+import { PanelProvider, usePanel } from "./app/project/panel-context";
+import usePersistentState from "./hooks/persistent-state";
+import { FileItem } from "./postchi/project/project-files";
 
 const LAST_PROJECT_KEY = 'lastProjectPath'
 const SETTINGS_STORE = 'settings.json'
@@ -49,7 +51,7 @@ if (windowLabel === 'main') {
     const store = await loadStore(SETTINGS_STORE)
     const lastPath = await store.get<string>(LAST_PROJECT_KEY) ?? tempPath
 
-    initialProject = await createProject(lastPath)
+    initialProject = isTauri() ? await createProject(lastPath) : await createTestProject(lastPath)
 
     setActiveProject(initialProject)
 
@@ -63,6 +65,7 @@ function AppShell() {
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
     const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
     const [pendingSourceChanges, setPendingSourceChanges] = useState<PendingSourceChanges[]>([])
+    const { openView } = usePanel()
 
     const refreshLicense = async () => {
         const status = await validateLicenseStatus()
@@ -132,7 +135,10 @@ function AppShell() {
                     break
                 }
                 case MenuActions.IMPORT_PROJECT: {
-                    await openImportWindow(project.path)
+                    openView({
+                        type: 'IMPORT',
+                        params: undefined
+                    })
                 }
             }
         })
@@ -179,13 +185,15 @@ function AppShell() {
 function RootComponent() {
     if (windowLabel === 'settings') {
         return <SettingsWindow />
-    } else if (windowLabel === 'import') {
-        const projectPath = new URLSearchParams(window.location.search).get('project')
-        return <ImportData project={projectForPath(projectPath!)} />
     }
+
+    const [selectedFile] = usePersistentState<FileItem | null>(`selectedFile:${initialProject!.path}`, null)
+
     return (
         <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
-            <AppShell />
+            <PanelProvider initialState={selectedFile ? { type: 'EDITOR', params: { path: selectedFile?.path } } : null}>
+                <AppShell />
+            </PanelProvider>
         </PostHogProvider>
     )
 }

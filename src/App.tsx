@@ -15,7 +15,7 @@ import {
     DropdownMenuTrigger,
 } from './components/ui/dropdown-menu';
 import { FileTree } from './app/project/FileTree';
-import { collectHttpFiles, FileItem } from './postchi/project/project-files';
+import { collectHttpFiles } from './postchi/project/project-files';
 import HttpRequestResponse from './app/editors/http/http-request-response';
 import { ActiveEnvironment } from './app/active-environment/active-environment';
 import { EnvironmentEditor } from './app/editors/environment-editor';
@@ -30,17 +30,19 @@ import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
 import { QuickActionsButton } from './app/quick-actions/quick-action';
 import { SourceChangesButton } from './app/sources/source-changes-dialog';
-import usePersistentState from './hooks/persistent-state';
 import { useFileWatch } from './hooks/file-watch';
 import { getFileTypeFromPath } from './postchi/project/file-types/file-type-recognizer';
 import { PendingSourceChanges } from './postchi/sources/source-checker';
 import { FileType } from './postchi/project/file-types/supported-filetypes';
 import { Project } from './postchi/project/project';
 import { useFileTree } from './hooks/use-file-tree';
+import { FolderSettings } from './app/folder-setting/folder-settings-dialog';
+import { usePanel } from './app/project/panel-context';
+import { ImportData } from './app/import/import-dialog';
+
 
 export default function App({ project, isTemp, pendingSourceChanges, onApply }: { project: Project, isTemp: boolean, pendingSourceChanges: PendingSourceChanges[], onApply: () => Promise<void> }) {
 
-    const [selectedFile, setSelectedFile] = usePersistentState<FileItem | null>(`selectedFile:${project.path}`, null)
     const [isFileTreeVisible, setIsFileTreeVisible] = useState(true)
     const [searchOpen, setSearchOpen] = useState(false)
 
@@ -48,9 +50,17 @@ export default function App({ project, isTemp, pendingSourceChanges, onApply }: 
 
     const httpFiles = useMemo(() => collectHttpFiles(fileTree), [fileTree])
 
-    useFileWatch(selectedFile?.path ?? null, (event) => {
+    const { viewState, openView } = usePanel()
+
+    let selectedPath = undefined
+    switch (viewState?.type) {
+        case 'EDITOR':
+            selectedPath = viewState.params.path;
+    }
+
+    useFileWatch(selectedPath ?? null, (event) => {
         if (event.type === FileWatchEventType.Deleted) {
-            setSelectedFile(null)
+            openView(null)
         }
     })
 
@@ -69,8 +79,10 @@ export default function App({ project, isTemp, pendingSourceChanges, onApply }: 
         <div className='flex-col h-screen w-screen flex'>
             <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} pendingSourceChanges={pendingSourceChanges} onApply={onApply} />
             <Split isFileTreeVisible={isFileTreeVisible}>
-                <FileTree items={fileTree} actionsPath={project.actionsPath} onItemClick={setSelectedFile} selectedPath={selectedFile?.path} />
-                {selectedFile?.path ? <Editor path={selectedFile.path} /> : null}
+                <FileTree items={fileTree} actionsPath={project.actionsPath} onItemClick={(item) => {
+                    openView({ type: 'EDITOR', params: { path: item.path } })
+                }} selectedPath={selectedPath} />
+                <MainPanel />
             </Split>
             <SearchDialog
                 open={searchOpen}
@@ -78,7 +90,7 @@ export default function App({ project, isTemp, pendingSourceChanges, onApply }: 
                 files={httpFiles}
                 collectionsPath={project.collectionsPath}
                 onSelect={item => {
-                    setSelectedFile(item)
+                    openView({ type: 'EDITOR', params: { path: item.path } })
                     setSearchOpen(false)
                 }}
             />
@@ -132,6 +144,18 @@ const FileMenu = ({ projectName, isTemp }: { projectName: string; isTemp: boolea
             }
         </DropdownMenu>
     )
+}
+
+const MainPanel = () => {
+    const { viewState } = usePanel()
+    switch (viewState?.type) {
+        case 'EDITOR':
+            return <Editor path={viewState.params.path} />
+        case 'FOLDER_SETTINGS':
+            return <FolderSettings folderPath={viewState.params.path} />
+        case 'IMPORT':
+            return <ImportData />
+    }
 }
 
 const Editor = ({ path }: { path: string }) => {

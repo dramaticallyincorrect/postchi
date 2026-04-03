@@ -189,6 +189,13 @@ async function copyDirectory(srcDir: string, destDir: string, fileStorage: FileS
 
 export async function createTestProject(path: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
     const project = await createProject(path, fileStorage)
+    await fileStorage.writeText(project.envPath, `
+# Production
+base_url=https://httpbin.org
+
+# Development
+base_url=https://httpbin.org
+deve_url=https://httpbin.org`)
     await createIfNotExists(pathOf(project.collectionsPath, 'settings.json'), fileStorage, `{"baseUrl": "https://httpbin.org"}`)
     await fileStorage.mkdir(pathOf(project.collectionsPath, 'top', 'nested', 'deep', 'down'))
     await createIfNotExists(pathOf(project.collectionsPath, 'users.get'), fileStorage, `POST https://httpbin.org/post
@@ -200,5 +207,18 @@ Authorization: bearer(<token>)
   "username": "<username>"
 }`)
     await createIfNotExists(pathOf(project.collectionsPath, 'auth.get'), fileStorage, 'GET https://httpbin.org/get')
+    await fileStorage.mkdir(pathOf(project.collectionsPath, 'stripe api'))
+    await createIfNotExists(pathOf(project.collectionsPath, 'stripe api', 'settings.json'), fileStorage, `{
+  "baseUrl": "",
+  "security": [
+    {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "tokenVariable": "company_provisioning_url"
+      }
+    }
+  ]
+}`)
     return project
 }

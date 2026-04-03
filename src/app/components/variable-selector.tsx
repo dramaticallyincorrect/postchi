@@ -1,12 +1,11 @@
-import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem, ComboboxEmpty } from "@/components/ui/combobox";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function LabeledVarInput({
-    label, value, existingVarNames, disabled, onChange,
+    label, value, existingVarNames, onChange,
 }: {
     label: string;
     value: string;
     existingVarNames: string[];
-    disabled: boolean;
     onChange: (v: string) => void;
 }) {
     return (
@@ -16,35 +15,34 @@ export function LabeledVarInput({
                 value={value}
                 onChange={onChange}
                 existingVarNames={existingVarNames}
-                disabled={disabled}
             />
         </div>
     );
 }
 
 export function VarInput({
-    value, onChange, existingVarNames, disabled,
+    value, onChange, existingVarNames,
 }: {
     value: string;
     onChange: (v: string) => void;
     existingVarNames: string[];
-    disabled: boolean;
     placeholder?: string;
 }) {
 
     return (
-        <Combobox items={existingVarNames}>
-            <ComboboxInput value={value} onChange={(e) => onChange(e.target.value)} placeholder="Select a framework" />
-            <ComboboxContent>
-                <ComboboxEmpty>No items found.</ComboboxEmpty>
-                <ComboboxList>
-                    {(item) => (
-                        <ComboboxItem key={item} value={item}>
-                            {item}
-                        </ComboboxItem>
+        <Select onValueChange={onChange} value={value}>
+            <SelectTrigger className="w-full max-w-48">
+                <SelectValue placeholder="Select a variable" >
+                    {value}
+                </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+                <SelectGroup>
+                    {existingVarNames.map((item, index) =>
+                        <SelectItem key={index} value={item}>{item}</SelectItem>
                     )}
-                </ComboboxList>
-            </ComboboxContent>
-        </Combobox>
+                </SelectGroup>
+            </SelectContent>
+        </Select>
     );
 }
