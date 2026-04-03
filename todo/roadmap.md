@@ -59,11 +59,9 @@
     1. postman
          1. open folder after import
     2. open api
-11. auto complete
-      1. context aware values
-12. save file  
+11. save file  
     1. when closing the app
-13. errors
+12. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -72,12 +70,11 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-14. last
+13. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
-15. octet stream body
-16. run a task to change the base path for every request to relative
-17. bugs
-    1.  + not being accepted in header value
+14. octet stream body
+15. run a task to change the base path for every request to relative
+16. bugs

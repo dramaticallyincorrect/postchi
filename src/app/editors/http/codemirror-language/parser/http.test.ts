@@ -91,10 +91,10 @@ POST /
 
   })
 
-  it('header with slashes in value', () => {
+  it('all possible value characters', () => {
     const defaultValue = `
 POST /path
-header: application/json`;
+header: application/json+-._~!@#$%^&*=|;`;
     const tree = parser.parse(defaultValue)
     let spec = `Request(
                 RequestLine(
