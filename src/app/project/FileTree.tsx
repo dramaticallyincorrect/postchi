@@ -24,6 +24,7 @@ import { beforeScriptPath } from "@/postchi/http/scripts/before/before-script-ex
 import { createHttpRequest, createQuickAction } from "@/postchi/project/project"
 import { FileType } from "@/postchi/project/file-types/supported-filetypes"
 import { usePanel } from "./panel-context"
+import { deleteSource } from "@/postchi/sources/sources"
 
 const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
 
@@ -134,7 +135,12 @@ const FolderNode = ({
     }
 
     const deleteItem = () => {
-        fileStorage.delete(folder.path)
+        if (folder.isSource) {
+            deleteSource(folder.name)
+        } else {
+            fileStorage.delete(folder.path)
+        }
+
     }
 
     const [quickActionDialogOpen, setQuickActionDialogOpen] = useState(false)
@@ -199,7 +205,7 @@ const FolderNode = ({
                             <ContextMenuSeparator />
                             <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
                             <ContextMenuItem onClick={deleteItem} variant="destructive">
-                                <TrashIcon className="size-4 mx-1" />Delete
+                                <TrashIcon className="size-4 mx-1" />{isSource ? 'Remove Source' : 'Delete'}
                                 <DeleteIcon className="size-4 ml-auto" />
                             </ContextMenuItem>
                         </>

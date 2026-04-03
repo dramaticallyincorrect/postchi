@@ -2,22 +2,24 @@
 
 1. Sources
    1. ~~ui redesign~~
-   2. authentication
+   2. if source fetch fails with 401, show set token
+   3. remove or update token from folder settings
+   4. authentication
       1. github
       2. general
-   3. test parse failures
-   4. prefer default value over name
-   5. refactor
+   5. test parse failures
+   6. prefer default value over name
+   7. refactor
       1. folder settings auth resolver, take request returned authenticated
-      2. break live source steps out into components, handle state inside each
-   6. spec integration
+   8. spec integration
       1. lint
       2. autocomplete
-   7.  git ignored?
+   9. git ignored?
       1. what happends if we don't?
       2. if we were, retrieve the spec from remote on project import?
 2. back and forward recent requests
-3. end to end tests
+3. http editor line wrap
+4. end to end tests
    1. import
       1. postman
       2. open api
@@ -26,7 +28,7 @@
    3. send request
       1. normal
       2. base path + env change
-4. actions - pin rethink
+5. actions - pin rethink
    1. remove titlebar new action when no action exists
    2. always show actions folder
    3. show hint when it's empty
@@ -34,13 +36,13 @@
    5. side bar item shows a play icon to run the action from sidebar
    6. play icon has the same progress and error indication that current titlebar action has
    7. the common flow (run the token request) will be handled by pin request feature
-5. search
+6. search
    1. recent requests
-6. security
+7. security
    1. store credentials in keychain
    2. stripout auth from history by default
       1. setting to override it
-7.  file tree
+8.  file tree
     1. rename
     2. view options
        1. show/hide scripts
@@ -51,17 +53,17 @@
        1. pinned items have an execute button
        2. shift+mod+enter for first pinned
        3. play icon on pinned items
-8.  scripts
+9.  scripts
     1. single source to derive execution and auto complete options from
-9.  import
+10. import
     1. postman
          1. open folder after import
     2. open api
-10. auto complete
+11. auto complete
       1. context aware values
-11. save file  
+12. save file  
     1. when closing the app
-12. errors
+13. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -70,12 +72,12 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-13. last
+14. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
-14. octet stream body
-15. run a task to change the base path for every request to relative
-16. bugs
+15. octet stream body
+16. run a task to change the base path for every request to relative
+17. bugs
     1.  + not being accepted in header value

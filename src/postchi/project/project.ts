@@ -207,16 +207,27 @@ Authorization: bearer(<token>)
   "username": "<username>"
 }`)
     await createIfNotExists(pathOf(project.collectionsPath, 'auth.get'), fileStorage, 'GET https://httpbin.org/get')
-    await fileStorage.mkdir(pathOf(project.collectionsPath, 'stripe api'))
-    await createIfNotExists(pathOf(project.collectionsPath, 'stripe api', 'settings.json'), fileStorage, `{
+    await fileStorage.mkdir(pathOf(project.collectionsPath, 'Swagger Petstore - OpenAPI 3.0'))
+    await createIfNotExists(pathOf(project.collectionsPath, 'Swagger Petstore - OpenAPI 3.0', 'settings.json'), fileStorage, `{
   "baseUrl": "",
   "security": [
     {
       "Bearer": {
         "type": "http",
         "scheme": "bearer",
-        "tokenVariable": "company_provisioning_url"
+        "tokenVariable": "<petstore_token>"
       }
+    }
+  ]
+}`)
+
+    fileStorage.writeText(pathOf(project.postchiPath, 'sources.json'), `
+{
+  "sources": [
+    {
+      "type": "open-api",
+      "url": "https://petstore3.swagger.io/api/v3/openapi.json",
+      "path": "Swagger Petstore - OpenAPI 3.0"
     }
   ]
 }`)

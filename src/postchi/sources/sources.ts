@@ -2,6 +2,7 @@ import { FileStorage } from "@/lib/storage/files/file";
 import DefaultFileStorage from "@/lib/storage/files/file-default";
 import { pathOf } from "@/lib/storage/files/join";
 import { postchiDirName, sourcesFileName } from "../project/project"
+import { getActiveProject } from "@/lib/project-state";
 
 export type SourceType = 'open-api';
 
@@ -37,4 +38,11 @@ export async function addSource(projectPath: string, source: Source, fileStorage
     const config = await readSources(projectPath, fileStorage)
     config.sources.push(source)
     await writeSources(projectPath, config, fileStorage)
+}
+
+export async function deleteSource(sourcePath: string, fileStorage = DefaultFileStorage.getInstance()): Promise<void> {
+    const config = await readSources(getActiveProject()!.path, fileStorage)
+    config.sources = config.sources.filter(s => s.path !== sourcePath)
+    await writeSources(getActiveProject()!.path, config, fileStorage)
+    await fileStorage.delete(pathOf(getActiveProject()!.collectionsPath, sourcePath))
 }
