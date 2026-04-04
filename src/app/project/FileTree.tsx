@@ -48,7 +48,7 @@ export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
 }) => {
 
     return (
-        <ScrollArea className="h-full font-sans text-foreground/64 ">
+        <ScrollArea className="h-full text-foreground/64">
             {items.map((item) => (
                 <FileTreeEntry
                     key={item.path}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ChevronRightIcon, DiffIcon, FolderIcon, MinusIcon, PlusIcon, RefreshCwIcon, RefreshCwOffIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
@@ -137,13 +137,14 @@ function SourceChangesDialog({ open, onClose, changes, onApply }: {
 
     return (
         <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
-            <DialogContent className="sm:max-w-5xl p-0 gap-0 h-[80vh] flex flex-col">
+
+            <DialogContent className="sm:max-w-5xl p-0 gap-0 h-[80vh] flex flex-col" showCloseButton={false}>
                 <div className="flex-1 min-h-0">
                     <ResizablePanelGroup orientation="horizontal" className="w-full h-full">
 
                         <ResizablePanel defaultSize="30%" className="bg-background-panel">
                             <ScrollArea className="h-full">
-                                <div className="py-2">
+                                <div className="py-1 text-foreground/64 ">
                                     {changes.map((pending) => (
                                         <SourceSection
                                             key={pending.source.path}
@@ -168,7 +169,12 @@ function SourceChangesDialog({ open, onClose, changes, onApply }: {
                     </ResizablePanelGroup>
                 </div>
 
-                <div className="flex items-center justify-end px-4 py-2 border-t border-muted">
+
+
+                <div className="absolute bottom-2 right-0 flex items-center justify-end px-4 py-2 ">
+                    <DialogClose asChild>
+                        <Button className='mr-2' size='sm' type="button" variant='outline'>Close</Button>
+                    </DialogClose>
                     <Button size="sm" onClick={handleApply} disabled={applying}>
                         {applying
                             ? <><RefreshCwIcon className="size-3 animate-spin mr-1" />Applying...</>
@@ -197,7 +203,7 @@ function SourceSection({ pending, selected, onSelect }: {
                     variant="ghost"
                     size="sm"
                     title={pending.source.url}
-                    className="group text-muted-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                    className="group text-foreground/64 data-[state=open]:text-current hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                 >
                     <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                     <FolderIcon />
@@ -248,7 +254,7 @@ function DiffFolderNode({ node, source, selected, onSelect }: {
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="group text-muted-foreground data-[state=open]:text-muted-foreground hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
+                    className="group data-[state=open]:text-current hover:bg-muted w-full justify-start transition-none data-[state=open]:bg-transparent"
                 >
                     <ChevronRightIcon className="transition-transform group-data-[state=open]:rotate-90" />
                     <FolderIcon />
@@ -277,7 +283,7 @@ function DiffFileNode({ node, source, selected, onSelect }: {
             onClick={() => onSelect({ source, change: node.change })}
             className={cn(
                 "w-full justify-start gap-2 transition-none",
-                isSelected ? "text-foreground bg-muted" : "text-muted-foreground hover:bg-muted"
+                isSelected ? "text-foreground bg-muted" : "text-foreground/64 hover:bg-muted"
             )}
         >
             <KindBadge kind={node.change.kind} />
@@ -297,22 +303,16 @@ function KindBadge({ kind }: { kind: SourceChange['kind'] }) {
 function DiffView({ change }: { change: SourceChange }) {
     const { theme } = useTheme()
     const themeExtensions = [theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]
-    const { activeEnvironment } = useEnvironment()
-
-    const vars = [
-        activeEnvironment?.variables || [],
-        activeEnvironment?.secrets || []
-    ].flat()
 
     const oldValue = change.oldContent ?? ''
     const newValue = change.newContent ?? ''
 
     const extensions = [
-        new LanguageSupport(customHttpLanguage, variableValidatorDecoration(new Set(vars.map(v => v.key))))
+        new LanguageSupport(customHttpLanguage)
     ];
 
     return (
-        <div className="h-full overflow-auto">
+        <div className="h-full overflow-auto mr-2">
             <CodeMirrorMerge key={change.path} theme={themeExtensions} className="h-full" destroyRerender={true}>
                 <Original value={oldValue} readOnly extensions={extensions} />
                 <Modified value={newValue} readOnly extensions={extensions} />
