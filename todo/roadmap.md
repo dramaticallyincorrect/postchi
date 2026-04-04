@@ -2,24 +2,31 @@
 
 1. Sources
    1. ~~ui redesign~~
-   2. if source fetch fails with 401, show set token
-   3. remove or update token from folder settings
-   4. authentication
+   2. sync tokens
+      1. store in keychain
+      2. map keys to multiple sources, so there won't be a need to make multiple tokens
+      3. if source fetch fails with 401, show set token
+   3. ed api security is recognized wrong as header
+   4. remove or update token from folder settings
+   5. authentication
       1. github
       2. general
-   5. test parse failures
-   6. prefer default value over name
-   7. refactor
+   6. test parse failures
+   7. prefer default value over name
+   8.  reorder auth methods from settings
+   9.  refactor
       1. folder settings auth resolver, take request returned authenticated
-   8. spec integration
+   10. spec integration
       1. lint
       2. autocomplete
-   9. git ignored?
-      1. what happends if we don't?
-      2. if we were, retrieve the spec from remote on project import?
 2. back and forward recent requests
-3. http editor line wrap
-4. end to end tests
+3. request snippet
+   1. select a range of text
+   2. create snippet, set a name
+   3. saved to a file next to request
+   4. folder snippets??
+4. http editor line wrap
+5. end to end tests
    1. import
       1. postman
       2. open api
@@ -28,7 +35,7 @@
    3. send request
       1. normal
       2. base path + env change
-5. actions - pin rethink
+6. actions - pin rethink
    1. remove titlebar new action when no action exists
    2. always show actions folder
    3. show hint when it's empty
@@ -36,13 +43,12 @@
    5. side bar item shows a play icon to run the action from sidebar
    6. play icon has the same progress and error indication that current titlebar action has
    7. the common flow (run the token request) will be handled by pin request feature
-6. search
+7. search
    1. recent requests
-7. security
-   1. store credentials in keychain
-   2. stripout auth from history by default
+8. security
+   1. stripout auth from history by default
       1. setting to override it
-8.  file tree
+9.  file tree
     1. rename
     2. view options
        1. show/hide scripts
@@ -53,15 +59,15 @@
        1. pinned items have an execute button
        2. shift+mod+enter for first pinned
        3. play icon on pinned items
-9.  scripts
+10. scripts
     1. single source to derive execution and auto complete options from
-10. import
+11. import
     1. postman
          1. open folder after import
     2. open api
-11. save file  
+12. save file  
     1. when closing the app
-12. errors
+13. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -70,11 +76,11 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-13. last
+14. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
-14. octet stream body
-15. run a task to change the base path for every request to relative
-16. bugs
+15. octet stream body
+16. run a task to change the base path for every request to relative
+17. bugs

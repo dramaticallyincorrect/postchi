@@ -25,6 +25,7 @@ const FREE_FEATURES = [
 ]
 
 const PRO_ONLY_FEATURES = [
+    'Open Api Integration',
     'Request Scripts',
     'Folder Scripts',
     'Folder Configuration',
