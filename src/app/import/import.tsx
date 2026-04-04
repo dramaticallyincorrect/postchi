@@ -22,6 +22,8 @@ import { OneTimeImport } from './one-time-import';
 import { getActiveProject } from '@/lib/project-state';
 import { useAsync } from '@/hooks/use-async';
 import { usePanel } from '../project/panel-context';
+import { useLicense } from '../license/license-context';
+import { emitMenuEvent, MenuActions } from '../menu/menu-events';
 
 export const ImportData = () => {
     return <div className='flex flex-col justify-center items-center h-full'>
@@ -32,6 +34,7 @@ export const ImportData = () => {
 type ImportMode = 'live-source' | 'one-time';
 
 function ImportWizard() {
+    const { isPro } = useLicense();
     const activeProject = getActiveProject()!;
     const [mode, setMode] = useState<ImportMode | null>(null);
 
@@ -39,6 +42,10 @@ function ImportWizard() {
         return (
             <ModeSelect
                 onSelect={(mode) => {
+                    if (mode === 'live-source' && !isPro) {
+                        emitMenuEvent(MenuActions.ACTIVATE_LICENSE);
+                        return
+                    }
                     if (mode === 'live-source') {
                         setMode('live-source');
                     } else {
@@ -59,6 +66,8 @@ function ImportWizard() {
 }
 
 function ModeSelect({ onSelect }: { onSelect: (mode: 'live-source' | 'one-time') => void }) {
+    const { isPro } = useLicense();
+
     return (
         <div className="flex flex-col items-center px-8 gap-6">
             <div className="text-center">
@@ -71,7 +80,7 @@ function ModeSelect({ onSelect }: { onSelect: (mode: 'live-source' | 'one-time')
                         icon: <ServerIcon className="h-6 w-6" />,
                         label: 'Live Source',
                         description: 'Track an OpenAPI spec URL. Enables Automatic sync, encriched autocomplete and linting.',
-                        badge: 'Recommended',
+                        badge: isPro ? 'Recommended' : 'Pro',
                     },
                     {
                         mode: 'one-time' as const,

@@ -38,7 +38,7 @@ import { Project } from './postchi/project/project';
 import { useFileTree } from './hooks/use-file-tree';
 import { FolderSettings } from './app/folder-setting/folder-settings-dialog';
 import { usePanel } from './app/project/panel-context';
-import { ImportData } from './app/import/import-dialog';
+import { ImportData } from './app/import/import';
 
 
 export default function App({ project, isTemp, pendingSourceChanges, onApply }: { project: Project, isTemp: boolean, pendingSourceChanges: PendingSourceChanges[], onApply: () => Promise<void> }) {

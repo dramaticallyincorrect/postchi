@@ -1,5 +1,5 @@
 import { AlertCircle, CircleCheck, FileText, Loader2, TriangleAlert, X } from "lucide-react";
-import { WizardLayout } from "./import-dialog";
+import { WizardLayout } from "./import";
 import { importAutoFromFile, ImportResult } from "@/postchi/import/import-folder";
 import { cn } from "@/lib/utils";
 import { formatFileSize } from "@/lib/utils/file-size-format";
