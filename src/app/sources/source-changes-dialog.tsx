@@ -134,7 +134,7 @@ function SourceChangesDialog({ open, onClose, changes, onApply }: {
     }
 
     return (
-        <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+        <Dialog open={open} onOpenChange={() => { }}>
 
             <DialogContent className="sm:max-w-5xl p-0 gap-0 h-[80vh] flex flex-col" showCloseButton={false}>
                 <div className="flex-1 min-h-0">
@@ -171,7 +171,7 @@ function SourceChangesDialog({ open, onClose, changes, onApply }: {
 
                 <div className="absolute bottom-2 right-0 flex items-center justify-end px-4 py-2 ">
                     <DialogClose asChild>
-                        <Button className='mr-2' size='sm' type="button" variant='outline'>Close</Button>
+                        <Button className='mr-2' size='sm' type="button" variant='outline' onClick={onClose}>Close</Button>
                     </DialogClose>
                     <Button size="sm" onClick={handleApply} disabled={applying}>
                         {applying
