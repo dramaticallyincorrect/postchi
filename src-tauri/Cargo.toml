@@ -43,6 +43,7 @@ tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 tauri-plugin-sentry = "0.5"
 sentry = "0.42"
+tauri-plugin-keyring = "0.1.0"
 [target."cfg(target_os = \"macos\")".dependencies]
 cocoa = "0.26"
 

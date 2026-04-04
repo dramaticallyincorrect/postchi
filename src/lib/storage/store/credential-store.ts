@@ -1,22 +1,15 @@
-import { loadStore } from './store'
+import { setPassword, getPassword, deletePassword } from 'tauri-plugin-keyring-api';
 
-function credentialKey(projectPath: string, sourcePath: string): string {
-    return `source-token:${projectPath}:${sourcePath}`
+const SERVICE_NAME = 'postchi'
+
+export async function getSourceToken(sourceUrl: string): Promise<string | null> {
+    return getPassword(SERVICE_NAME, sourceUrl)
 }
 
-export async function getSourceToken(projectPath: string, sourcePath: string): Promise<string | null> {
-    const store = await loadStore('credentials.json')
-    return store.get<string>(credentialKey(projectPath, sourcePath))
+export async function setSourceToken(sourceUrl: string, token: string): Promise<void> {
+    await setPassword(SERVICE_NAME, sourceUrl, token)
 }
 
-export async function setSourceToken(projectPath: string, sourcePath: string, token: string): Promise<void> {
-    const store = await loadStore('credentials.json')
-    await store.set(credentialKey(projectPath, sourcePath), token)
-    await store.save()
-}
-
-export async function deleteSourceToken(projectPath: string, sourcePath: string): Promise<void> {
-    const store = await loadStore('credentials.json')
-    await store.delete(credentialKey(projectPath, sourcePath))
-    await store.save()
+export async function deleteSourceToken(sourceUrl: string): Promise<void> {
+    await deletePassword(SERVICE_NAME, sourceUrl)
 }

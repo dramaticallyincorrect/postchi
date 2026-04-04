@@ -42,7 +42,7 @@ export async function checkSources(
             const sourceFolderPath = pathOf(project.collectionsPath, source.path)
 
             const token = source.authType
-                ? await getSourceToken(project.path, source.path) ?? undefined
+                ? await getSourceToken(source.url) ?? undefined
                 : undefined
             const remoteDoc = await fetchOpenApiSpec(source.url, token)
 

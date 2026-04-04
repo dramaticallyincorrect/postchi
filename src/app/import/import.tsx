@@ -189,7 +189,7 @@ const LiveImport = ({ onCancel }: { onCancel: () => void },) => {
                             placeholder="GitLab Personal Access Token"
                         />
                         <p className="text-[11px] text-muted-foreground">
-                            Required for private repositories. Stored securely in app data.
+                            Required for private repositories. must have read-repository access.
                         </p>
                     </div>
                 )}
@@ -232,7 +232,7 @@ function ImportSpec({ doc, url, token, onDone }: { doc: OpenAPIV3.Document, url:
                 specYaml,
             );
             if (token) {
-                await setSourceToken(project.path, result.rootFolderName, token);
+                await setSourceToken(url, token);
             }
             await addSource(project.path, {
                 type: 'open-api',

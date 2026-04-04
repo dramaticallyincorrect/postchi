@@ -29,6 +29,7 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
     "core:window:allow-set-resizable",
+    "keyring:default",
     "fs:default",
     "fs:read-all",
     "fs:write-all",
