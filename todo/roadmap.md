@@ -3,9 +3,8 @@
 1. Sources
    1. ~~ui redesign~~
    2. sync tokens
-      1. store in keychain
-      2. map keys to multiple sources, so there won't be a need to make multiple tokens
-      3. if source fetch fails with 401, show set token
+      1. ~~store in keychain~~
+      2. if source fetch fails with 401, show set token
    3. ed api security is recognized wrong as header
    4. remove or update token from folder settings
    5. authentication

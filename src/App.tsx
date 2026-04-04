@@ -40,6 +40,7 @@ import { usePanel } from './app/project/panel-context';
 import { ImportData } from './app/import/import';
 import { SourceTokensManagement } from './app/sources/source-tokens-management';
 import { getActiveProject } from './lib/project-state';
+import { osCommandKey } from './lib/utils/platform-modifiers';
 
 
 export default function App({ project, isTemp }: { project: Project, isTemp: boolean }) {
@@ -76,6 +77,17 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
         return () => window.removeEventListener('keydown', handler)
     }, [])
 
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if (isOsCommandKey(e) && e.key === 's') {
+                e.preventDefault()
+                setIsFileTreeVisible(visible => !visible)
+            }
+        }
+        window.addEventListener('keydown', handler)
+        return () => window.removeEventListener('keydown', handler)
+    }, [])
+
     return <EnvironmentProvider project={project} >
         <div className='flex-col h-screen w-screen flex'>
             <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
@@ -105,7 +117,7 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
             <div className="flex items-center mt-1.5">
-                <Button variant="ghost" size="icon" className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1'} onClick={onToggleFileTree}>
+                <Button title={`${osCommandKey} + S`} variant="ghost" size="icon" className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1'} onClick={onToggleFileTree}>
                     <PanelLeftIcon />
                 </Button>
                 <FileMenu projectName={project.name} isTemp={isTemp} />
