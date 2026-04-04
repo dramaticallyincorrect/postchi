@@ -247,7 +247,7 @@ function ImportSpec({ doc, url, token, onDone }: { doc: OpenAPIV3.Document, url:
         return result
     }
 
-    const { data: importResult, loading, error, execute } = useAsync(importData, [url, token])
+    const { data: importResult, loading, error, execute } = useAsync(importData)
 
 
     if (importResult) {

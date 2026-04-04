@@ -8,7 +8,7 @@ import { KeyRoundIcon, Trash2Icon, PencilIcon, CheckIcon, XIcon } from "lucide-r
 import { toast } from "sonner"
 
 export const SourceTokensManagement = ({ projectPath }: { projectPath: string }) => {
-    const { data: config, loading, execute } = useAsync(() => readSources(projectPath), [projectPath + '-sources-config'])
+    const { data: config, loading, execute } = useAsync(() => readSources(projectPath))
 
     useEffect(() => {
         execute()
@@ -49,7 +49,7 @@ export function SourceTokenRow({ source, onDeleted }: {
     const [token, setToken] = useState('')
     const [saving, setSaving] = useState(false)
 
-    const { data: currentToken, execute: loadToken } = useAsync(() => getSourceToken(source.url), [])
+    const { data: currentToken, execute: loadToken } = useAsync(() => getSourceToken(source.url))
 
     useEffect(() => {
         loadToken()

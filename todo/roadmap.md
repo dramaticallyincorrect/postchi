@@ -5,6 +5,10 @@
    2. sync tokens
       1. ~~store in keychain~~
       2. if source fetch fails with 401, show set token
+      3. replace source tokens page with sources page
+         1. allow deleting a source
+         2. updating the tokens
+         3. fetch changes
    3. ed api security is recognized wrong as header
    4. remove or update token from folder settings
    5. authentication
