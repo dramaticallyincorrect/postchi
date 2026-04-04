@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronRightIcon, DiffIcon, FolderIcon, MinusIcon, PlusIcon, RefreshCwIcon } from 'lucide-react'
+import { ChevronRightIcon, DiffIcon, FolderIcon, MinusIcon, PlusIcon, RefreshCwIcon, RefreshCwOffIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
@@ -14,8 +14,11 @@ import { customHttpLanguage } from '@/app/editors/http/codemirror-language/http-
 import { useEnvironment } from '@/app/active-environment/environment-context'
 import { LanguageSupport } from '@codemirror/language'
 import { variableValidatorDecoration } from '@/app/editors/http/codemirror-language/decoration/json-variable-decoration'
-import { SourceChange, PendingSourceChanges } from '@/postchi/sources/source-checker'
+import { SourceChange, PendingSourceChanges, checkSources, SourceCheckResult } from '@/postchi/sources/source-checker'
 import { Source } from '@/postchi/sources/sources'
+import { Project } from '@/postchi/project/project'
+import { applySourceChanges } from '@/postchi/sources/source-applier'
+import { usePanel } from '../project/panel-context'
 
 const { Original, Modified } = CodeMirrorMerge
 
@@ -63,24 +66,50 @@ function buildDiffTree(changes: SourceChange[], sourceFolderName: string): DiffT
 type Selection = { source: Source; change: SourceChange }
 
 
-export function SourceChangesButton({ changes, onApply }: { changes: PendingSourceChanges[], onApply: () => Promise<void> }) {
+export function SourceChangesButton({ project }: { project: Project }) {
+    const [result, setResult] = useState<SourceCheckResult | null>(null)
+
+    const { openView } = usePanel()
+
+    useEffect(() => {
+        setResult(null)
+        checkSources(project)
+            .then((r) => setResult(r))
+            .catch(() => { })
+    }, [project])
+
     const [open, setOpen] = useState(false)
 
-    const totalCount = changes.reduce((sum, s) => sum + s.changes.length, 0)
-    if (totalCount === 0) return null
+    const totalCount = result?.changes.reduce((sum, s) => sum + s.changes.length, 0) || 0
+    if (totalCount === 0 || result == null) return null
+
+    const onApply = async () => {
+        await applySourceChanges(result!.changes, project)
+        setResult(null)
+    }
 
     return (
         <>
-            <Button
-                variant="outline"
-                size="sm"
-                className="text-foreground mt-1.5 mx-2"
-                onClick={() => setOpen(true)}
-            >
-                <RefreshCwIcon className="size-3" />
-                {totalCount} {totalCount === 1 ? 'change' : 'changes'}
-            </Button>
-            <SourceChangesDialog open={open} onClose={() => setOpen(false)} changes={changes} onApply={onApply} />
+            {
+                result?.authErrors.length > 0 ? <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-foreground mt-1.5 mx-2"
+                    onClick={() => openView({ type: 'SOURCE_TOKENS', params: null })}
+                >
+                    <RefreshCwOffIcon className="size-3 text-error" />
+                    {result.authErrors.length} {'source' + (result.authErrors.length > 1 ? 's' : '')} have auth issues
+                </Button> : <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-foreground mt-1.5 mx-2"
+                    onClick={() => setOpen(true)}
+                >
+                    <RefreshCwIcon className="size-3" />
+                    {totalCount} {totalCount === 1 ? 'change' : 'changes'}
+                </Button>
+            }
+            <SourceChangesDialog open={open} onClose={() => setOpen(false)} changes={result?.changes || []} onApply={onApply} />
         </>
     )
 }

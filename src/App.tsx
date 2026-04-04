@@ -32,16 +32,17 @@ import { QuickActionsButton } from './app/quick-actions/quick-action';
 import { SourceChangesButton } from './app/sources/source-changes-dialog';
 import { useFileWatch } from './hooks/file-watch';
 import { getFileTypeFromPath } from './postchi/project/file-types/file-type-recognizer';
-import { PendingSourceChanges } from './postchi/sources/source-checker';
 import { FileType } from './postchi/project/file-types/supported-filetypes';
 import { Project } from './postchi/project/project';
 import { useFileTree } from './hooks/use-file-tree';
 import { FolderSettings } from './app/folder-setting/folder-settings-dialog';
 import { usePanel } from './app/project/panel-context';
 import { ImportData } from './app/import/import';
+import { SourceTokensManagement } from './app/sources/source-tokens-management';
+import { getActiveProject } from './lib/project-state';
 
 
-export default function App({ project, isTemp, pendingSourceChanges, onApply }: { project: Project, isTemp: boolean, pendingSourceChanges: PendingSourceChanges[], onApply: () => Promise<void> }) {
+export default function App({ project, isTemp }: { project: Project, isTemp: boolean }) {
 
     const [isFileTreeVisible, setIsFileTreeVisible] = useState(true)
     const [searchOpen, setSearchOpen] = useState(false)
@@ -77,7 +78,7 @@ export default function App({ project, isTemp, pendingSourceChanges, onApply }: 
 
     return <EnvironmentProvider project={project} >
         <div className='flex-col h-screen w-screen flex'>
-            <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} pendingSourceChanges={pendingSourceChanges} onApply={onApply} />
+            <TitleBar project={project} isTemp={isTemp} onToggleFileTree={() => setIsFileTreeVisible(!isFileTreeVisible)} />
             <Split isFileTreeVisible={isFileTreeVisible}>
                 <FileTree items={fileTree} actionsPath={project.actionsPath} onItemClick={(item) => {
                     openView({ type: 'EDITOR', params: { path: item.path } })
@@ -99,7 +100,7 @@ export default function App({ project, isTemp, pendingSourceChanges, onApply }: 
 
 }
 
-const TitleBar = ({ project, isTemp, onToggleFileTree, pendingSourceChanges, onApply }: { project: Project; isTemp: boolean; onToggleFileTree: () => void; pendingSourceChanges: PendingSourceChanges[]; onApply: () => Promise<void> }) => {
+const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isTemp: boolean; onToggleFileTree: () => void }) => {
     return <div className="titlebar bg-background-panel">
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
@@ -113,7 +114,7 @@ const TitleBar = ({ project, isTemp, onToggleFileTree, pendingSourceChanges, onA
             </div>
 
             <div className="ml-auto" />
-            <SourceChangesButton changes={pendingSourceChanges} onApply={onApply} />
+            <SourceChangesButton project={project} />
             <QuickActionsButton project={project} />
             {!isMac() && <MsWindowControls />}
 
@@ -155,6 +156,8 @@ const MainPanel = () => {
             return <FolderSettings folderPath={viewState.params.path} />
         case 'IMPORT':
             return <ImportData />
+        case 'SOURCE_TOKENS':
+            return <SourceTokensManagement projectPath={getActiveProject()!.path} />
     }
 }
 

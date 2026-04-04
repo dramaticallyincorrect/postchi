@@ -64,7 +64,7 @@ function AppShell() {
     const [project, setProject] = useState<Project>(initialProject!)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
     const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
-    const [pendingSourceChanges, setPendingSourceChanges] = useState<PendingSourceChanges[]>([])
+    
     const { openView } = usePanel()
 
     const refreshLicense = async () => {
@@ -74,13 +74,6 @@ function AppShell() {
 
     useEffect(() => {
         setActiveProject(project)
-    }, [project])
-
-    useEffect(() => {
-        setPendingSourceChanges([])
-        checkSources(project)
-            .then(setPendingSourceChanges)
-            .catch(() => { })
     }, [project])
 
     useEffect(() => {
@@ -152,12 +145,6 @@ function AppShell() {
                 key={project.path}
                 project={project}
                 isTemp={project.path === tempPath}
-                pendingSourceChanges={pendingSourceChanges}
-                onApply={async () => {
-                    await applySourceChanges(pendingSourceChanges, project)
-                    setPendingSourceChanges([])
-                    checkSources(project).then(setPendingSourceChanges).catch(() => { })
-                }}
             />
             <NewProjectDialog
                 onConfirm={async (name, parentFolder) => {

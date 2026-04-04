@@ -30,12 +30,18 @@ export type PendingSourceChanges = {
     remoteDoc: OpenAPIV3.Document
 }
 
+export type SourceCheckResult = {
+    changes: PendingSourceChanges[]
+    authErrors: { source: Source}[]
+}
+
 export async function checkSources(
     project: Project,
     fileStorage = DefaultFileStorage.getInstance()
-): Promise<PendingSourceChanges[]> {
+): Promise<SourceCheckResult> {
     const config = await readSources(project.path, fileStorage)
     const results: PendingSourceChanges[] = []
+    const authErrors: { source: Source }[] = []
 
     for (const source of config.sources) {
         try {
@@ -44,6 +50,12 @@ export async function checkSources(
             const token = source.authType
                 ? await getSourceToken(source.url) ?? undefined
                 : undefined
+            
+                if (source.authType && !token) {
+                    authErrors.push({ source })
+                    continue
+                }
+
             const remoteDoc = await fetchOpenApiSpec(source.url, token)
 
             const remoteMap = flattenImportedFolder(convertDocumentToFolder(remoteDoc), sourceFolderPath)
@@ -59,7 +71,10 @@ export async function checkSources(
         }
     }
 
-    return results
+    return {
+        changes: results,
+        authErrors
+    }
 }
 
 export function diffSources(documentA: OpenAPIV3.Document, documentB: OpenAPIV3.Document, sourceFolderPath = ''): SourceChange[] {

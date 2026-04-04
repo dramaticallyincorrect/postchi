@@ -8,6 +8,7 @@ export type ViewState =
     | { type: 'EDITOR'; params: EditorParams }
     | { type: 'FOLDER_SETTINGS'; params: FolderSettingsParams }
     | { type: 'IMPORT'; params: undefined }
+    | { type: 'SOURCE_TOKENS'; params: null }
 
 export interface PanelContextType {
     viewState: ViewState | null;

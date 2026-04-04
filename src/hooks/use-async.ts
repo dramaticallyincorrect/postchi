@@ -7,7 +7,7 @@ interface AsyncState<T, E = Error> {
     error: E | null;
 }
 
-export function useAsync<T, E = Error>(asyncFunction: (...args: any[]) => Promise<T>) {
+export function useAsync<T, E = Error>(asyncFunction: (...args: any[]) => Promise<T>, deps: any[] = []): AsyncState<T, E> & { execute: (...args: any[]) => Promise<T> } {
     const [state, setState] = useState<AsyncState<T, E>>({
         data: null,
         loading: false,
