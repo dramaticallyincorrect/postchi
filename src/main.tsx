@@ -24,9 +24,8 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { openSettingsWindow } from "./app/windows/window-manager";
 import { getInitialLicenseStatus, validateLicenseStatus } from "./postchi/license/license";
 import { getDefaultProjectPath, createProject, copyProject, Project, createTestProject } from "./postchi/project/project";
-import { applySourceChanges } from "./postchi/sources/source-applier";
-import { PendingSourceChanges, checkSources } from "./postchi/sources/source-checker";
 import { PanelProvider, usePanel } from "./app/project/panel-context";
+import { SourceCheckProvider } from "./app/sources/source-check-context";
 import usePersistentState from "./hooks/persistent-state";
 import { FileItem } from "./postchi/project/project-files";
 
@@ -141,11 +140,13 @@ function AppShell() {
 
     return (
         <LicenseContext.Provider value={{ isPro, refreshLicense }}>
+            <SourceCheckProvider project={project}>
             <App
                 key={project.path}
                 project={project}
                 isTemp={project.path === tempPath}
             />
+            </SourceCheckProvider>
             <NewProjectDialog
                 onConfirm={async (name, parentFolder) => {
                     const destPath = pathOf(parentFolder, name)

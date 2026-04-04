@@ -96,7 +96,7 @@
   }
 
   body {
-    @apply font-mono bg-background text-foreground;
+    @apply bg-background text-foreground tracking-wide;
   }
 
   html {

@@ -5,14 +5,15 @@ import { ApiKeyAuth, AuthMethod, HttpBasicAuth, HttpBearerAuth, patchFolderSetti
 import { isVariable } from "@/lib/utils/variable-name";
 import { useEnvironment } from "../active-environment/environment-context";
 import { filename } from "@/lib/storage/files/file-utils/file-utils";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { EnvironmentEditor } from "../editors/environment-editor";
-import { getActiveProject } from "@/lib/project-state";
 import { LabeledVarInput } from "../components/variable-selector";
-import { Shield } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Layers, Shield } from "lucide-react";
 import { debounce } from "perfect-debounce";
 import { cn } from "@/lib/utils";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { getActiveProject } from "@/lib/project-state";
+import { EnvironmentEditor } from "../editors/environment-editor";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const isValidBaseUrl = (url: string): boolean => {
     if (url === '' || isVariable(url)) return true;
@@ -61,12 +62,15 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
     };
 
 
+    const [showEnvironment, setShowEnvironment] = useState(false);
+
     return (
+
         <ResizablePanelGroup
             orientation="horizontal"
             className="w-full h-full">
             <ResizablePanel defaultSize="50%" className='bg-background-panel'>
-                <div className="h-full flex flex-col items-center justify-center">
+                <div className="h-full flex flex-col items-center justify-center p-4">
                     <div className="sm:max-w-162 min-w-75 w-full">
                         <div className="my-8">
                             <div>{filename(folderPath)} Settings</div>
@@ -94,9 +98,13 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
                                 </p>
                             </div>
 
-                            <div className="space-y-2" hidden={security.length === 0}>
-                                <Label>Authentication</Label>
+                            <div className="space-y-2 flex flex-col" hidden={security.length === 0}>
+                                <Label className="text-md font-medium">Authentication</Label>
                                 <SecurityStep securities={security} onImport={v => saveAuthentication(v)} existingVarNames={vars} />
+                                <Button className="place-self-end" variant="secondary" size="sm" onClick={() => setShowEnvironment(prev => !prev)}>
+                                    <Layers className="mr-2 h-3.5 w-3.5" />
+                                    {showEnvironment ? 'Hide' : 'Show'} Environments
+                                </Button>
                             </div>
 
                         </div>
@@ -107,7 +115,7 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
 
             <ResizableHandle className={'w-px bg-muted/60'} />
 
-            <ResizablePanel className='bg-background-panel overflow-hidden'>
+            <ResizablePanel className='bg-background-panel overflow-hidden' hidden={!showEnvironment}>
                 <EnvSecretSplit />
             </ResizablePanel>
         </ResizablePanelGroup>
@@ -176,10 +184,10 @@ function SchemeConfig({
                 `API Key · ${method.in}: ${method.name}`;
 
     return (
-        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="rounded-lg bg-background p-4 space-y-3">
             <div className="flex items-center gap-2">
                 <Shield className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-[11px] text-foreground bg-muted px-1.5 py-0.5 rounded">
+                <span className="text-[11px] text-primary bg-muted px-1.5 py-0.5 rounded">
                     {authLabel}
                 </span>
             </div>

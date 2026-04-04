@@ -14,11 +14,12 @@ import { customHttpLanguage } from '@/app/editors/http/codemirror-language/http-
 import { useEnvironment } from '@/app/active-environment/environment-context'
 import { LanguageSupport } from '@codemirror/language'
 import { variableValidatorDecoration } from '@/app/editors/http/codemirror-language/decoration/json-variable-decoration'
-import { SourceChange, PendingSourceChanges, checkSources, SourceCheckResult } from '@/postchi/sources/source-checker'
+import { SourceChange, PendingSourceChanges } from '@/postchi/sources/source-checker'
 import { Source } from '@/postchi/sources/sources'
-import { Project } from '@/postchi/project/project'
-import { applySourceChanges } from '@/postchi/sources/source-applier'
 import { usePanel } from '../project/panel-context'
+import { useSourceCheck } from './source-check-context'
+import { applySourceChanges } from '@/postchi/sources/source-applier'
+import { Project } from '@/postchi/project/project'
 
 const { Original, Modified } = CodeMirrorMerge
 
@@ -67,25 +68,17 @@ type Selection = { source: Source; change: SourceChange }
 
 
 export function SourceChangesButton({ project }: { project: Project }) {
-    const [result, setResult] = useState<SourceCheckResult | null>(null)
-
+    const { result, refresh } = useSourceCheck()
     const { openView } = usePanel()
-
-    useEffect(() => {
-        setResult(null)
-        checkSources(project)
-            .then((r) => setResult(r))
-            .catch(() => { })
-    }, [project])
-
     const [open, setOpen] = useState(false)
 
     const totalCount = result?.changes.reduce((sum, s) => sum + s.changes.length, 0) || 0
     if (totalCount === 0 || result == null) return null
 
     const onApply = async () => {
-        await applySourceChanges(result!.changes, project)
-        setResult(null)
+        if (!result) return
+        await applySourceChanges(result.changes, project)
+        refresh()
     }
 
     return (

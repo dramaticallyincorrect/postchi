@@ -10,7 +10,7 @@ export function LabeledVarInput({
 }) {
     return (
         <div className="space-y-1 flex-1">
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</p>
+            <p className="text-[11px] text-foreground tracking-wider">{label}</p>
             <VarInput
                 value={value}
                 onChange={onChange}
@@ -31,7 +31,7 @@ export function VarInput({
 
     return (
         <Select onValueChange={onChange} value={value}>
-            <SelectTrigger className="w-full max-w-48">
+            <SelectTrigger className="w-full max-w-64 border-transparent ">
                 <SelectValue placeholder="Select a variable" >
                     {value}
                 </SelectValue>
