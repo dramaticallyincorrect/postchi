@@ -4,6 +4,7 @@ import { join } from 'path';
 import { createFileTree, parseFileTree } from "../../lib/utils/test-utils";
 import { createProject } from "./project";
 import { isPathInFileTree, readProjectFileTree } from "./project-files";
+import { addSource } from "../sources/sources";
 
 const rootPath = '/test-project'
 
@@ -44,6 +45,37 @@ secrets.cenv
 
 
     expect(items).toStrictEqual(expected)
+
+})
+
+
+test("excludes source files from project file tree", async () => {
+
+    const project = await createProject(rootPath)
+    await addSource(project.path, {
+        path: 'assets',
+        url: 'http://example.com/collections/assets',
+        type: 'open-api',
+    })
+
+    const files = `
+collections
+    assets
+        logo.get
+environments.cenv
+secrets.cenv
+`
+    const expected = parseFileTree(files, rootPath)
+
+    createFileTree(expected)
+    fs.mkdirSync(join(rootPath, 'collections', 'assets'), { recursive: true })
+    fs.writeFileSync(join(rootPath, 'collections', 'assets', 'source.yaml'), '- yaml')
+
+    const items = await readProjectFileTree(project)
+
+
+
+    expect(isPathInFileTree(items, join(rootPath, 'collections', 'assets', 'source.yaml'))).toEqual(false)
 
 })
 

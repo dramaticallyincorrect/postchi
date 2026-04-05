@@ -73,6 +73,7 @@ async function readItems(path: string, storage: FileStorage = DefaultFileStorage
     return storage.readDirectory(path).then(entries => {
         const filtered = entries.filter(entry => !entry.filename.startsWith('.') &&
             entry.filename !== 'settings.json' &&
+            entry.filename !== 'source.yaml' &&
             !entry.filename.endsWith(FileType.AFTER_SCRIPT) &&
             !entry.filename.endsWith(FileType.BEFORE_SCRIPT) &&
             !entry.filename.endsWith(REQUEST_SPEC_FILENAME_SUFFIX)
