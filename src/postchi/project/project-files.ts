@@ -9,17 +9,22 @@ import { readSources } from '../sources/sources';
 import { FileType } from './file-types/supported-filetypes';
 import { Project } from './project';
 
+
+export type FileItemTrait = 'executable' | 'pinable'
+
 export class FileItem {
     name: string;
     path: string;
     before: string = '';
     after: string = '';
+    traits: FileItemTrait[] = [];
 
-    constructor(name: string, path: string, before: string = '', after: string = '') {
+    constructor(name: string, path: string, before: string = '', after: string = '', traits: FileItemTrait[] = []) {
         this.name = name;
         this.path = path;
         this.before = before;
         this.after = after;
+        this.traits = traits;
     }
 }
 
@@ -50,9 +55,7 @@ export async function readProjectFileTree(project: Project, storage: FileStorage
     const result: FileTreeItem[] = [
         new FolderItem('collections', project.collectionsPath, colllectionItems),
     ]
-    if (actionsItems.length > 0) {
-        result.push(new FolderItem('actions', project.actionsPath, actionsItems))
-    }
+    result.push(new FolderItem('actions', project.actionsPath, actionsItems))
     result.push(
         new FileItem('environments', project.envPath),
         new FileItem('secrets', project.secretsPath)
@@ -78,7 +81,7 @@ async function readItems(path: string, storage: FileStorage = DefaultFileStorage
             !entry.filename.endsWith(FileType.BEFORE_SCRIPT) &&
             !entry.filename.endsWith(REQUEST_SPEC_FILENAME_SUFFIX)
         )
-        
+
         const files = filtered.filter(e => !e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
         const folders = filtered.filter(e => e.isDirectory).sort((a, b) => a.filename.localeCompare(b.filename))
 
@@ -109,7 +112,7 @@ export async function readActionItems(path: string, storage: FileStorage = Defau
         return entries
             .filter(e => !e.isDirectory && e.filename.endsWith(FileType.QUICK_ACTION))
             .sort((a, b) => a.filename.localeCompare(b.filename))
-            .map(e => new FileItem(e.filename.slice(0, -FileType.QUICK_ACTION.length), e.path))
+            .map(e => new FileItem(e.filename.slice(0, -FileType.QUICK_ACTION.length), e.path, '', '', ['executable']))
     } catch {
         return []
     }

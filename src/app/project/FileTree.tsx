@@ -25,6 +25,7 @@ import { createHttpRequest, createQuickAction } from "@/postchi/project/project"
 import { FileType } from "@/postchi/project/file-types/supported-filetypes"
 import { usePanel } from "./panel-context"
 import { deleteSource } from "@/postchi/sources/sources"
+import { FileExecution } from "./item-execution"
 
 const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
 
@@ -230,7 +231,7 @@ const FolderNode = ({
     );
 };
 
-const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item: FileTreeItem, isInActionsFolder?: boolean, onItemClick: any, selectedPath: string }) => {
+const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item: FileItem, isInActionsFolder?: boolean, onItemClick: any, selectedPath: string }) => {
     const storage = DefaultFileStorage.getInstance();
     const { isPro } = useLicense();
     const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT) || item.name === FileType.FOLDER_BEFORE_SCRIPT;
@@ -256,6 +257,8 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
 
     const icon = isBeforeScript || isAfterScript || isInActionsFolder ? <FileJavascriptIcon /> : <FileCodeIcon />;
 
+    const executable = item.traits.includes('executable') ? <FileExecution path={item.path} /> : null;
+
     return (
         <div>
             <ContextMenu>
@@ -266,12 +269,15 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                         onClick={() => onItemClick(item)}
                         onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                         className={cn(
-                            "w-full justify-start gap-2 transition-none",
+                            "w-full justify-start items-center gap-2 transition-none",
                             selectedPath === item.path ? "text-foreground bg-muted" : "hover:bg-muted"
                         )}
                     >
-                        {icon}
-                        <span>{item.name}</span>
+                        <span className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                            {icon}
+                            <span className="truncate">{item.name}</span>
+                        </span>
+                        {executable}
                     </Button>
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-50">

@@ -4,22 +4,22 @@
    1. ~~ui redesign~~
    2. sync tokens
       1. ~~store in keychain~~
-      2. if source fetch fails with 401, show set token
-      3. replace source tokens page with sources page
+      2. auth 'and' logic
+      3. if source fetch fails with 401, show set token
+      4. replace source tokens page with sources page
          1. allow deleting a source
          2. updating the tokens
          3. fetch changes
-   3. ed api security is recognized wrong as header
-   4. remove or update token from folder settings
-   5. authentication
+   3. remove or update token from folder settings
+   4. authentication
       1. github
       2. general
-   6. test parse failures
-   7. prefer default value over name
-   8.  reorder auth methods from settings
-   9.  refactor
+   5. test parse failures
+   6. prefer default value over name
+   7.  reorder auth methods from settings
+   8.  refactor
       1. folder settings auth resolver, take request returned authenticated
-   10. spec integration
+   9.  spec integration
       1. lint
       2. autocomplete
 2. back and forward recent requests
@@ -39,13 +39,13 @@
       1. normal
       2. base path + env change
 6. actions - pin rethink
-   1. remove titlebar new action when no action exists
-   2. always show actions folder
+   1. ~~remove titlebar new action when no action exists~~
+   2. ~~always show actions folder~~
    3. show hint when it's empty
-   4. remove shortcut keybinding (maybe can be defined by use later, we'll see)
-   5. side bar item shows a play icon to run the action from sidebar
-   6. play icon has the same progress and error indication that current titlebar action has
-   7. the common flow (run the token request) will be handled by pin request feature
+   4. ~~remove shortcut keybinding (maybe can be defined by use later, we'll see)~~
+   5. ~~side bar item shows a play icon to run the action from sidebar~~
+   6. ~~play icon has the same progress and error indication that current titlebar action has~~
+   7. ~~the common flow (run the token request) will be handled by pin request feature~~
 7. search
    1. recent requests
 8. security

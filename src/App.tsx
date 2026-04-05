@@ -28,7 +28,6 @@ import { FileWatchEventType } from './lib/storage/files/file';
 import { projectMenuItems } from './app/menu/project-menu'
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
-import { QuickActionsButton } from './app/quick-actions/quick-action';
 import { SourceChangesButton } from './app/sources/source-changes-dialog';
 import { useFileWatch } from './hooks/file-watch';
 import { getFileTypeFromPath } from './postchi/project/file-types/file-type-recognizer';
@@ -127,7 +126,6 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
 
             <div className="ml-auto" />
             <SourceChangesButton project={project} />
-            <QuickActionsButton project={project} />
             {!isMac() && <MsWindowControls />}
 
         </div>
