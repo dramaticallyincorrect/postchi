@@ -4,7 +4,7 @@ import { isTauri } from '@tauri-apps/api/core'
 const LICENSE_KEY = 'licenseKey'
 const LAST_LICENSE_VALIDATION_DATE = 'lastLicenseValidationDate'
 const SETTINGS_STORE = 'settings.json'
-const LICENSE_API_BASE = 'https://postchi-backend-s76aq.sevalla.app'
+const LICENSE_API_BASE = 'https://api.getpostchi.com'
 const LICENSE_PATTERN = /^CHI-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export type LicenseStatus = 'free' | 'pro'

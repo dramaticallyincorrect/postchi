@@ -51,7 +51,7 @@
 8. security
    1. stripout auth from history by default
       1. setting to override it
-9.  file tree
+9. file tree
     1. rename
     2. view options
        1. show/hide scripts
@@ -59,9 +59,10 @@
     4. move script creation out of FileTree
     5. show request urls as filenames and group by path?
     6. pin to top
-       1. pinned items have an execute button
-       2. shift+mod+enter for first pinned
-       3. play icon on pinned items
+       1. in postchi folder in pinned.json
+       2. path relative to project root, so actions can be pinned possibly in future
+       3. pinned items have an execute button -> executable trait
+       4. shift+mod+enter for first pinned -> shortcut trait
 10. scripts
     1. single source to derive execution and auto complete options from
 11. import
