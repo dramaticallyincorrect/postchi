@@ -42,9 +42,10 @@ export async function importAutoFromFile(file: File, root: string): Promise<Impo
 export async function importOpenApiFromUrl(url: string, root: string, token?: string): Promise<ImportOpenApiResult> {
     console.log(`Fetching OpenAPI spec from ${url}...`);
     const doc = await fetchOpenApiSpec(url, token);
-    const rootFolder = convertDocumentToFolder(doc);
+    if (doc.isErr) throw Error(doc.error.message)
+    const rootFolder = convertDocumentToFolder(doc.value);
     const result = await importFolderInto(rootFolder, root);
-    return { ...result, specYaml: yaml.dump(doc), servers: doc.servers ?? [] };
+    return { ...result, specYaml: yaml.dump(doc), servers: doc.value.servers ?? [] };
 }
 
 export type ImportOpenApiResult = ImportResult & {

@@ -1,6 +1,7 @@
 import jsYaml from 'js-yaml';
 import { createHttpClient } from '../../network/http/http-client-factory';
 import { HttpRequest } from '../../network/http/http-client';
+import { Task } from 'true-myth/task';
 
 export function isGitLabUrl(url: string): boolean {
     try {
@@ -53,42 +54,68 @@ export function toGitLabApiUrl(url: string): string {
     return `${parsed.origin}/api/v4/projects/${encodedProject}/repository/files/${encodedFilePath}/raw?ref=${encodeURIComponent(ref)}`
 }
 
-export async function fetchWithGitLabAuth(url: string, token: string | undefined): Promise<unknown> {
-    const client = createHttpClient()
-    const request: HttpRequest = {
-        method: 'GET',
-        url: toGitLabApiUrl(url),
-        headers: token ? [['PRIVATE-TOKEN', token]] : [],
-        body: '',
-    }
+type FetchError = {
+    message: string,
+    status: number
+}
 
-    const result = await client.fetch(request, new AbortController().signal)
+export function fetchWithGitLabAuth(url: string, token: string | undefined): Task<unknown, FetchError> {
+    return new Task(async (ok, err) => {
+        const client = createHttpClient()
+        const request: HttpRequest = {
+            method: 'GET',
+            url: toGitLabApiUrl(url),
+            headers: token ? [['PRIVATE-TOKEN', token]] : [],
+            body: '',
+        }
 
-    if (result.isErr) {
-        throw new Error(`Failed to fetch spec: ${result.error.message}`)
-    }
+        const result = await client.fetch(request, new AbortController().signal)
 
-    const response = result.value
+        if (result.isErr) {
+            return err({
+                message: `Failed to fetch spec: ${result.error.message}`,
+                status: 0
+            })
+        }
 
-    if (response.status === 401) {
-        throw new Error('GitLab authentication failed — check your token')
-    }
-    if (response.status === 404) {
-        throw new Error('Spec not found at that URL')
-    }
-    if (response.status < 200 || response.status >= 300) {
-        throw new Error(`Failed to fetch spec: ${response.status}`)
-    }
+        const response = result.value
 
-    const text = typeof response.body === 'string'
-        ? response.body
-        : new TextDecoder().decode(response.body)
+        if (response.status === 401) {
+            return err({
+                message: 'GitLab authentication failed — check your token',
+                status: response.status
+            })
+        }
+        if (response.status === 404) {
+            return err({
+                message: 'Spec not found at that URL',
+                status: response.status
+            })
+        }
+        if (response.status < 200 || response.status >= 300) {
+            return err({
+                message: `Failed to fetch spec: ${response.status}`,
+                status: response.status
+            })
+        }
 
-    try {
-        return JSON.parse(text)
-    } catch {
-        return jsYaml.load(text)
-    }
+        const text = typeof response.body === 'string'
+            ? response.body
+            : new TextDecoder().decode(response.body)
+
+        try {
+            return ok(JSON.parse(text))
+        } catch {
+            try {
+                return ok(jsYaml.load(text))
+            } catch {
+                return err({
+                    message: 'Failed to parse spec',
+                    status: 0
+                })
+            }
+        }
+    })
 }
 
 async function fetchGithubFile(url: string): Promise<unknown> {

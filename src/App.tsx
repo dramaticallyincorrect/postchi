@@ -37,7 +37,7 @@ import { useFileTree } from './hooks/use-file-tree';
 import { FolderSettings } from './app/folder-setting/folder-settings-dialog';
 import { usePanel } from './app/project/panel-context';
 import { ImportData } from './app/import/import';
-import { SourceTokensManagement } from './app/sources/source-tokens-management';
+import { SourceTokensManagement } from './app/sources/manage-sources';
 import { getActiveProject } from './lib/project-state';
 import { osCommandKey } from './lib/utils/platform-modifiers';
 

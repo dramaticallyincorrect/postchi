@@ -12,12 +12,12 @@ import { filenameWithoutExtension } from '@/lib/storage/files/file-utils/file-ut
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../components/ui/resizable'
 import { customHttpLanguage } from '@/app/editors/http/codemirror-language/http-language'
 import { LanguageSupport } from '@codemirror/language'
-import { SourceChange, PendingSourceChanges } from '@/postchi/sources/source-checker'
+import { SourceChange, PendingSourceChanges, checkSources } from '@/postchi/sources/source-checker'
 import { Source } from '@/postchi/sources/sources'
 import { usePanel } from '../project/panel-context'
-import { useSourceCheck } from './source-check-context'
 import { applySourceChanges } from '@/postchi/sources/source-applier'
 import { Project } from '@/postchi/project/project'
+import { useAsync } from '@/hooks/use-async'
 
 const { Original, Modified } = CodeMirrorMerge
 
@@ -66,47 +66,63 @@ type Selection = { source: Source; change: SourceChange }
 
 
 export function SourceChangesButton({ project }: { project: Project }) {
-    const { result, refresh } = useSourceCheck()
+
+    const [closed, setClosed] = useState(false)
+    const { data: result, loading, execute } = useAsync(checkSources)
+
+    useEffect(() => {
+        execute()
+    }, [])
+
     const { openView } = usePanel()
     const [open, setOpen] = useState(false)
 
     const totalCount = result?.changes.reduce((sum, s) => sum + s.changes.length, 0) || 0
-    if (totalCount === 0 || result == null) return null
+    if (loading || totalCount === 0 || result == null) return null
 
     const onApply = async () => {
         if (!result) return
         await applySourceChanges(result.changes, project)
-        refresh()
+        setClosed(true)
     }
 
-    return (
-        <>
-            {
-                result?.authErrors.length > 0 ? <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-foreground mt-1.5 mx-2"
-                    onClick={() => openView({ type: 'SOURCE_TOKENS', params: null })}
-                >
-                    <RefreshCwOffIcon className="size-3 text-error" />
-                    {result.authErrors.length} {'source' + (result.authErrors.length > 1 ? 's' : '')} have auth issues
-                </Button> : <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-foreground mt-1.5 mx-2"
-                    onClick={() => setOpen(true)}
-                >
-                    <RefreshCwIcon className="size-3" />
-                    {totalCount} {totalCount === 1 ? 'change' : 'changes'}
-                </Button>
-            }
+    if (closed) return null
+
+    if (result.authErrors.length > 0) {
+        return <Button
+            variant="outline"
+            size="sm"
+            className="text-foreground mt-1.5 mx-2"
+            onClick={() => {
+                setClosed(true);
+                openView({ type: 'SOURCE_TOKENS', params: null })
+            }}
+        >
+            <RefreshCwOffIcon className="size-3 text-error" />
+            {result.authErrors.length} {'source' + (result.authErrors.length > 1 ? 's' : '')} have auth issues
+        </Button >
+    }
+
+    if (result.changes.length > 0) {
+        return <>
+            <Button
+                variant="outline"
+                size="sm"
+                className="text-foreground mt-1.5 mx-2"
+                onClick={() => setOpen(true)}
+            >
+                <RefreshCwIcon className="size-3" />
+                {totalCount} {totalCount === 1 ? 'change' : 'changes'}
+            </Button>
             <SourceChangesDialog open={open} onClose={() => setOpen(false)} changes={result?.changes || []} onApply={onApply} />
         </>
-    )
+    }
+
+
+
 }
 
-
-function SourceChangesDialog({ open, onClose, changes, onApply }: {
+export function SourceChangesDialog({ open, onClose, changes, onApply }: {
     open: boolean
     onClose: () => void
     changes: PendingSourceChanges[]

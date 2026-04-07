@@ -21,7 +21,7 @@ export type SourcesConfig = {
     sources: Source[];
 };
 
-function sourcesFilePath(projectPath: string): string {
+export function sourcesFilePath(projectPath: string): string {
     return pathOf(projectPath, postchiDirName, sourcesFileName)
 }
 

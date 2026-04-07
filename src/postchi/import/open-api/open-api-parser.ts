@@ -5,6 +5,7 @@ import { ImportedFolder, ImportedRequest } from '../postman/postman-parser';
 import { fetchSpec, fetchWithGitLabAuth, isGitLabUrl } from '@/lib/storage/integrations/gitlab';
 import { ApiKeyAuth, AuthMethod, HttpBasicAuth, HttpBearerAuth, SecurityRequirement } from '@/postchi/project/project';
 import { RequestSpec } from '@/postchi/sources/request-spec';
+import Task from 'true-myth/task';
 
 const HTTP_METHODS = ['get', 'put', 'post', 'delete', 'patch', 'options', 'head', 'trace'] as const;
 
@@ -34,19 +35,46 @@ export async function fetchOpenApiSpecFromFile(file: File): Promise<OpenAPIV3.Do
     return SwaggerParser.dereference(parsed as OpenAPIV3.Document) as Promise<OpenAPIV3.Document>;
 }
 
-export async function fetchOpenApiSpec(url: string, token?: string): Promise<OpenAPIV3.Document> {
-    if (token && isGitLabUrl(url)) {
-        const raw = await fetchWithGitLabAuth(url, token);
-        return await SwaggerParser.dereference(raw as OpenAPIV3.Document) as OpenAPIV3.Document;
-    } else {
-        try {
-            return await SwaggerParser.dereference(url) as OpenAPIV3.Document;
-        } catch {
-            const spec = await fetchSpec(url);
-            return await SwaggerParser.dereference(spec as OpenAPIV3.Document) as OpenAPIV3.Document;
-        }
-    }
 
+type SourceFetchError = {
+    type: 'auth' | 'network' | 'parse';
+    message: string
+}
+
+export function fetchOpenApiSpec(url: string, token?: string): Task<OpenAPIV3.Document, SourceFetchError> {
+
+    return new Task(async (resolve, reject) => {
+        if (token && isGitLabUrl(url)) {
+            const raw = await fetchWithGitLabAuth(url, token)
+
+            if (raw.isErr) {
+                const err = raw.error
+                if (err.status === 401) {
+                    return reject({
+                        type: 'auth',
+                        message: 'authentication failed'
+                    })
+                } else {
+                    return reject({
+                        type: 'network',
+                        message: err.message
+                    })
+                }
+            }
+
+            const doc = await SwaggerParser.dereference(raw.value as OpenAPIV3.Document) as OpenAPIV3.Document;
+            return resolve(doc)
+        } else {
+            try {
+                const doc = await SwaggerParser.dereference(url) as OpenAPIV3.Document;
+                return resolve(doc)
+            } catch {
+                const spec = await fetchSpec(url);
+                const doc = await SwaggerParser.dereference(spec as OpenAPIV3.Document) as OpenAPIV3.Document;
+                return resolve(doc)
+            }
+        }
+    })
 }
 
 export function convertDocumentToFolder(doc: OpenAPIV3.Document): ImportedFolder {

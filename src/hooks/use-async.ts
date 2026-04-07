@@ -7,7 +7,7 @@ interface AsyncState<T, E = Error> {
     error: E | null;
 }
 
-export function useAsync<T, E = Error>(asyncFunction: (...args: any[]) => Promise<T>): AsyncState<T, E> & { execute: (...args: any[]) => Promise<T> } {
+export function useAsync<T, E = Error>(asyncFunction: (...args: any[]) => Promise<T>): AsyncState<T, E> & { execute: (...args: any[]) => Promise<T>, reset: () => void } {
     const [state, setState] = useState<AsyncState<T, E>>({
         data: null,
         loading: false,
@@ -27,5 +27,7 @@ export function useAsync<T, E = Error>(asyncFunction: (...args: any[]) => Promis
         }
     }, [asyncFunction]);
 
-    return { ...state, execute };
+    const reset = () => setState({ data: null, loading: false, error: null });
+
+    return { ...state, execute, reset };
 }

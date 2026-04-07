@@ -140,7 +140,7 @@ const LiveImport = ({ onCancel }: { onCancel: () => void },) => {
             setError(null);
             setLoading(true);
             try {
-                const doc = await fetchOpenApiSpec(url, token || undefined);
+                const doc = (await fetchOpenApiSpec(url, token || undefined)).unwrapOrElse((s) => { throw Error(s.message) });
                 setDoc(doc)
                 setLoading(false)
             } catch (e) {

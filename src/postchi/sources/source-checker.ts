@@ -11,6 +11,7 @@ import { pathOf } from "@/lib/storage/files/join"
 import { getSourceToken } from "@/lib/storage/store/credential-store"
 import { FileType } from "../project/file-types/supported-filetypes"
 import { RequestSpec } from "./request-spec"
+import { getActiveProject } from "@/lib/project-state"
 
 export const SOURCE_SPEC_FILENAME = 'source.yaml'
 
@@ -32,16 +33,21 @@ export type PendingSourceChanges = {
 
 export type SourceCheckResult = {
     changes: PendingSourceChanges[]
-    authErrors: { source: Source}[]
+    authErrors: SourceSyncError[]
+}
+
+export type SourceSyncError = {
+    source: Source,
+    error: string
 }
 
 export async function checkSources(
-    project: Project,
+    project: Project = getActiveProject()!,
     fileStorage = DefaultFileStorage.getInstance()
 ): Promise<SourceCheckResult> {
     const config = await readSources(project.path, fileStorage)
     const results: PendingSourceChanges[] = []
-    const authErrors: { source: Source }[] = []
+    const authErrors: SourceSyncError[] = []
 
     for (const source of config.sources) {
         try {
@@ -50,21 +56,31 @@ export async function checkSources(
             const token = source.authType
                 ? await getSourceToken(source.url) ?? undefined
                 : undefined
-            
-                if (source.authType && !token) {
-                    authErrors.push({ source })
-                    continue
-                }
+
+            if (source.authType && !token) {
+                authErrors.push({ source, error: 'required auth token is not set' })
+                continue
+            }
 
             const remoteDoc = await fetchOpenApiSpec(source.url, token)
 
-            const remoteMap = flattenImportedFolder(convertDocumentToFolder(remoteDoc), sourceFolderPath)
+            if (remoteDoc.isErr) {
+                authErrors.push({
+                    source: source,
+                    error: remoteDoc.error.message
+                })
+                continue
+            }
+
+            const doc = remoteDoc.value
+
+            const remoteMap = flattenImportedFolder(convertDocumentToFolder(doc), sourceFolderPath)
             const diskMap = await readDiskFileMap(sourceFolderPath, fileStorage)
 
             const changes = diffMaps(remoteMap, diskMap)
 
             if (changes.length > 0) {
-                results.push({ source, changes, remoteDoc })
+                results.push({ source, changes, remoteDoc: doc })
             }
         } catch (e) {
             console.error(`[sources] Failed to check source "${source.url}":`, e)
