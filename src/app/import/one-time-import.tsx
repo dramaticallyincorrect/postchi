@@ -1,5 +1,5 @@
 import { AlertCircle, CircleCheck, FileText, Loader2, TriangleAlert, X } from "lucide-react";
-import { WizardLayout } from "./import";
+import { WizardLayout, WizardStepNav } from "./import";
 import { importAutoFromFile, ImportResult } from "@/postchi/import/import-folder";
 import { cn } from "@/lib/utils";
 import { formatFileSize } from "@/lib/utils/file-size-format";
@@ -7,7 +7,7 @@ import { FileRejection, useDropzone } from "react-dropzone";
 import { importPostmanZip } from "@/postchi/import/import-postman-zip";
 import { useCallback, useState } from "react";
 
-export const OneTimeImport = ({ rootPath }: { onCancel: () => void; rootPath: string },) => {
+export const OneTimeImport = ({ rootPath, onCancel }: { onCancel: () => void; rootPath: string },) => {
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [rejectedFile, setRejectedFile] = useState(false);
@@ -64,6 +64,7 @@ export const OneTimeImport = ({ rootPath }: { onCancel: () => void; rootPath: st
         <WizardLayout
             actions={null}
         >
+            <WizardStepNav title='Back' onBack={onCancel} />
             <div className="space-y-4">
                 <div
                     {...getRootProps()}
@@ -130,7 +131,7 @@ export const OneTimeImport = ({ rootPath }: { onCancel: () => void; rootPath: st
                     rejectedFile && !isDragActive ? 'text-destructive' : 'text-muted-foreground',
                 )}>
                     {rejectedFile && !isDragActive && <AlertCircle className="h-3 w-3 shrink-0" />}
-                    <span>
+                    <span className="text-sm">
                         {rejectedFile && !isDragActive
                             ? `Only ${ONE_TIME_EXTENSIONS.join(', ')} files are supported`
                             : 'Postman collection (.json, .zip) or OpenAPI spec (.yaml, .json)'}

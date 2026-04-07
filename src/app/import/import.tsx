@@ -355,7 +355,7 @@ function ImportResults({ result, onConfigure }: { result: ImportResult | null, o
     );
 }
 
-function WizardStepNav({ title, stepLabel, onBack }: {
+export function WizardStepNav({ title, stepLabel, onBack }: {
     title: string;
     stepLabel?: string;
     onBack?: () => void;
