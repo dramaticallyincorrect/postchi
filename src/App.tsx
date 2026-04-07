@@ -25,7 +25,7 @@ import MsWindowControls from './components/window-controls';
 import { isDesktopMac, isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
 import { FileWatchEventType } from './lib/storage/files/file';
-import { projectMenuItems } from './app/menu/project-menu'
+import { fileMenuItems } from './app/menu/project-menu'
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
 import { SourceChangesButton } from './app/sources/source-changes-dialog';
@@ -140,7 +140,7 @@ const FileMenu = ({ projectName, isTemp }: { projectName: string; isTemp: boolea
             </DropdownMenuTrigger>
             {
                 !isDesktopMac() && <DropdownMenuContent className='w-full'>
-                    {projectMenuItems(isTemp).map((item, index) =>
+                    {fileMenuItems(isTemp).map((item, index) =>
                         'item' in item ? (
                             <DropdownMenuSeparator key={`separator-${index}`} />
                         ) : (

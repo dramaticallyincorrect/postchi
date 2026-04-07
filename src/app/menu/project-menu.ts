@@ -1,7 +1,7 @@
 import { Menu } from '@tauri-apps/api/menu';
 import { isDesktopMac, isTauri } from '../../lib/utils/os';
 import { emitMenuEvent, MenuActions } from './menu-events';
-import { exit } from '@tauri-apps/plugin-process';
+
 
 export async function initMenu(isTemp: boolean = true): Promise<void> {
     if (isDesktopMac()) {
@@ -15,10 +15,10 @@ export async function setupMacAppMenu(isTemp: boolean): Promise<void> {
 }
 
 async function buildFileMenu(isTemp: boolean): Promise<Menu> {
-    return Menu.new(fileMenuItems(isTemp));
+    return Menu.new(topMenuItems(isTemp));
 }
 
-export function projectMenuItems(isTemp: boolean) {
+export function fileMenuItems(isTemp: boolean) {
     return [
         ...((isTemp && isTauri()) ? [{
             id: 'save_project',
@@ -30,37 +30,26 @@ export function projectMenuItems(isTemp: boolean) {
             text: 'Import',
             action: async () => emitMenuEvent(MenuActions.IMPORT_PROJECT),
         },
-        ...(isTauri() ? desktopOnlyMenuItems : sharedMenuItems),
+        ...(isTauri() ? desktopOnlyMenuItems : []),
     ];
 }
 
-const sharedMenuItems = [
-    { item: "Separator" as const },
-    {
-        id: 'settings',
-        text: 'Settings',
-        accelerator: 'CmdOrCtrl+,',
-        action: async () => emitMenuEvent(MenuActions.SETTINGS),
-    },
-    {
-        id: 'activate_license',
-        text: 'Activate License…',
-        action: async () => emitMenuEvent(MenuActions.ACTIVATE_LICENSE),
-    },
-]
+export function viewMenuItmes() {
+    return [
+        {
+            id: 'view_sources',
+            text: 'Sources',
+            action: async () => emitMenuEvent(MenuActions.VIEW_SOURCES),
+        }
+    ];
+}
 
-const desktopOnlyMenuItems = [
+const PostchiMenu = [
     {
-        id: 'new_project',
-        text: 'New Project',
-        action: async () => emitMenuEvent(MenuActions.NEW_PROJECT),
+        id: 'about_postchi',
+        text: 'About Postchi',
+        action: async () => emitMenuEvent(MenuActions.ABOUT_POSTCHI),
     },
-    {
-        id: 'open_project',
-        text: 'Open Project',
-        action: async () => emitMenuEvent(MenuActions.OPEN_PROJECT),
-    },
-    { item: "Separator" as const },
     {
         id: 'check_for_updates',
         text: 'Check for Updates…',
@@ -80,19 +69,26 @@ const desktopOnlyMenuItems = [
     },
     { item: "Separator" as const },
     {
-        id: 'about_postchi',
-        text: 'About Postchi',
-        action: async () => emitMenuEvent(MenuActions.ABOUT_POSTCHI),
-    },
-    {
         id: "quit",
         text: "Quit",
         accelerator: 'CmdOrCtrl+Q',
         action: async () => {
+            const { exit } = await import('@tauri-apps/plugin-process');
             exit(0);
-            // const {  } = await import("@tauri-apps/api/app");
-            // app.exit(0);
         },
+    },
+]
+
+const desktopOnlyMenuItems = [
+    {
+        id: 'new_project',
+        text: 'New Project',
+        action: async () => emitMenuEvent(MenuActions.NEW_PROJECT),
+    },
+    {
+        id: 'open_project',
+        text: 'Open Project',
+        action: async () => emitMenuEvent(MenuActions.OPEN_PROJECT),
     },
 ]
 
@@ -115,16 +111,24 @@ const editMenuItems = [
     { item: 'SelectAll' as const },
 ]
 
-function fileMenuItems(isTemp: boolean) {
+function topMenuItems(isTemp: boolean) {
     return {
         items: [
             {
+                text: 'Postchi',
+                items: PostchiMenu,
+            },
+            {
                 text: 'File',
-                items: projectMenuItems(isTemp),
+                items: fileMenuItems(isTemp),
             },
             {
                 text: 'Edit',
                 items: editMenuItems,
+            },
+            {
+                text: 'View',
+                items: viewMenuItmes(),
             },
             {
                 text: 'Help',

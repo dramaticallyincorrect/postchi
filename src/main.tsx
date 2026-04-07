@@ -63,7 +63,7 @@ function AppShell() {
     const [project, setProject] = useState<Project>(initialProject!)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
     const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
-    
+
     const { openView } = usePanel()
 
     const refreshLicense = async () => {
@@ -131,6 +131,13 @@ function AppShell() {
                         type: 'IMPORT',
                         params: undefined
                     })
+                    break
+                }
+                case MenuActions.VIEW_SOURCES: {
+                    openView({
+                        type: 'SOURCE_TOKENS',
+                        params: null
+                    })
                 }
             }
         })
@@ -141,11 +148,11 @@ function AppShell() {
     return (
         <LicenseContext.Provider value={{ isPro, refreshLicense }}>
             <SourceCheckProvider project={project}>
-            <App
-                key={project.path}
-                project={project}
-                isTemp={project.path === tempPath}
-            />
+                <App
+                    key={project.path}
+                    project={project}
+                    isTemp={project.path === tempPath}
+                />
             </SourceCheckProvider>
             <NewProjectDialog
                 onConfirm={async (name, parentFolder) => {
