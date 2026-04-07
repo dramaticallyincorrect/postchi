@@ -1,0 +1,218 @@
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Serialize)]
+#[serde(tag = "type")]
+pub enum FileTreeItem {
+    File(FileItem),
+    Folder(FolderItem),
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileItem {
+    pub name: String,
+    pub path: String,
+    pub before: String,
+    pub after: String,
+    pub traits: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FolderItem {
+    pub name: String,
+    pub path: String,
+    pub items: Vec<FileTreeItem>,
+    pub is_source: bool,
+}
+
+#[derive(Deserialize)]
+struct SourceEntry {
+    path: String,
+}
+
+#[derive(Deserialize)]
+struct SourcesConfig {
+    sources: Vec<SourceEntry>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectPaths {
+    pub project_path: String,
+    pub collections_path: String,
+    pub actions_path: String,
+    pub env_path: String,
+    pub secrets_path: String,
+}
+
+#[tauri::command]
+pub fn read_project_file_tree(paths: ProjectPaths) -> Result<Vec<FileTreeItem>, String> {
+    let source_paths = load_source_paths(&paths.project_path, &paths.collections_path);
+
+    let collection_items = read_items(Path::new(&paths.collections_path), &source_paths)
+        .unwrap_or_default();
+    let action_items = read_action_items(Path::new(&paths.actions_path));
+
+    Ok(vec![
+        FileTreeItem::Folder(FolderItem {
+            name: "collections".into(),
+            path: paths.collections_path,
+            items: collection_items,
+            is_source: false,
+        }),
+        FileTreeItem::Folder(FolderItem {
+            name: "actions".into(),
+            path: paths.actions_path,
+            items: action_items,
+            is_source: false,
+        }),
+        FileTreeItem::File(FileItem {
+            name: "environments".into(),
+            path: paths.env_path,
+            before: String::new(),
+            after: String::new(),
+            traits: vec![],
+        }),
+        FileTreeItem::File(FileItem {
+            name: "secrets".into(),
+            path: paths.secrets_path,
+            before: String::new(),
+            after: String::new(),
+            traits: vec![],
+        }),
+    ])
+}
+
+fn read_items(dir: &Path, source_paths: &HashSet<String>) -> std::io::Result<Vec<FileTreeItem>> {
+    let mut files: Vec<(String, PathBuf)> = vec![];
+    let mut folders: Vec<(String, PathBuf)> = vec![];
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let name = entry.file_name().to_string_lossy().to_string();
+        let path = entry.path();
+
+        if name.starts_with('.')
+            || name == "settings.json"
+            || name == "source.yaml"
+            || name.ends_with(".before.js")
+            || name.ends_with(".after.js")
+            || name.ends_with(".spec.yaml")
+        {
+            continue;
+        }
+
+        if path.is_dir() {
+            folders.push((name, path));
+        } else {
+            files.push((name, path));
+        }
+    }
+
+    files.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    folders.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+
+    let mut result = vec![];
+
+    for (name, path) in &files {
+        let path_str = path.to_string_lossy().to_string();
+        let base = match path_str.rfind('.') {
+            Some(i) => path_str[..i].to_string(),
+            None => path_str.clone(),
+        };
+        let before_path = format!("{}.before.js", base);
+        let after_path = format!("{}.after.js", base);
+        let display = match name.rfind('.') {
+            Some(i) => name[..i].to_string(),
+            None => name.clone(),
+        };
+        result.push(FileTreeItem::File(FileItem {
+            name: display,
+            path: path_str,
+            before: if Path::new(&before_path).exists() {
+                before_path
+            } else {
+                String::new()
+            },
+            after: if Path::new(&after_path).exists() {
+                after_path
+            } else {
+                String::new()
+            },
+            traits: vec![],
+        }));
+    }
+
+    for (name, path) in &folders {
+        let path_str = path.to_string_lossy().to_string();
+        let is_source = source_paths.contains(&path_str);
+        let children = read_items(path, source_paths).unwrap_or_default();
+        result.push(FileTreeItem::Folder(FolderItem {
+            name: name.clone(),
+            path: path_str,
+            items: children,
+            is_source,
+        }));
+    }
+
+    Ok(result)
+}
+
+fn read_action_items(dir: &Path) -> Vec<FileTreeItem> {
+    let Ok(rd) = fs::read_dir(dir) else {
+        return vec![];
+    };
+    let mut entries: Vec<(String, String)> = rd
+        .filter_map(|e| e.ok())
+        .filter_map(|e| {
+            let name = e.file_name().to_string_lossy().to_string();
+            if !e.path().is_dir() && name.ends_with(".action.js") {
+                Some((
+                    name[..name.len() - ".action.js".len()].to_string(),
+                    e.path().to_string_lossy().to_string(),
+                ))
+            } else {
+                None
+            }
+        })
+        .collect();
+    entries.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    entries
+        .into_iter()
+        .map(|(name, path)| {
+            FileTreeItem::File(FileItem {
+                name,
+                path,
+                before: String::new(),
+                after: String::new(),
+                traits: vec!["executable".into()],
+            })
+        })
+        .collect()
+}
+
+fn load_source_paths(project_path: &str, collections_path: &str) -> HashSet<String> {
+    let sources_path = PathBuf::from(project_path)
+        .join(".postchi")
+        .join("sources.json");
+    let Ok(content) = fs::read_to_string(&sources_path) else {
+        return HashSet::new();
+    };
+    let Ok(config) = serde_json::from_str::<SourcesConfig>(&content) else {
+        return HashSet::new();
+    };
+    config
+        .sources
+        .into_iter()
+        .map(|s| {
+            PathBuf::from(collections_path)
+                .join(&s.path)
+                .to_string_lossy()
+                .to_string()
+        })
+        .collect()
+}

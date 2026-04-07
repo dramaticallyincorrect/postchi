@@ -56,7 +56,7 @@
     4. move script creation out of FileTree
     5. show request urls as filenames and group by path?
     6. pin to top
-       1. in postchi folder in pinned.json
+       1. in postchi folder in pinned.txt
        2. path relative to project root, so actions can be pinned possibly in future
        3. pinned items have an execute button -> executable trait
        4. shift+mod+enter for first pinned -> shortcut trait

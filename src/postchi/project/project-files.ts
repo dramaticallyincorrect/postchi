@@ -1,5 +1,7 @@
+import { isTauri } from '@tauri-apps/api/core'
 import { FileStorage } from '../../lib/storage/files/file';
 import DefaultFileStorage from '../../lib/storage/files/file-default';
+import { readProjectFileTreeNative } from './project-files-native';
 import { trimExtension } from '../../lib/storage/files/file-utils/file-utils';
 import { pathOf } from '../../lib/storage/files/join';
 import { afterScriptPath } from '../http/scripts/after/after-script-executor';
@@ -45,6 +47,9 @@ export class FolderItem {
 export type FileTreeItem = FileItem | FolderItem
 
 export async function readProjectFileTree(project: Project, storage: FileStorage = DefaultFileStorage.getInstance()): Promise<FileTreeItem[]> {
+    if (isTauri()) {
+        return readProjectFileTreeNative(project)
+    }
     const [colllectionItems, actionsItems, sourcesConfig] = await Promise.all([
         readItems(project.collectionsPath, storage),
         readActionItems(project.actionsPath, storage),
