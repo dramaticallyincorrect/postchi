@@ -8,7 +8,7 @@
       1. github
       2. general
    4. test parse failures
-   5. prefer default value over name
+   5. ~~prefer default value over name~~
    6. right click options
       1. reset to spec
    7. reorder auth methods from settings

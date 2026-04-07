@@ -160,6 +160,11 @@ function resolveSecurityForRequestText(
     return { authHeaders, authQueryParams }
 }
 
+function valueOf(schemaObject: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined): string | null {
+    const schema = schemaObject as OpenAPIV3.SchemaObject | undefined
+    return schema?.default !== undefined ? String(schema.default) : schema?.example !== undefined ? String(schema.example) : null
+}
+
 function buildRequestText(tuple: OperationTuple): string {
     const { pathPattern, method, operation, pathLevelParams, securitySchemes } = tuple;
 
@@ -179,11 +184,12 @@ function buildRequestText(tuple: OperationTuple): string {
         : { authHeaders: [], authQueryParams: [] }
 
     // Build URL: relative path with {param} → <param>, then append query string
+
     const path = pathPattern.replace(/\{(\w+)\}/g, '<$1>');
     const allQueryParts = [
         ...queryParams.map(p => {
             const schema = p.schema as OpenAPIV3.SchemaObject | undefined
-            const value = schema?.example !== undefined ? String(schema.example) : `<${p.name}>`
+            const value = valueOf(schema) ?? `<${p.name}>`
             return `${p.name}=${value}`
         }),
         ...authForText.authQueryParams,
@@ -191,7 +197,7 @@ function buildRequestText(tuple: OperationTuple): string {
     const queryString = allQueryParts.join('&');
     const url = queryString ? `${path}?${queryString}` : path;
 
-    const headers: string[] = headerParams.map(p => `${p.name}: <${p.name}>`);
+    const headers: string[] = headerParams.map(p => `${p.name}: ${valueOf(p.schema) ?? `<${p.name}>`}`);
     headers.push(...authForText.authHeaders);
 
     const requestBody = operation.requestBody;

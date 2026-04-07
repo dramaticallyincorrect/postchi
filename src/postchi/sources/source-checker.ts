@@ -17,6 +17,7 @@ export const SOURCE_SPEC_FILENAME = 'source.yaml'
 
 export type ChangeKind = 'added' | 'removed' | 'modified'
 
+//TODO: path should be absolute to not need the project, in general we save on disk relative but once read should exist as absolute
 export type SourceChange = {
     kind: ChangeKind
     path: string
