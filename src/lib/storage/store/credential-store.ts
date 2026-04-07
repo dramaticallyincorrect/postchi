@@ -1,6 +1,6 @@
 import { setPassword, getPassword, deletePassword } from 'tauri-plugin-keyring-api';
 
-const SERVICE_NAME = 'postchi'
+const SERVICE_NAME = import.meta.env.DEV ? 'postchi-dev' : 'postchi'
 
 export async function getSourceToken(sourceUrl: string): Promise<string | null> {
     return getPassword(SERVICE_NAME, sourceUrl)
