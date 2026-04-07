@@ -4,7 +4,7 @@
    1. ~~ui redesign~~
    2. sync tokens
       1. ~~store in keychain~~
-      2. prevent duplicate sources to be added
+      2. ~~prevent duplicate sources to be added~~
       3. auth 'and' logic
       4. ~~if source fetch fails with 401, show set token~~
       5. ~~replace source tokens page with sources page~~

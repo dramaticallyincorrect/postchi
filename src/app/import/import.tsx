@@ -146,9 +146,14 @@ const LiveImport = ({ onCancel }: { onCancel: () => void },) => {
                     setError('Source already exists');
                     return
                 }
-                const doc = (await fetchOpenApiSpec(url, token || undefined)).unwrapOrElse((s) => { throw Error(s.message) });
-                setDoc(doc)
+                const result = await fetchOpenApiSpec(url, token || undefined)
                 setLoading(false)
+                if (result.isOk) {
+                    setDoc(result.value)
+                } else {
+                    setError(result.error.message);
+                }
+
             } catch (e) {
                 setError(e instanceof Error ? e.message : 'Failed to fetch spec');
                 setLoading(false);
@@ -199,15 +204,13 @@ const LiveImport = ({ onCancel }: { onCancel: () => void },) => {
                         </p>
                     </div>
                 )}
-                {error && (
-                    <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
-                        <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />
-                        <p className="text-[12px] text-destructive">{error}</p>
-                    </div>
-                )}
                 <p className="text-[11px] text-muted-foreground" hidden={doc != null}>
                     Supports Swagger 2.0, OpenAPI 3.0 and 3.1
                 </p>
+                <div className={cn("flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5", error ? 'visible' : 'invisible')} hidden={doc != null}>
+                    <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" />
+                    <p className="text-[12px] text-destructive">{error ?? 'just-for-height-adjustmant'}</p>
+                </div>
 
                 {
                     doc && (

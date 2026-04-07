@@ -45,7 +45,7 @@ export async function importOpenApiFromUrl(url: string, root: string, token?: st
     if (doc.isErr) throw Error(doc.error.message)
     const rootFolder = convertDocumentToFolder(doc.value);
     const result = await importFolderInto(rootFolder, root);
-    return { ...result, specYaml: yaml.dump(doc), servers: doc.value.servers ?? [] };
+    return { ...result, specYaml: yaml.dump(doc.value), servers: doc.value.servers ?? [] };
 }
 
 export type ImportOpenApiResult = ImportResult & {
