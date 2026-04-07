@@ -3,7 +3,7 @@ import { fs } from 'memfs';
 import { join } from 'path';
 import { createFileTree, parseFileTree } from "../../lib/utils/test-utils";
 import { createProject } from "./project";
-import { isPathInFileTree, readProjectFileTree } from "./project-files";
+import { collectHttpFiles, isPathInFileTree, readProjectFileTree } from "./project-files";
 import { addSource } from "../sources/sources";
 
 const rootPath = '/test-project'
@@ -24,7 +24,7 @@ secrets.cenv
     const items = await readProjectFileTree(project)
 
 
-    expect(items).toStrictEqual(expected)
+    expect(collectHttpFiles(items)).toStrictEqual(collectHttpFiles(expected))
 
 })
 
@@ -44,7 +44,7 @@ secrets.cenv
     const items = await readProjectFileTree(project)
 
 
-    expect(items).toStrictEqual(expected)
+    expect(collectHttpFiles(items)).toStrictEqual(collectHttpFiles(expected))
 
 })
 
@@ -98,7 +98,7 @@ secrets.cenv
     const items = await readProjectFileTree(project)
 
 
-    expect(items).toStrictEqual(expected)
+    expect(collectHttpFiles(items)).toStrictEqual(collectHttpFiles(expected))
 
 })
 

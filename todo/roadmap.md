@@ -1,29 +1,20 @@
 # Roadmap
 
 1. Sources
-   1. ~~ui redesign~~
-   2. sync tokens
-      1. ~~store in keychain~~
-      2. ~~prevent duplicate sources to be added~~
-      3. auth 'and' logic
-      4. ~~if source fetch fails with 401, show set token~~
-      5. ~~replace source tokens page with sources page~~
-         1. ~~allow deleting a source~~
-         2. ~~updating the tokens~~
-         3. ~~fetch changess~~
-         4. ~~clear titlebar indicator after going to sources page~~
-   3. remove or update token from folder settings
-   4. authentication
+   1. sync tokens
+      1. auth 'and' logic
+   2. remove or update token from folder settings
+   3. authentication
       1. github
       2. general
-   5. test parse failures
-   6. prefer default value over name
-   7. right click options
+   4. test parse failures
+   5. prefer default value over name
+   6. right click options
       1. reset to spec
-   8. reorder auth methods from settings
-   9. refactor
+   7. reorder auth methods from settings
+   8. refactor
       1. folder settings auth resolver, take request returned authenticated
-   10. spec integration
+   9.  spec integration
       1. lint
       2. autocomplete
 2. back and forward recent requests
