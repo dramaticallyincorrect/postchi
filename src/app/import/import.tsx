@@ -17,7 +17,7 @@ import { OpenAPIV3 } from 'openapi-types';
 import * as yaml from 'js-yaml';
 import DefaultFileStorage from '@/lib/storage/files/file-default';
 import { setSourceToken } from '@/lib/storage/store/credential-store';
-import { addSource } from '@/postchi/sources/sources';
+import { addSource, readSources } from '@/postchi/sources/sources';
 import { OneTimeImport } from './one-time-import';
 import { getActiveProject } from '@/lib/project-state';
 import { useAsync } from '@/hooks/use-async';
@@ -140,6 +140,12 @@ const LiveImport = ({ onCancel }: { onCancel: () => void },) => {
             setError(null);
             setLoading(true);
             try {
+                const sourcesConfig = await readSources(getActiveProject()!.path)
+                if (sourcesConfig.sources.some((s) => s.url == url)) {
+                    setLoading(false);
+                    setError('Source already exists');
+                    return
+                }
                 const doc = (await fetchOpenApiSpec(url, token || undefined)).unwrapOrElse((s) => { throw Error(s.message) });
                 setDoc(doc)
                 setLoading(false)
