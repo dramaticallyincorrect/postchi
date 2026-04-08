@@ -1,28 +1,25 @@
 # Roadmap
 
 1. Sources
-   1. sync tokens
-      1. auth 'and' logic
+   1. auth 'and' logic
    2. remove or update token from folder settings
    3. diff
       1. things to change since we want to show deviations from the spec as warning (because when you are working on a backend you still haven't updated the spec but still want to be able to make a request)
       2. ~~diff against spec since if we remove a value from request temporarily don't want to get change updates for that~~
       3. merge with existing, keep changes even if they don't conform to the spec
    4. optional parameters
-      1. not added to request on import
-      2. shown as commented in sync changes
-      3. shown in right click context
+      1. ~~not added to request on import~~
+      2. shown in right click context
    5. authentication
       1. github
       2. general
    6. test parse failures
-   7. ~~prefer default value over name~~
-   8. right click options
+   7. right click options
       1. reset to spec
-   9.  reorder auth methods from settings
-   10. refactor
+   8.  reorder auth methods from settings
+   9.  refactor
       1. folder settings auth resolver, take request returned authenticated
-   11. spec integration
+   10. spec integration
       1. lint
       2. autocomplete
 2. http

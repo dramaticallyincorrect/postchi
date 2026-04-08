@@ -74,7 +74,7 @@ describe('open api parser', () => {
           get: {
             tags: ['pet'],
             summary: 'Finds Pets by status.',
-            parameters: [{ name: 'status', in: 'query', schema: { type: 'string' } }],
+            parameters: [{ name: 'status', in: 'query', schema: { type: 'string' }, required: true }],
             responses: ok200,
           },
         },
@@ -83,6 +83,26 @@ describe('open api parser', () => {
     const petFolder = result.items.find(i => isFolder(i) && i.name === 'pet') as ImportedFolder;
     const findByStatus = petFolder.items.find(i => isRequest(i) && i.name === 'Finds Pets by status.') as ImportedRequest;
     expect(findByStatus.request).toContain('?status=<status>');
+  });
+
+  it('skipts optional query parameters', () => {
+    const result = convertDocumentToFolder({
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0.0' },
+      paths: {
+        '/pet/findByStatus': {
+          get: {
+            tags: ['pet'],
+            summary: 'Finds Pets by status.',
+            parameters: [{ name: 'status', in: 'query', schema: { type: 'string' } }],
+            responses: ok200,
+          },
+        },
+      },
+    });
+    const petFolder = result.items.find(i => isFolder(i) && i.name === 'pet') as ImportedFolder;
+    const findByStatus = petFolder.items.find(i => isRequest(i) && i.name === 'Finds Pets by status.') as ImportedRequest;
+    expect(findByStatus.request).not.toContain('?status=<status>');
   });
 
   it('adds Content-Type header and JSON body for application/json requests', () => {
@@ -183,7 +203,7 @@ describe('query param value generation', () => {
         '/pets': {
           get: {
             summary: 'List Pets',
-            parameters: [{ name: 'status', in: 'query', schema: { type: 'string', example: 'available' } }],
+            parameters: [{ name: 'status', in: 'query', schema: { type: 'string', example: 'available' }, required: true }],
             responses: ok200
           }
         }
@@ -203,7 +223,7 @@ describe('query param value generation', () => {
         '/pets': {
           get: {
             summary: 'List Pets',
-            parameters: [{ name: 'status', in: 'query', schema: { type: 'string' } }],
+            parameters: [{ name: 'status', in: 'query', schema: { type: 'string' }, required: true }],
             responses: ok200
           }
         }
@@ -223,7 +243,7 @@ describe('query param value generation', () => {
           '/pets': {
             get: {
               summary: 'List Pets',
-              parameters: [{ name: 'status', in: 'query', schema: { type: 'string', default: 'active', example: 'available' } }],
+              parameters: [{ name: 'status', in: 'query', schema: { type: 'string', default: 'active', example: 'available' }, required: true }],
               responses: ok200
             }
           }
@@ -262,7 +282,7 @@ describe('query param value generation', () => {
         '/pets': {
           get: {
             summary: 'List Pets',
-            parameters: [{ name: 'status', in: 'query', schema: { type: 'string', example: 'available' } }],
+            parameters: [{ name: 'status', in: 'query', schema: { type: 'string', example: 'available' }, required: true }],
             responses: ok200
           }
         }

@@ -78,7 +78,6 @@ function FetchChanges({ onAuthErrors }: { onAuthErrors: (sources: SourceSyncErro
         }
     }, changes ? 1000 : null)
 
-    console.log('changes', changes)
 
     if (!changes || changes.changes.length == 0) return (
         <Button className="min-w-32" onClick={() => {

@@ -19,11 +19,6 @@ type OperationTuple = {
     securitySchemes: Record<string, OpenAPIV3.SecuritySchemeObject | OpenAPIV3.ReferenceObject>;
 };
 
-export async function convertOpenApiToPostchi(filePath: string): Promise<ImportedFolder> {
-    const doc = await SwaggerParser.dereference(filePath) as OpenAPIV3.Document;
-    return convertDocumentToFolder(doc);
-}
-
 export async function fetchOpenApiSpecFromFile(file: File): Promise<OpenAPIV3.Document> {
     const content = await file.text();
     return fetchOpenApiSpecFromText(content)
@@ -75,7 +70,7 @@ export function fetchOpenApiSpec(url: string, token?: string): Task<OpenAPIV3.Do
     );
 }
 
-export function convertDocumentToFolder(doc: OpenAPIV3.Document): ImportedFolder {
+export function convertDocumentToFolder(doc: OpenAPIV3.Document, includeOptionals = false): ImportedFolder {
     const tagBuckets = new Map<string, OperationTuple[]>();
     const untagged: OperationTuple[] = [];
     const securitySchemes = doc.components?.securitySchemes ?? {};
@@ -103,27 +98,27 @@ export function convertDocumentToFolder(doc: OpenAPIV3.Document): ImportedFolder
     const items: (ImportedFolder | ImportedRequest)[] = [];
 
     for (const [tag, ops] of tagBuckets) {
-        items.push(convertTagToFolder(tag, ops));
+        items.push(convertTagToFolder(tag, ops, includeOptionals));
     }
 
     for (const tuple of untagged) {
-        items.push(convertOperationToRequest(tuple));
+        items.push(convertOperationToRequest(tuple, includeOptionals));
     }
 
     return { name: doc.info.title, items };
 }
 
-function convertTagToFolder(tag: string, ops: OperationTuple[]): ImportedFolder {
+function convertTagToFolder(tag: string, ops: OperationTuple[], includeOptionals: boolean): ImportedFolder {
     return {
         name: tag,
-        items: ops.map(convertOperationToRequest),
+        items: ops.map((op) => convertOperationToRequest(op, includeOptionals),),
     };
 }
 
-function convertOperationToRequest(tuple: OperationTuple): ImportedRequest {
+function convertOperationToRequest(tuple: OperationTuple, includeOptionals: boolean): ImportedRequest {
     return {
         name: getRequestName(tuple.operation, tuple.method, tuple.pathPattern),
-        request: buildRequestText(tuple),
+        request: buildRequestText(tuple, includeOptionals),
         spec: buildRequestSpec(tuple.method, tuple.pathPattern, tuple.operation),
     };
 }
@@ -169,7 +164,7 @@ function valueOf(schemaObject: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObjec
     return schema?.default !== undefined ? String(schema.default) : schema?.example !== undefined ? String(schema.example) : null
 }
 
-function buildRequestText(tuple: OperationTuple): string {
+function buildRequestText(tuple: OperationTuple, includeOptionals: boolean): string {
     const { pathPattern, method, operation, pathLevelParams, securitySchemes } = tuple;
 
     // Merge path-level and operation-level params; operation-level wins on (name, in) conflict
@@ -180,7 +175,7 @@ function buildRequestText(tuple: OperationTuple): string {
     }
     const params = Array.from(paramMap.values());
 
-    const queryParams = params.filter(p => p.in === 'query');
+    const queryParams = params.filter(p => p.in === 'query' && (includeOptionals || p.required == true));
     const headerParams = params.filter(p => p.in === 'header');
 
     const authForText = operation.security !== undefined

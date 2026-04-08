@@ -5,14 +5,13 @@ import { Source, readSources } from "./sources"
 import { Project } from "../project/project"
 import { OpenAPIV3 } from "openapi-types"
 import { mergeRequestContent } from "./source-merger"
-import { FileStorage, StorageEntry } from "@/lib/storage/files/file"
 import DefaultFileStorage from "@/lib/storage/files/file-default"
 import { pathOf } from "@/lib/storage/files/join"
 import { getSourceToken } from "@/lib/storage/store/credential-store"
 import { FileType } from "../project/file-types/supported-filetypes"
 import { RequestSpec } from "./request-spec"
 import { getActiveProject } from "@/lib/project-state"
-import SwaggerParser from "@apidevtools/swagger-parser"
+import { fromPromise } from "true-myth/task"
 
 export const SOURCE_SPEC_FILENAME = 'source.yaml'
 
@@ -66,8 +65,6 @@ export async function checkSources(
 
             const remoteDoc = await fetchOpenApiSpec(source.url, token)
 
-            console.log('fetch remote dot', remoteDoc.isOk)
-
             if (remoteDoc.isErr) {
                 authErrors.push({
                     source: source,
@@ -98,48 +95,13 @@ export async function checkSources(
 
 export async function diffSources(local: OpenAPIV3.Document, remote: OpenAPIV3.Document, sourceFolderPath = ''): Promise<SourceChange[]> {
     try {
-        const localFlat = flattenImportedFolder(convertDocumentToFolder(local), sourceFolderPath)
+        const localFlat = flattenImportedFolder(convertDocumentToFolder(local, true), sourceFolderPath)
         const localMap = new Map<string, string>([...localFlat].map(([p, e]) => [p, e.content]))
-        const remoteMap = flattenImportedFolder(convertDocumentToFolder(remote), sourceFolderPath)
-        return await diffMaps(localMap, remoteMap, sourceFolderPath)
+        const remoteMap = flattenImportedFolder(convertDocumentToFolder(remote, true), sourceFolderPath)
+        return await diffMaps(localMap, remoteMap)
     } catch (e) {
         console.error(`[sources] Failed to diff sources:`, e)
         return []
-    }
-}
-
-/** Recursively reads all .http request files from a source folder into a path → content map. */
-async function readDiskFileMap(
-    dirPath: string,
-    fileStorage: FileStorage
-): Promise<Map<string, string>> {
-    const map = new Map<string, string>()
-    await collectDiskFiles(dirPath, map, fileStorage)
-    return map
-}
-
-async function collectDiskFiles(
-    dirPath: string,
-    map: Map<string, string>,
-    fileStorage: FileStorage
-): Promise<void> {
-    let entries: StorageEntry[]
-    try {
-        entries = await fileStorage.readDirectory(dirPath)
-    } catch {
-        return
-    }
-
-    for (const entry of entries) {
-        if (entry.isDirectory) {
-            await collectDiskFiles(entry.path, map, fileStorage)
-        } else if (entry.filename.endsWith(FileType.HTTP)) {
-            try {
-                map.set(entry.path, await fileStorage.readText(entry.path))
-            } catch {
-                // skip unreadable files
-            }
-        }
     }
 }
 
@@ -165,22 +127,31 @@ function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string,
     return map
 }
 
-async function diffMaps(local: Map<string, string>, remote: Map<string, FlattenedEntry>, sourceFolderPath = ''): Promise<SourceChange[]> {
+async function diffMaps(local: Map<string, string>, remote: Map<string, FlattenedEntry>): Promise<SourceChange[]> {
     const changes: SourceChange[] = []
 
     for (const [path, { content: newContent, spec }] of remote) {
+        if (path.includes('Pet')) {
+            console.log('check path ', path)
+        }
         if (!local.has(path)) {
             changes.push({ kind: 'added', path, newContent, spec })
         } else {
             if (local.get(path) !== newContent) {
-                const onDisk = await DefaultFileStorage.getInstance().readText(path)
-                const merged = mergeRequestContent(onDisk ?? '', newContent ?? '')
+                if (path.endsWith('Update an existing pet.get')) {
+                    console.log('pet')
+                }
+                const onDiskResult = fromPromise(DefaultFileStorage.getInstance().readText(path))
+                const merged = mergeRequestContent((await onDiskResult).unwrapOr(local.get(path)) ?? '', newContent ?? '')
                 changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent: merged, spec })
             }
         }
     }
 
     for (const [path, oldContent] of local) {
+        if (path.includes('Pet')) {
+            console.log('check path ', path)
+        }
         if (!remote.has(path)) {
             changes.push({ kind: 'removed', path, oldContent })
         }
