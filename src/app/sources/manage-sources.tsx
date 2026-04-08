@@ -72,7 +72,7 @@ function FetchChanges({ onAuthErrors }: { onAuthErrors: (sources: SourceSyncErro
     const [open, setOpen] = useState(false)
 
     useTimeout(() => {
-        if (changes && changes.changes.length == 0) {
+        if (changes && changes.changes.length == 0 && changes.authErrors.length == 0) {
             changes.authErrors
             resetChanges()
         }
