@@ -1,7 +1,7 @@
 import { isTauri } from '@tauri-apps/api/core'
 import { FileStorage } from '../../lib/storage/files/file';
 import DefaultFileStorage from '../../lib/storage/files/file-default';
-import { readProjectFileTreeNative } from './project-files-native';
+import { readProjectFileTreeNative, searchProjectFilesNative } from './project-files-native';
 import { trimExtension } from '../../lib/storage/files/file-utils/file-utils';
 import { pathOf } from '../../lib/storage/files/join';
 import { afterScriptPath } from '../http/scripts/after/after-script-executor';
@@ -123,6 +123,19 @@ export async function readActionItems(path: string, storage: FileStorage = Defau
     }
 }
 
+
+export async function searchProjectFiles(
+    collectionsPath: string,
+    query: string,
+    allFiles?: FileItem[]
+): Promise<FileItem[]> {
+    if (isTauri()) {
+        return searchProjectFilesNative(collectionsPath, query)
+    }
+    if (!allFiles) return []
+    const lower = query.toLowerCase()
+    return allFiles.filter(f => f.path.toLowerCase().includes(lower))
+}
 
 export function collectHttpFiles(items: FileTreeItem[]): FileItem[] {
     return items.flatMap(item =>

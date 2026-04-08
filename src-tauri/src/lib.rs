@@ -57,7 +57,11 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
-        .invoke_handler(tauri::generate_handler![greet, project_files::read_project_file_tree])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            project_files::read_project_file_tree,
+            project_files::search_project_files,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

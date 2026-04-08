@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import {
     Command,
@@ -9,13 +9,16 @@ import {
     CommandList,
 } from '@/components/ui/command'
 import { FileItem } from '@/postchi/project/project-files'
+import { useProjectSearch } from '@/hooks/use-project-search'
+
+const BATCH_SIZE = 20
 
 type Props = {
     open: boolean
     onOpenChange: (open: boolean) => void
-    files: FileItem[]
     onSelect: (item: FileItem) => void
     collectionsPath: string
+    files?: FileItem[]
 }
 
 function dir(displayPath: string): string {
@@ -25,8 +28,29 @@ function dir(displayPath: string): string {
     return displayPath.slice(0, lastSep + 1)
 }
 
-export function SearchDialog({ open, onOpenChange, files, onSelect, collectionsPath }: Props) {
+function useVisibleItems<T>(items: T[]) {
+    const [count, setCount] = useState(BATCH_SIZE)
+    const sentinelRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => setCount(BATCH_SIZE), [items])
+
+    useEffect(() => {
+        const el = sentinelRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) setCount(c => Math.min(c + BATCH_SIZE, items.length))
+        })
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [items])
+
+    return { visible: items.slice(0, count), sentinelRef, hasMore: count < items.length }
+}
+
+export function SearchDialog({ open, onOpenChange, onSelect, collectionsPath, files }: Props) {
     const [query, setQuery] = useState('')
+    const results = useProjectSearch(collectionsPath, query, files)
+    const { visible, sentinelRef, hasMore } = useVisibleItems(results)
 
     function displayPath(path: string): string {
         const prefix = collectionsPath.endsWith('/') ? collectionsPath : collectionsPath + '/'
@@ -49,30 +73,29 @@ export function SearchDialog({ open, onOpenChange, files, onSelect, collectionsP
                     <CommandList className="max-h-96">
                         <CommandEmpty>No requests found.</CommandEmpty>
                         <CommandGroup>
-                            {files
-                                .filter(f => !query || f.path.toLowerCase().includes(query.toLowerCase()))
-                                .map(file => {
-                                    const path = displayPath(file.path)
-                                    const folder = dir(path)
-                                    return (
-                                        <CommandItem
-                                            key={file.path}
-                                            onSelect={() => onSelect(file)}
-                                            className="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg mx-1"
-                                        >
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-medium truncate ">
-                                                    {file.name}
+                            {visible.map(file => {
+                                const path = displayPath(file.path)
+                                const folder = dir(path)
+                                return (
+                                    <CommandItem
+                                        key={file.path}
+                                        onSelect={() => onSelect(file)}
+                                        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg mx-1"
+                                    >
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-sm font-medium truncate">
+                                                {file.name}
+                                            </span>
+                                            {folder && (
+                                                <span className="text-xs text-muted-foreground truncate font-mono">
+                                                    {folder}
                                                 </span>
-                                                {folder && (
-                                                    <span className="text-xs text-muted-foreground truncate font-mono">
-                                                        {folder}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </CommandItem>
-                                    )
-                                })}
+                                            )}
+                                        </div>
+                                    </CommandItem>
+                                )
+                            })}
+                            {hasMore && <div ref={sentinelRef} />}
                         </CommandGroup>
                     </CommandList>
                 </Command>

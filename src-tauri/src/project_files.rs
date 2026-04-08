@@ -195,6 +195,65 @@ fn read_action_items(dir: &Path) -> Vec<FileTreeItem> {
         .collect()
 }
 
+#[tauri::command]
+pub fn search_project_files(collections_path: String, query: String) -> Result<Vec<FileItem>, String> {
+    let query_lower = query.to_lowercase();
+    let mut results = vec![];
+    collect_matching_files(Path::new(&collections_path), &query_lower, &mut results);
+    Ok(results)
+}
+
+fn collect_matching_files(dir: &Path, query: &str, results: &mut Vec<FileItem>) {
+    let Ok(entries) = fs::read_dir(dir) else { return };
+
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().to_string();
+        let path = entry.path();
+
+        if name.starts_with('.')
+            || name == "settings.json"
+            || name == "source.yaml"
+            || name.ends_with(".before.js")
+            || name.ends_with(".after.js")
+            || name.ends_with(".spec.yaml")
+        {
+            continue;
+        }
+
+        if path.is_dir() {
+            collect_matching_files(&path, query, results);
+        } else {
+            let path_str = path.to_string_lossy().to_string();
+            if !query.is_empty() && !path_str.to_lowercase().contains(query) {
+                continue;
+            }
+            let base = match path_str.rfind('.') {
+                Some(i) => path_str[..i].to_string(),
+                None => path_str.clone(),
+            };
+            let display_name = match name.rfind('.') {
+                Some(i) => name[..i].to_string(),
+                None => name,
+            };
+            results.push(FileItem {
+                name: display_name,
+                path: path_str,
+                before: if Path::new(&format!("{}.before.js", base)).exists() {
+                    format!("{}.before.js", base)
+                } else {
+                    String::new()
+                },
+                after: if Path::new(&format!("{}.after.js", base)).exists() {
+                    format!("{}.after.js", base)
+                } else {
+                    String::new()
+                },
+                traits: vec![],
+            });
+        }
+    }
+}
+
 fn load_source_paths(project_path: &str, collections_path: &str) -> HashSet<String> {
     let sources_path = PathBuf::from(project_path)
         .join(".postchi")

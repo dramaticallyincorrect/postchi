@@ -29,6 +29,22 @@ function hydrate(raw: RawItem[]): FileTreeItem[] {
     )
 }
 
+type RawFileItem = {
+    name: string
+    path: string
+    before: string
+    after: string
+    traits: Array<'executable' | 'pinable'>
+}
+
+export async function searchProjectFilesNative(
+    collectionsPath: string,
+    query: string
+): Promise<FileItem[]> {
+    const raw = await invoke<RawFileItem[]>('search_project_files', { collectionsPath, query })
+    return raw.map(r => new FileItem(r.name, r.path, r.before, r.after, r.traits))
+}
+
 export async function readProjectFileTreeNative(project: Project): Promise<FileTreeItem[]> {
     const raw = await invoke<RawItem[]>('read_project_file_tree', {
         paths: {

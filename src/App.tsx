@@ -5,7 +5,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from './app/theme/theme-context';
 import {
     DropdownMenu,
@@ -15,7 +15,6 @@ import {
     DropdownMenuTrigger,
 } from './components/ui/dropdown-menu';
 import { FileTree } from './app/project/FileTree';
-import { collectHttpFiles } from './postchi/project/project-files';
 import HttpRequestResponse from './app/editors/http/http-request-response';
 import { ActiveEnvironment } from './app/active-environment/active-environment';
 import { EnvironmentEditor } from './app/editors/environment-editor';
@@ -48,8 +47,6 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
     const [searchOpen, setSearchOpen] = useState(false)
 
     const { tree: fileTree } = useFileTree(project)
-
-    const httpFiles = useMemo(() => collectHttpFiles(fileTree), [fileTree])
 
     const { viewState, openView } = usePanel()
 
@@ -99,7 +96,6 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
             <SearchDialog
                 open={searchOpen}
                 onOpenChange={setSearchOpen}
-                files={httpFiles}
                 collectionsPath={project.collectionsPath}
                 onSelect={item => {
                     openView({ type: 'EDITOR', params: { path: item.path } })
