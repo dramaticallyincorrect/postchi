@@ -1,4 +1,4 @@
-import { fetchOpenApiSpec, convertDocumentToFolder } from "../import/open-api/open-api-parser"
+import { fetchOpenApiSpec, convertDocumentToFolder, fetchOpenApiSpecFromText } from "../import/open-api/open-api-parser"
 import { ImportedFolder, ImportedRequest } from "../import/postman/postman-parser"
 import { sanitizeFilename } from "../project/project"
 import { Source, readSources } from "./sources"
@@ -12,6 +12,7 @@ import { getSourceToken } from "@/lib/storage/store/credential-store"
 import { FileType } from "../project/file-types/supported-filetypes"
 import { RequestSpec } from "./request-spec"
 import { getActiveProject } from "@/lib/project-state"
+import SwaggerParser from "@apidevtools/swagger-parser"
 
 export const SOURCE_SPEC_FILENAME = 'source.yaml'
 
@@ -65,6 +66,8 @@ export async function checkSources(
 
             const remoteDoc = await fetchOpenApiSpec(source.url, token)
 
+            console.log('fetch remote dot', remoteDoc.isOk)
+
             if (remoteDoc.isErr) {
                 authErrors.push({
                     source: source,
@@ -75,16 +78,15 @@ export async function checkSources(
 
             const doc = remoteDoc.value
 
-            const remoteMap = flattenImportedFolder(convertDocumentToFolder(doc), sourceFolderPath)
-            const diskMap = await readDiskFileMap(sourceFolderPath, fileStorage)
+            const localDoc = await DefaultFileStorage.getInstance().readText(pathOf(sourceFolderPath, SOURCE_SPEC_FILENAME)).then((text) => fetchOpenApiSpecFromText(text))
 
-            const changes = diffMaps(remoteMap, diskMap)
+            const changes = await diffSources(localDoc, doc, sourceFolderPath)
 
             if (changes.length > 0) {
                 results.push({ source, changes, remoteDoc: doc })
             }
         } catch (e) {
-            console.error(`[sources] Failed to check source "${source.url}":`, e)
+            console.error(`[sources] Failed to check source "${source.url}":`)
         }
     }
 
@@ -94,12 +96,12 @@ export async function checkSources(
     }
 }
 
-export function diffSources(documentA: OpenAPIV3.Document, documentB: OpenAPIV3.Document, sourceFolderPath = ''): SourceChange[] {
+export async function diffSources(local: OpenAPIV3.Document, remote: OpenAPIV3.Document, sourceFolderPath = ''): Promise<SourceChange[]> {
     try {
-        const localFlat = flattenImportedFolder(convertDocumentToFolder(documentA), sourceFolderPath)
+        const localFlat = flattenImportedFolder(convertDocumentToFolder(local), sourceFolderPath)
         const localMap = new Map<string, string>([...localFlat].map(([p, e]) => [p, e.content]))
-        const remoteMap = flattenImportedFolder(convertDocumentToFolder(documentB), sourceFolderPath)
-        return diffMaps(remoteMap, localMap)
+        const remoteMap = flattenImportedFolder(convertDocumentToFolder(remote), sourceFolderPath)
+        return await diffMaps(localMap, remoteMap, sourceFolderPath)
     } catch (e) {
         console.error(`[sources] Failed to diff sources:`, e)
         return []
@@ -163,15 +165,16 @@ function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string,
     return map
 }
 
-function diffMaps(remote: Map<string, FlattenedEntry>, local: Map<string, string>): SourceChange[] {
+async function diffMaps(local: Map<string, string>, remote: Map<string, FlattenedEntry>, sourceFolderPath = ''): Promise<SourceChange[]> {
     const changes: SourceChange[] = []
 
     for (const [path, { content: newContent, spec }] of remote) {
         if (!local.has(path)) {
             changes.push({ kind: 'added', path, newContent, spec })
         } else {
-            const merged = mergeRequestContent(local.get(path) ?? '', newContent ?? '')
-            if (local.get(path) !== merged) {
+            if (local.get(path) !== newContent) {
+                const onDisk = await DefaultFileStorage.getInstance().readText(path)
+                const merged = mergeRequestContent(onDisk ?? '', newContent ?? '')
                 changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent: merged, spec })
             }
         }

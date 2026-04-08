@@ -78,7 +78,7 @@ export function SourceChangesButton({ project }: { project: Project }) {
     const [open, setOpen] = useState(false)
 
     const totalCount = result?.changes.reduce((sum, s) => sum + s.changes.length, 0) || 0
-    if (loading || totalCount === 0 || result == null) return null
+    if (loading  || result == null) return null
 
     const onApply = async () => {
         if (!result) return

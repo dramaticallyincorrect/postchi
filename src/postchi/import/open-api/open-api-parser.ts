@@ -26,11 +26,15 @@ export async function convertOpenApiToPostchi(filePath: string): Promise<Importe
 
 export async function fetchOpenApiSpecFromFile(file: File): Promise<OpenAPIV3.Document> {
     const content = await file.text();
+    return fetchOpenApiSpecFromText(content)
+}
+
+export async function fetchOpenApiSpecFromText(text: string): Promise<OpenAPIV3.Document> {
     let parsed: unknown;
     try {
-        parsed = JSON.parse(content);
+        parsed = JSON.parse(text);
     } catch {
-        parsed = yaml.load(content);
+        parsed = yaml.load(text);
     }
     return SwaggerParser.dereference(parsed as OpenAPIV3.Document) as Promise<OpenAPIV3.Document>;
 }

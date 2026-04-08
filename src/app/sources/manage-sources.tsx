@@ -136,7 +136,6 @@ function SourceItem({ source, fetchError, onDeleted }: {
             await loadToken()
             setEditing(false)
             setToken('')
-            toast.success('Token updated')
         } catch {
             toast.error('Failed to save token')
         } finally {
