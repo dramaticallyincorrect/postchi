@@ -2,7 +2,7 @@ import Result from "true-myth/result";
 import DefaultFileStorage from "../file-default";
 import {isWindows } from "@/lib/utils/os";
 
-const FileSeparator = isWindows() ? '\\' : '/'
+export const FileSeparator = isWindows() ? '\\' : '/'
 
 export async function readClosestFile(
     filename: string,

@@ -1,4 +1,5 @@
 import { isTauri } from "@tauri-apps/api/core"
+import { FileSeparator } from "./file-utils/file-utils"
 
 const isWindows = () =>
     isTauri()
@@ -7,7 +8,11 @@ const isWindows = () =>
 
 export const pathOf = (...parts: string[]): string => {
     if (isWindows()) {
-        return parts.join('\\')
+        return parts.map(noTrailingSlash).join('\\')
     }
-    return parts.join('/')
+    return parts.map(noTrailingSlash).join('/')
+}
+
+const noTrailingSlash = (v:string) => {
+    return v.replace(/[\/\\]+$/, '')
 }
