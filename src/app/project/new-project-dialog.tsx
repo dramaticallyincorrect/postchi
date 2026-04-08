@@ -35,6 +35,7 @@ export function NewProjectDialog({onConfirm }: NewProjectDialogProps) {
     const handleConfirm = () => {
         if (!name.trim() || !parentFolder) return
         onConfirm(name.trim(), parentFolder)
+        setOpen(false)
         setName("")
         setParentFolder("")
     }
