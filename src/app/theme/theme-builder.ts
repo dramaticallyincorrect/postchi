@@ -105,7 +105,7 @@ export function resolveEditorColors(input: EditorColorsInput | undefined, vars: 
         variableValidBackground: input?.variableValidBackground ?? '#006400',
         variableValidForeground: input?.variableValidForeground ?? '#FFFFFF',
         variableInvalidBackground: input?.variableInvalidBackground ?? vars['--error'],
-        variableInvalidForeground: input?.variableInvalidForeground ?? '#8b0000',
+        variableInvalidForeground: input?.variableInvalidForeground ?? '#FFFFFF',
         lintError: input?.lintError ?? vars['--destructive'],
         lintWarning: input?.lintWarning ?? vars['--warning'],
         lintInfo: input?.lintInfo ?? vars['--muted-foreground'],
@@ -203,27 +203,23 @@ export function buildEditorTheme(colors: EditorColors, dark: boolean): Extension
         '.cm-variable-valid': {
             backgroundColor: `${colors.variableValidBackground} !important`,
             borderRadius: '2px',
-            padding: '0 2px',
             color: `${colors.variableValidForeground} !important`,
         },
         // Handle case where variable is wrapped in a span (e.g. due to syntax highlighting like in JSON)
         '.cm-variable-valid span': {
             backgroundColor: `${colors.variableValidBackground} !important`,
             borderRadius: '2px',
-            padding: '0 2px',
             color: `${colors.variableValidForeground} !important`,
         },
         '.cm-variable-invalid': {
             backgroundColor: colors.variableInvalidBackground,
-            borderRadius: '2px',
-            padding: '0 2px',
-            color: colors.variableInvalidForeground,
+            borderRadius: '4px',
+            color: colors.variableInvalidForeground
         },
         // Handle case where variable is wrapped in a span (e.g. due to syntax highlighting like in JSON)
         '.cm-variable-invalid span': {
             backgroundColor: colors.variableInvalidBackground,
-            borderRadius: '2px',
-            padding: '0 2px',
+            borderRadius: '4px',
             color: colors.variableInvalidForeground,
         },
     }, { dark });
@@ -234,7 +230,7 @@ export function buildSyntaxHighlighting(tokens: SyntaxTokens): Extension {
         { tag: t.keyword, color: tokens.keyword },
         { tag: t.string, color: tokens.string },
         { tag: t.propertyName, color: tokens.propertyName },
-        { tag: t.variableName, color: tokens.variableName },
+        { tag: t.variableName, color: tokens.variableName, class: 'px-[2px]' },
         { tag: t.comment, color: tokens.comment, fontStyle: 'italic' },
         { tag: t.annotation, color: tokens.annotation },
     ]));

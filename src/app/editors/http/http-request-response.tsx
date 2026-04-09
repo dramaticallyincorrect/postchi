@@ -80,6 +80,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
             lintGutter(),
             customHttp(activeEnvironment ?? undefined),
             Prec.highest(submitKeymap),
+            EditorView.lineWrapping,
         ];
     }, [activeEnvironment]);
 

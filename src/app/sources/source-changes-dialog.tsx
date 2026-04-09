@@ -18,6 +18,7 @@ import { usePanel } from '../project/panel-context'
 import { applySourceChanges } from '@/postchi/sources/source-applier'
 import { Project } from '@/postchi/project/project'
 import { useAsync } from '@/hooks/use-async'
+import { EditorView } from '@codemirror/view'
 
 const { Original, Modified } = CodeMirrorMerge
 
@@ -322,7 +323,8 @@ function DiffView({ change }: { change: SourceChange }) {
     const newValue = change.newContent ?? ''
 
     const extensions = [
-        new LanguageSupport(customHttpLanguage)
+        new LanguageSupport(customHttpLanguage),
+        EditorView.lineWrapping
     ];
 
     return (
