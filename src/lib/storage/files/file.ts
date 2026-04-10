@@ -2,7 +2,7 @@ export interface FileStorage {
     exists(path: string): Promise<boolean>;
     readText(path: string): Promise<string>;
     readFile(path: string): Promise<Blob>;
-    writeText(path: string, text: string): Promise<void>;
+    writeText(path: string, text: string, append?: boolean): Promise<void>;
     readDirectory(path: string): Promise<StorageEntry[]>;
     create(path: string, text?: string): Promise<void>;
     mkdir(path: string): Promise<void>;

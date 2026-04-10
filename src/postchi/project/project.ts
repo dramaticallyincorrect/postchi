@@ -35,6 +35,10 @@ export async function createProject(path: string, fileStorage: FileStorage = Def
     };
 }
 
+export function pinnedPathForProject(projectPath: string): string {
+    return pathOf(projectPath, postchiDirName, 'pinned')
+}
+
 export function projectForPath(path: string): Project {
     return {
         name: path.split('/').filter(Boolean).pop() ?? path,

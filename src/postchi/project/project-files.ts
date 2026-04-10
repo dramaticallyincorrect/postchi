@@ -12,21 +12,23 @@ import { FileType } from './file-types/supported-filetypes';
 import { Project } from './project';
 
 
-export type FileItemTrait = 'executable' | 'pinable'
+export type FileItemTrait = 'executable' | 'pinable' | 'shortcutExecutable'
 
 export class FileItem {
     name: string;
     path: string;
     before: string = '';
     after: string = '';
+    isPinned: boolean = false;
     traits: FileItemTrait[] = [];
 
-    constructor(name: string, path: string, before: string = '', after: string = '', traits: FileItemTrait[] = []) {
+    constructor(name: string, path: string, before: string = '', after: string = '', traits: FileItemTrait[] = [], isPinned: boolean = false) {
         this.name = name;
         this.path = path;
         this.before = before;
         this.after = after;
         this.traits = traits;
+        this.isPinned = isPinned;
     }
 }
 

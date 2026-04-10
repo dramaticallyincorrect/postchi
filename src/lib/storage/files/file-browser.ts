@@ -27,8 +27,8 @@ export class BrowserFileStorage implements FileStorage {
             });
     }
 
-    writeText(path: string, text: string): Promise<void> {
-        return fs.promises.writeFile(path, text);
+    writeText(path: string, text: string, append: boolean = false): Promise<void> {
+        return fs.promises.writeFile(path, text, { flag: append ? 'a' : 'w' });
     }
 
     async readDirectory(path: string): Promise<StorageEntry[]> {

@@ -30,8 +30,8 @@ export default class DefaultFileStorage implements FileStorage {
         return this.storage.readFile(path)
     }
 
-    async writeText(path: string, text: string): Promise<void> {
-        await this.storage.writeText(path, text)
+    async writeText(path: string, text: string, append: boolean = false): Promise<void> {
+        await this.storage.writeText(path, text, append)
         this.pendingSyntheticDeletes.add(path)
         this.emitSynthetic({ type: FileWatchEventType.Modified, path })
     }

@@ -16,8 +16,8 @@ export class TauriFileStorage implements FileStorage {
         return fs.readFile(path).then((data) => new Blob([data]))
     }
 
-    writeText(path: string, text: string): Promise<void> {
-        return fs.writeTextFile(path, text)
+    writeText(path: string, text: string, append: boolean = false): Promise<void> {
+        return fs.writeTextFile(path, text, { append: append })
     }
 
     async readDirectory(path: string): Promise<StorageEntry[]> {

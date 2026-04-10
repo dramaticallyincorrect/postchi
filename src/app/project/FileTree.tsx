@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, LockIcon, ServerIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, LockIcon, PinIcon, PinOffIcon, ServerIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/postchi/project/project-files"
@@ -26,6 +26,8 @@ import { FileType } from "@/postchi/project/file-types/supported-filetypes"
 import { usePanel } from "./panel-context"
 import { deleteSource } from "@/postchi/sources/sources"
 import { FileExecution } from "./item-execution"
+import { addToPinned, removePinned } from "@/postchi/project/pin/pin"
+import { getActiveProject } from "@/lib/project-state"
 
 const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
 
@@ -122,6 +124,7 @@ const FolderNode = ({
             }
         })
     }
+
 
     const addFolderBeforeScript = () => {
         if (!isPro) { openLicenseDialog(); return; }
@@ -255,9 +258,18 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
         storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
     }
 
-    const icon = isBeforeScript || isAfterScript || isInActionsFolder ? <FileJavascriptIcon /> : <FileCodeIcon />;
+    const onPin = () => {
+        if (!isPro) { openLicenseDialog(); return; }
+        addToPinned(item.path, getActiveProject()!.path)
+    }
 
-    const executable = item.traits.includes('executable') ? <FileExecution path={item.path} /> : null;
+    const unPin = () => {
+        removePinned(item.path, getActiveProject()!.path)
+    }
+
+    const icon = item.isPinned ? <PinIcon className="" /> : isBeforeScript || isAfterScript || isInActionsFolder ? <FileJavascriptIcon /> : <FileCodeIcon />;
+
+    const executable = item.traits.includes('executable') ? <FileExecution path={item.path} shortcutEnabled={item.traits.includes('shortcutExecutable')} /> : null;
 
     return (
         <div>
@@ -269,7 +281,7 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                         onClick={() => onItemClick(item)}
                         onKeyDown={(e) => { if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteItem(); } }}
                         className={cn(
-                            "w-full justify-start items-center gap-2 transition-none",
+                            "w-full justify-start items-center gap-2 transition-none group",
                             selectedPath === item.path ? "text-foreground bg-muted" : "hover:bg-muted"
                         )}
                     >
@@ -281,6 +293,12 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                     </Button>
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-50">
+                    {
+                        item.traits.includes('pinable') && <ContextMenuItem onClick={onPin} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><PinIcon className="size-4 mx-1" />Pin</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                    }
+                    {
+                        item.isPinned && <ContextMenuItem onClick={unPin} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><PinOffIcon className="size-4 mx-1" />Unpin</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                    }
                     {!isInActionsFolder && (
                         <>
                             <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>

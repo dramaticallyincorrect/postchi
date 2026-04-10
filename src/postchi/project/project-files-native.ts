@@ -8,7 +8,8 @@ type RawFile = {
     path: string
     before: string
     after: string
-    traits: Array<'executable' | 'pinable'>
+    traits: Array<'executable' | 'pinable'>,
+    isPinned: boolean
 }
 
 type RawFolder = {
@@ -25,7 +26,7 @@ function hydrate(raw: RawItem[]): FileTreeItem[] {
     return raw.map(item =>
         item.type === 'Folder'
             ? new FolderItem(item.name, item.path, hydrate(item.items), item.isSource)
-            : new FileItem(item.name, item.path, item.before, item.after, item.traits)
+            : new FileItem(item.name, item.path, item.before, item.after, item.traits, item.isPinned)
     )
 }
 
