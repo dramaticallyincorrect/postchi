@@ -3,10 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiKeyAuth, AuthMethod, HttpBasicAuth, HttpBearerAuth, patchFolderSettings, readFolderSettings, SecurityRequirement } from "@/postchi/project/project";
 import { isVariable } from "@/lib/utils/variable-name";
-import { useEnvironment } from "../active-environment/environment-context";
+import { ProjectEnvironment, useEnvironment } from "../active-environment/environment-context";
 import { filename } from "@/lib/storage/files/file-utils/file-utils";
 import { LabeledVarInput } from "../components/variable-selector";
-import { CircleAlert, Layers, Shield } from "lucide-react";
+import { AlertTriangleIcon, Layers, Shield } from "lucide-react";
 import { debounce } from "perfect-debounce";
 import { cn } from "@/lib/utils";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -14,7 +14,7 @@ import { getActiveProject } from "@/lib/project-state";
 import { EnvironmentEditor } from "../editors/environment-editor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Row } from "@/components/layout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const isValidBaseUrl = (url: string): boolean => {
     if (url === '' || isVariable(url)) return true;
@@ -33,7 +33,13 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
     const { environments } = useEnvironment();
 
 
-    const vars = useMemo(() => {
+    const [vars, secrets] = useMemo(() => {
+
+        const all = new Set<string>(environments.flatMap(env => [env.variables, env.secrets].flat().map(v => v.key)));
+        return [
+            new Set(environments.flatMap(env => env.variables).map(v => v.key)),
+            new Set(environments.flatMap(env => env.secrets).map(v => v.key)),
+        ]
         return [...environments.flatMap(env => [env.variables, env.secrets]
             .flat()
             .map(v => v.key)),]
@@ -101,7 +107,7 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
 
                             <div className="space-y-2 flex flex-col" hidden={security.length === 0}>
                                 <Label className="text-md font-medium">Authentication</Label>
-                                <SecurityStep securities={security} onImport={v => saveAuthentication(v)} existingVarNames={vars} />
+                                <SecurityStep securities={security} onImport={v => saveAuthentication(v)} vars={[...vars]} secrets={[...secrets]} />
                                 <Button className="place-self-end" variant="secondary" size="sm" onClick={() => setShowEnvironment(prev => !prev)}>
                                     <Layers className="mr-2 h-3.5 w-3.5" />
                                     {showEnvironment ? 'Hide' : 'Show'} Environments
@@ -143,11 +149,12 @@ function EnvSecretSplit() {
 
 
 function SecurityStep({
-    securities, onImport, existingVarNames
+    securities, onImport, vars, secrets
 }: {
     securities: SecurityRequirement[];
     onImport: (s: SecurityRequirement[]) => void;
-    existingVarNames: string[];
+    vars: string[];
+    secrets: string[];
 }) {
     const updateScheme = (reqIdx: number, schemeName: string, method: AuthMethod) => {
         const newSecurities = securities.map((req, i) =>
@@ -163,7 +170,8 @@ function SecurityStep({
                     <SchemeConfig
                         key={`${reqIdx}-${schemeName}`}
                         method={method}
-                        existingVarNames={existingVarNames}
+                        vars={vars}
+                        secrets={secrets}
                         onChange={m => updateScheme(reqIdx, schemeName, m)}
                     />
                 )),
@@ -173,12 +181,16 @@ function SecurityStep({
 }
 
 function SchemeConfig({
-    method, existingVarNames, onChange,
+    method, vars, secrets, onChange,
 }: {
     method: AuthMethod;
-    existingVarNames: string[];
+    vars: string[];
+    secrets: string[];
     onChange: (m: AuthMethod) => void;
 }) {
+
+    const { environments } = useEnvironment();
+
     const authLabel =
         method.type === 'http' && method.scheme === 'bearer' ? 'Bearer Token' :
             method.type === 'http' && method.scheme === 'basic' ? 'Basic Auth' :
@@ -196,7 +208,8 @@ function SchemeConfig({
                 <LabeledVarInput
                     label="Token Variable"
                     value={method.tokenVariable}
-                    existingVarNames={existingVarNames}
+                    vars={vars}
+                    secrets={secrets}
                     onChange={v => onChange({ ...method, tokenVariable: v } satisfies HttpBearerAuth)}
                 />
             )}
@@ -205,13 +218,15 @@ function SchemeConfig({
                     <LabeledVarInput
                         label="Username Variable"
                         value={method.usernameVariable}
-                        existingVarNames={existingVarNames}
+                        vars={vars}
+                        secrets={secrets}
                         onChange={v => onChange({ ...method, usernameVariable: v } satisfies HttpBasicAuth)}
                     />
                     <LabeledVarInput
                         label="Password Variable"
                         value={method.passwordVariable}
-                        existingVarNames={existingVarNames}
+                        vars={vars}
+                        secrets={secrets}
                         onChange={v => onChange({ ...method, passwordVariable: v } satisfies HttpBasicAuth)}
                     />
                 </div>
@@ -220,34 +235,49 @@ function SchemeConfig({
                 <LabeledVarInput
                     label="Key Variable"
                     value={method.keyVariable}
-                    existingVarNames={existingVarNames}
+                    vars={vars}
+                    secrets={secrets}
                     onChange={v => onChange({ ...method, keyVariable: v } satisfies ApiKeyAuth)}
                 />
             )}
             {
-                isVariableValid(method, existingVarNames) ? null : (
-                    <Row className="text-sm text-error items-center gap-2">
-                        <CircleAlert></CircleAlert>
-                        <p>
-                            Variable is not defined in any environment or has no value.
-                        </p>
-                    </Row>
-
-                )
+                isInKEnvironment(method, environments) == 0 ? <Alert className="max-w-md border-error-200 bg-error text-error-900 dark:border-error-900 dark:bg-error-950 dark:text-error-50">
+                    <AlertTriangleIcon />
+                    <AlertDescription>
+                        Variable is not defined in any environment.
+                    </AlertDescription>
+                </Alert> : isInKEnvironment(method, environments) < environments.length ? (
+                    <Alert className="max-w-md text-warning">
+                        <AlertTriangleIcon />
+                        <AlertDescription className="text-warning-foreground">
+                            Variable is not defined in all environments.
+                        </AlertDescription>
+                    </Alert>
+                ) : null
             }
         </div>
     );
 }
 
-function isVariableValid(auth: AuthMethod, vars: string[]): boolean {
+function isInKEnvironment(auth: AuthMethod, environments: ProjectEnvironment[]): number {
+
+    let vars: string[] = [];
     if (auth.type === 'http' && auth.scheme === 'bearer') {
-        return vars.includes(auth.tokenVariable);
+        vars.push(auth.tokenVariable)
     }
     if (auth.type === 'http' && auth.scheme === 'basic') {
-        return vars.includes(auth.usernameVariable) && vars.includes(auth.passwordVariable);
+        vars.push(auth.usernameVariable);
+        vars.push(auth.passwordVariable);
     }
     if (auth.type === 'apiKey') {
-        return vars.includes(auth.keyVariable);
+        vars.push(auth.keyVariable);
     }
-    return true;
+
+    const count = environments.filter(env => isDefinedInEnvironment(vars[0], env)).length;
+
+    return count;
+}
+
+function isDefinedInEnvironment(variable: string, environment: ProjectEnvironment): boolean {
+    return [...environment.variables, ...environment.secrets].map(e => e.key).includes(variable);
 }

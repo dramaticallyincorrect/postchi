@@ -4,14 +4,10 @@
 2. Sources
    1. remove or update token from folder settings
    2. **settings ui**
-      1. variable is not present in all environments
-      2. show alert sign in drop down for items not in every environment
-      3. group env and secrets
-      4. show secrets first
-      5. auth 'and' logic
+      1. auth 'and' logic
          1. group as one item
-      6. add new auth methods
-      7. no auth delete if defined in source, can add empty auth to allow it
+      2. add new auth methods
+      3. no auth delete if defined in source, can add empty auth to allow it
    3. diff
       1. things to change since we want to show deviations from the spec as warning (because when you are working on a backend you still haven't updated the spec but still want to be able to make a request)
       2. ~~diff against spec since if we remove a value from request temporarily don't want to get change updates for that~~
@@ -21,8 +17,7 @@
       1. ~~not added to request on import~~
       2. shown in right click context
    5. authentication
-      1. ~~**github**~~
-      2. general
+      1. general
    6. test parse failures
    7. right click options
       1. reset to spec
