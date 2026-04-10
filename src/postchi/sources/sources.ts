@@ -6,7 +6,7 @@ import { getActiveProject } from "@/lib/project-state";
 
 export type SourceType = 'open-api';
 
-export type SourceAuthType = 'gitlab-pat';
+export type SourceAuthType = 'gitlab-pat' | 'github-token';
 
 export type Source = {
     type: SourceType;

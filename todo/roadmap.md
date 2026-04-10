@@ -1,9 +1,9 @@
 # Roadmap
 
-1. / for stored paths
+1. **os independent paths for stored paths**
 2. Sources
    1. remove or update token from folder settings
-   2. settings ui
+   2. **settings ui**
       1. variable is not present in all environments
       2. show alert sign in drop down for items not in every environment
       3. group env and secrets
@@ -21,7 +21,7 @@
       1. ~~not added to request on import~~
       2. shown in right click context
    5. authentication
-      1. **github**
+      1. ~~**github**~~
       2. general
    6. test parse failures
    7. right click options
@@ -29,7 +29,7 @@
    8.  reorder auth methods from settings
    9.  refactor
       1. folder settings auth resolver, take request returned authenticated
-   10. spec integration
+   10. **spec integration**
       1. lint
       2. autocomplete
 3. http
@@ -37,16 +37,10 @@
       1. each query on a separate line identified by leading &
    2. context options
       1. remove all optional parameters
-4. back and forward recent requests
-5. request snippet
-   1. select a range of text
-   2. create snippet, set a name
-   3. saved to a file next to request
-   4. folder snippets??
-6. http editor line wrap
-7. performance optimizations
+4. **back and forward recent requests**
+5. performance optimizations
    1. scope tree changes to the folder that changed
-8. end to end tests
+6. end to end tests
    1. import
       1. postman
       2. open api
@@ -55,31 +49,32 @@
    3. send request
       1. normal
       2. base path + env change
-9.  actions - pin rethink
-   3. show hint when it's empty
-10. search
+7.  actions - pin rethink
+   1. show hint when it's empty
+8.  search
    1. recent requests
-11. security
+   2. request text search
+9.  security
    1. stripout auth from history by default
       1. setting to override it
-12. file tree
+10. file tree
     1. rename
     2. view options
        1. show/hide scripts
     3. open scripts after creation
     4. move script creation out of FileTree
     5. show request urls as filenames and group by path?
-    6. **pin to top**
-       5. group pins in one folder
-13. scripts
+    6. pin to top
+       1. group pins in one folder
+11. scripts
     1. single source to derive execution and auto complete options from
-14. import
+12. import
     1. postman
          1. open folder after import
     2. open api
-15. save file  
+13. save file  
     1. when closing the app
-16. errors
+14. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -88,14 +83,19 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-17. last
+15. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
     5. write tests for rust project file reader
-18. octet stream body
-19. run a task to change the base path for every request to relative
-20. bugs
-21. unverified
-    1.  editor right click shows optional paramters
+16. octet stream body
+17. run a task to change the base path for every request to relative
+18. bugs
+19. unverified
+    1. editor right click shows optional paramters
+    2. request snippet
+       1. select a range of text
+       2. create snippet, set a name
+       3. saved to a file next to request
+       4. folder snippets??

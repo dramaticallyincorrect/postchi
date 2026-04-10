@@ -6,7 +6,7 @@ import {
     ServerIcon, ImportIcon, ArrowLeft, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { isGitLabUrl } from '@/lib/storage/integrations/gitlab';
+import { isGithubUrl, isGitLabUrl } from '@/lib/storage/integrations/gitlab';
 import {
     importFolderInto, ImportResult,
 } from '@/postchi/import/import-folder';
@@ -17,7 +17,7 @@ import { OpenAPIV3 } from 'openapi-types';
 import * as yaml from 'js-yaml';
 import DefaultFileStorage from '@/lib/storage/files/file-default';
 import { setSourceToken } from '@/lib/storage/store/credential-store';
-import { addSource, readSources } from '@/postchi/sources/sources';
+import { addSource, readSources, SourceAuthType } from '@/postchi/sources/sources';
 import { OneTimeImport } from './one-time-import';
 import { getActiveProject } from '@/lib/project-state';
 import { useAsync } from '@/hooks/use-async';
@@ -133,7 +133,7 @@ const LiveImport = ({ onCancel }: { onCancel: () => void },) => {
 
     const { openView } = usePanel()
 
-    const isGitLab = isGitLabUrl(url);
+    const showToken = isGitLabUrl(url) || isGithubUrl(url);
 
     const startFetch = async () => {
         if (url.trim()) {
@@ -191,7 +191,7 @@ const LiveImport = ({ onCancel }: { onCancel: () => void },) => {
                         autoFocus
                     />
                 </div>
-                {isGitLab && (
+                {showToken && (
                     <div className="space-y-1">
                         <Input
                             type="password"
@@ -243,11 +243,17 @@ function ImportSpec({ doc, url, token, onDone }: { doc: OpenAPIV3.Document, url:
             if (token) {
                 await setSourceToken(url, token);
             }
+
+            let authType: SourceAuthType | undefined = undefined;
+            if (token == null) {
+
+            } else if (isGitLabUrl(url)) authType = 'gitlab-pat';
+            else if (isGithubUrl(url)) authType = 'github-token';
             await addSource(project.path, {
                 type: 'open-api',
                 url,
                 path: result.rootFolderName,
-                authType: token ? 'gitlab-pat' : undefined,
+                authType: authType,
             });
 
             const security = extractGlobalSecurity(doc)

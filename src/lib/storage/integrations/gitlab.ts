@@ -1,15 +1,11 @@
 import jsYaml from 'js-yaml';
 import { createHttpClient } from '../../network/http/http-client-factory';
-import { HttpRequest } from '../../network/http/http-client';
+import { HttpRequest, HttpResponse } from '../../network/http/http-client';
 import { Task } from 'true-myth/task';
 
-export function isGitLabUrl(url: string): boolean {
-    try {
-        const { hostname } = new URL(url)
-        return hostname === 'gitlab.com' || hostname.includes('gitlab')
-    } catch {
-        return false
-    }
+type FetchError = {
+    message: string,
+    status: number
 }
 
 /**
@@ -54,41 +50,86 @@ export function toGitLabApiUrl(url: string): string {
     return `${parsed.origin}/api/v4/projects/${encodedProject}/repository/files/${encodedFilePath}/raw?ref=${encodeURIComponent(ref)}`
 }
 
-type FetchError = {
-    message: string,
-    status: number
-}
+
 
 export function fetchWithGitLabAuth(url: string, token: string | undefined): Task<unknown, FetchError> {
-    return new Task(async (ok, err) => {
-        const client = createHttpClient()
-        const request: HttpRequest = {
-            method: 'GET',
-            url: toGitLabApiUrl(url),
-            headers: token ? [['PRIVATE-TOKEN', token]] : [],
-            body: '',
-        }
+    const client = createHttpClient()
+    const request: HttpRequest = {
+        method: 'GET',
+        url: toGitLabApiUrl(url),
+        headers: token ? [['PRIVATE-TOKEN', token]] : [],
+        body: '',
+    }
 
-        const result = await client.fetch(request, new AbortController().signal)
+    const result = client.fetch(request, new AbortController().signal)
+    return result.mapRejected(err => ({
+        message: `Failed to fetch spec: ${err.message}`,
+        status: 0
+    })).andThen(processResponse)
+}
 
-        if (result.isErr) {
-            return err({
-                message: `Failed to fetch spec: ${result.error.message}`,
-                status: 0
-            })
-        }
+export function fetchGithubFile(url: string, token?: string): Task<unknown, FetchError> {
+    const parsed = new URL(url)
+    const pathname = parsed.pathname
 
-        const response = result.value
+    // Convert github.com browse URL to API URL
+    // https://github.com/{owner}/{repo}/blob/{branch}/{filepath} -> https://api.github.com/repos/{owner}/{repo}/contents/{filepath}?ref={branch}
+    const match = pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/)
+    if (!match) return Task.reject({
+        message: 'Invalid GitHub URL format',
+        status: 0
+    })
+
+    const [, owner, repo, branch, filepath] = match
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filepath}?ref=${branch}`
+
+    const client = createHttpClient()
+    const request: HttpRequest = {
+        method: 'GET',
+        url: apiUrl,
+        headers: token ? [['Authorization', `Bearer ${token}`], ['Accept', 'application/vnd.github.v3.raw']] : [['Accept', 'application/vnd.github.v3.raw']],
+        body: '',
+    }
+
+    const result = client.fetch(request, new AbortController().signal)
+
+    return result.mapRejected(err => ({
+        message: `Failed to fetch spec: ${err.message}`,
+        status: 0
+    })).andThen(processResponse)
+
+}
+
+export async function fetchSpec(url: string): Promise<unknown> {
+    const client = createHttpClient()
+    const headers: [string, string][] = []
+    const request: HttpRequest = {
+        method: 'GET',
+        url: url,
+        headers: headers,
+        body: '',
+    }
+
+    const result = client.fetch(request, new AbortController().signal)
+
+    return result.mapRejected(err => ({
+        message: `Failed to fetch spec: ${err.message}`,
+        status: 0
+    })).map(processResponse)
+}
+
+function processResponse(response: HttpResponse): Task<unknown, FetchError> {
+    return new Task((ok, err) => {
 
         if (response.status === 401) {
             return err({
-                message: 'GitLab authentication failed — check your token',
+                message: 'authentication failed — check your token',
                 status: response.status
             })
         }
         if (response.status === 404) {
             return err({
-                message: 'Spec not found at that URL',
+                message: 'Spec not found at that URL or you do not have access to it',
                 status: response.status
             })
         }
@@ -118,94 +159,20 @@ export function fetchWithGitLabAuth(url: string, token: string | undefined): Tas
     })
 }
 
-async function fetchGithubFile(url: string): Promise<unknown> {
-    const parsed = new URL(url)
-    const pathname = parsed.pathname
-
-    // Convert github.com browse URL to API URL
-    // https://github.com/{owner}/{repo}/blob/{branch}/{filepath} -> https://api.github.com/repos/{owner}/{repo}/contents/{filepath}?ref={branch}
-    const match = pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/)
-    if (!match) return url
-
-    const [, owner, repo, branch, filepath] = match
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filepath}?ref=${branch}`
-
-    const client = createHttpClient()
-    const request: HttpRequest = {
-        method: 'GET',
-        url: apiUrl,
-        headers: [['Accept', 'application/vnd.github.v3.raw']],
-        body: '',
-    }
-
-    const result = await client.fetch(request, new AbortController().signal)
-
-    if (result.isErr) {
-        throw new Error(`Failed to fetch spec: ${result.error.message}`)
-    }
-
-    const response = result.value
-
-    if (response.status === 401) {
-        throw new Error('authentication failed — check your token')
-    }
-    if (response.status === 404) {
-        throw new Error('Spec not found at that URL')
-    }
-    if (response.status < 200 || response.status >= 300) {
-        throw new Error(`Failed to fetch spec: ${response.status}`)
-    }
-
-    const text = typeof response.body === 'string'
-        ? response.body
-        : new TextDecoder().decode(response.body)
-
+export function isGitLabUrl(url: string): boolean {
     try {
-        return JSON.parse(text)
+        const { hostname } = new URL(url)
+        return hostname === 'gitlab.com' || hostname.includes('gitlab')
     } catch {
-        return jsYaml.load(text)
+        return false
     }
 }
 
-
-export async function fetchSpec(url: string): Promise<unknown> {
-    const client = createHttpClient()
-    const headers: [string, string][] = []
-    if (url.includes('github.com')) {
-        return await fetchGithubFile(url)
-    }
-    const request: HttpRequest = {
-        method: 'GET',
-        url: url,
-        headers: headers,
-        body: '',
-    }
-
-    const result = await client.fetch(request, new AbortController().signal)
-
-    if (result.isErr) {
-        throw new Error(`Failed to fetch spec: ${result.error.message}`)
-    }
-
-    const response = result.value
-
-    if (response.status === 401) {
-        throw new Error('authentication failed — check your token')
-    }
-    if (response.status === 404) {
-        throw new Error('Spec not found at that URL')
-    }
-    if (response.status < 200 || response.status >= 300) {
-        throw new Error(`Failed to fetch spec: ${response.status}`)
-    }
-
-    const text = typeof response.body === 'string'
-        ? response.body
-        : new TextDecoder().decode(response.body)
-
+export function isGithubUrl(url: string): boolean {
     try {
-        return JSON.parse(text)
+        const { hostname } = new URL(url)
+        return hostname === 'github.com' || hostname.includes('github')
     } catch {
-        return jsYaml.load(text)
+        return false
     }
 }

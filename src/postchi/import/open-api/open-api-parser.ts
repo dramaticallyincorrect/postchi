@@ -2,7 +2,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
 import * as yaml from 'js-yaml';
 import { ImportedFolder, ImportedRequest } from '../postman/postman-parser';
-import { fetchSpec, fetchWithGitLabAuth, isGitLabUrl } from '@/lib/storage/integrations/gitlab';
+import { fetchGithubFile, fetchSpec, fetchWithGitLabAuth, isGithubUrl, isGitLabUrl } from '@/lib/storage/integrations/gitlab';
 import { ApiKeyAuth, AuthMethod, HttpBasicAuth, HttpBearerAuth, SecurityRequirement } from '@/postchi/project/project';
 import { RequestSpec } from '@/postchi/sources/request-spec';
 import Task, { fromPromise, tryOrElse } from 'true-myth/task';
@@ -45,8 +45,8 @@ function toSourceFetchError(err: { status: number; message: string }): SourceFet
 }
 
 export function fetchOpenApiSpec(url: string, token?: string): Task<OpenAPIV3.Document, SourceFetchError> {
-    if (token && isGitLabUrl(url)) {
-        return fetchWithGitLabAuth(url, token)
+    if (isGitLabUrl(url) || isGithubUrl(url)) {
+        return (isGitLabUrl(url) ? fetchWithGitLabAuth(url, token) : fetchGithubFile(url, token))
             .mapRejected(toSourceFetchError)
             .andThen(raw =>
                 tryOrElse(
@@ -55,6 +55,7 @@ export function fetchOpenApiSpec(url: string, token?: string): Task<OpenAPIV3.Do
                 )
             );
     }
+
 
     return fromPromise(
         SwaggerParser.dereference(url) as Promise<OpenAPIV3.Document>,
