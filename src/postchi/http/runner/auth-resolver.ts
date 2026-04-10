@@ -5,6 +5,7 @@ import * as yaml from 'js-yaml'
 import { filenameWithoutExtension } from '@/lib/storage/files/file-utils/file-utils'
 import { pathOf } from '@/lib/storage/files/join'
 import { parentDir } from '@/lib/storage/files/file-utils/file-utils'
+import Task from 'true-myth/task'
 
 /**
  * Resolves the auth headers for a request.
@@ -17,39 +18,43 @@ import { parentDir } from '@/lib/storage/files/file-utils/file-utils'
  *  2. Otherwise read `settings.json` via path-walking, find the first satisfiable
  *     SecurityRequirement (OR), and apply all its AuthMethods (AND).
  */
-export async function resolveRequestAuth(
+
+
+export function resolveRequestAuth(
     requestPath: string,
     variables: Map<string, string>,
     fileStorage = DefaultFileStorage.getInstance()
-): Promise<Array<[string, string]>> {
+): Task<Array<[string, string]>, string> {
     // 1. Check for per-request spec file override
-    const specPath = pathOf(
-        parentDir(requestPath),
-        filenameWithoutExtension(requestPath) + REQUEST_SPEC_FILENAME_SUFFIX
-    )
-    try {
-        const specContent = await fileStorage.readText(specPath)
-        const spec = yaml.load(specContent) as RequestSpec
-        //TODO: if template has auth header, skip auth resolution other wise check spec, if spec has auth, resolve it from settings
-        if (spec.operation.security !== undefined) {
-            // Operation explicitly defines its own security (or opts out with [])
-            return []
+    return new Task(async (resolve, reject) => {
+        const specPath = pathOf(
+            parentDir(requestPath),
+            filenameWithoutExtension(requestPath) + REQUEST_SPEC_FILENAME_SUFFIX
+        )
+        try {
+            const specContent = await fileStorage.readText(specPath)
+            const spec = yaml.load(specContent) as RequestSpec
+            //TODO: if template has auth header, skip auth resolution other wise check spec, if spec has auth, resolve it from settings
+            if (spec.operation.security !== undefined) {
+                // Operation explicitly defines its own security (or opts out with [])
+                return resolve([])  // skip folder auth resolution
+            }
+        } catch {
+            // No spec file — proceed to folder settings
         }
-    } catch {
-        // No spec file — proceed to folder settings
-    }
 
-    // 2. Read folder security from settings.json
-    const settings = await readSettingsForRequest(requestPath)
-    if (!settings.security?.length) return []
+        // 2. Read folder security from settings.json
+        const settings = await readSettingsForRequest(requestPath)
+        if (!settings.security?.length) return resolve([]) 
 
-    // Try each SecurityRequirement in order (OR semantics)
-    for (const requirement of settings.security) {
-        const headers = resolveRequirement(requirement, variables)
-        if (headers !== null) return headers
-    }
+        // Try each SecurityRequirement in order (OR semantics)
+        for (const requirement of settings.security) {
+            const headers = resolveRequirement(requirement, variables)
+            if (headers !== null) return resolve(headers) 
+        }
 
-    return []
+        return reject('Request requires authentication, but no valid auth was found, check the folder settings');
+    })
 }
 
 /**

@@ -45,7 +45,10 @@ export default function executeHttpTemplate(
         }
 
         const authHeaders = await resolveRequestAuth(templatePath, vars)
-        for (const header of authHeaders) {
+        if (authHeaders.isErr) {
+            return reject(new ExecutionError('template', authHeaders.error));
+        }
+        for (const header of authHeaders.value) {
             request.headers.push(header)
         }
 

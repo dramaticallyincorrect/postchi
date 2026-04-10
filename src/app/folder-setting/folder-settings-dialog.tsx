@@ -6,7 +6,7 @@ import { isVariable } from "@/lib/utils/variable-name";
 import { useEnvironment } from "../active-environment/environment-context";
 import { filename } from "@/lib/storage/files/file-utils/file-utils";
 import { LabeledVarInput } from "../components/variable-selector";
-import { Layers, Shield } from "lucide-react";
+import { CircleAlert, Layers, Shield } from "lucide-react";
 import { debounce } from "perfect-debounce";
 import { cn } from "@/lib/utils";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -14,6 +14,7 @@ import { getActiveProject } from "@/lib/project-state";
 import { EnvironmentEditor } from "../editors/environment-editor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Row } from "@/components/layout";
 
 const isValidBaseUrl = (url: string): boolean => {
     if (url === '' || isVariable(url)) return true;
@@ -35,7 +36,7 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
     const vars = useMemo(() => {
         return [...environments.flatMap(env => [env.variables, env.secrets]
             .flat()
-            .map(v => `<${v.key}>`)),]
+            .map(v => v.key)),]
             .filter((v, i, arr) => arr.indexOf(v) === i);
     }, [environments]);
 
@@ -223,6 +224,30 @@ function SchemeConfig({
                     onChange={v => onChange({ ...method, keyVariable: v } satisfies ApiKeyAuth)}
                 />
             )}
+            {
+                isVariableValid(method, existingVarNames) ? null : (
+                    <Row className="text-sm text-error items-center gap-2">
+                        <CircleAlert></CircleAlert>
+                        <p>
+                            Variable is not defined in any environment or has no value.
+                        </p>
+                    </Row>
+
+                )
+            }
         </div>
     );
+}
+
+function isVariableValid(auth: AuthMethod, vars: string[]): boolean {
+    if (auth.type === 'http' && auth.scheme === 'bearer') {
+        return vars.includes(auth.tokenVariable);
+    }
+    if (auth.type === 'http' && auth.scheme === 'basic') {
+        return vars.includes(auth.usernameVariable) && vars.includes(auth.passwordVariable);
+    }
+    if (auth.type === 'apiKey') {
+        return vars.includes(auth.keyVariable);
+    }
+    return true;
 }

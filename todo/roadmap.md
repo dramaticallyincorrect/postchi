@@ -2,8 +2,16 @@
 
 1. / for stored paths
 2. Sources
-   1. auth 'and' logic
-   2. remove or update token from folder settings
+   1. remove or update token from folder settings
+   2. settings ui
+      1. variable is not present in all environments
+      2. show alert sign in drop down for items not in every environment
+      3. group env and secrets
+      4. show secrets first
+      5. auth 'and' logic
+         1. group as one item
+      6. add new auth methods
+      7. no auth delete if defined in source, can add empty auth to allow it
    3. diff
       1. things to change since we want to show deviations from the spec as warning (because when you are working on a backend you still haven't updated the spec but still want to be able to make a request)
       2. ~~diff against spec since if we remove a value from request temporarily don't want to get change updates for that~~
@@ -18,8 +26,8 @@
    6. test parse failures
    7. right click options
       1. reset to spec
-   8. reorder auth methods from settings
-   9. refactor
+   8.  reorder auth methods from settings
+   9.  refactor
       1. folder settings auth resolver, take request returned authenticated
    10. spec integration
       1. lint
@@ -47,14 +55,8 @@
    3. send request
       1. normal
       2. base path + env change
-9. actions - pin rethink
-   1. ~~remove titlebar new action when no action exists~~
-   2. ~~always show actions folder~~
+9.  actions - pin rethink
    3. show hint when it's empty
-   4. ~~remove shortcut keybinding (maybe can be defined by use later, we'll see)~~
-   5. ~~side bar item shows a play icon to run the action from sidebar~~
-   6. ~~play icon has the same progress and error indication that current titlebar action has~~
-   7. ~~the common flow (run the token request) will be handled by pin request feature~~
 10. search
    1. recent requests
 11. security
@@ -68,10 +70,7 @@
     4. move script creation out of FileTree
     5. show request urls as filenames and group by path?
     6. **pin to top**
-       1. ~~in postchi folder in pinned~~
-       2. ~~path relative to project root, so actions can be pinned possibly in future~~
-       3. ~~pinned items have an execute button -> executable trait~~
-       4. ~~shift+mod+enter for first pinned -> shortcut trait~~
+       5. group pins in one folder
 13. scripts
     1. single source to derive execution and auto complete options from
 14. import
@@ -98,7 +97,5 @@
 18. octet stream body
 19. run a task to change the base path for every request to relative
 20. bugs
-    1.  source auth is not set
-    2.  source auth not set should give error 
 21. unverified
     1.  editor right click shows optional paramters
