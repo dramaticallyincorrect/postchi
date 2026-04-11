@@ -34,16 +34,10 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
 
 
     const [vars, secrets] = useMemo(() => {
-
-        const all = new Set<string>(environments.flatMap(env => [env.variables, env.secrets].flat().map(v => v.key)));
         return [
             new Set(environments.flatMap(env => env.variables).map(v => v.key)),
             new Set(environments.flatMap(env => env.secrets).map(v => v.key)),
         ]
-        return [...environments.flatMap(env => [env.variables, env.secrets]
-            .flat()
-            .map(v => v.key)),]
-            .filter((v, i, arr) => arr.indexOf(v) === i);
     }, [environments]);
 
     const [security, setSecurity] = useState<SecurityRequirement[]>([]);

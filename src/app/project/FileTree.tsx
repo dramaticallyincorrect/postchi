@@ -220,6 +220,8 @@ const FolderNode = ({
                 <NewFileDialog
                     onConfirm={(name) => onNewFile(name, dialogType)}
                     type={dialogType}
+                    open={dialogType !== null}
+                    onClose={() => setDialogType(null)}
                 />
             )}
             {isActionsFolder && (

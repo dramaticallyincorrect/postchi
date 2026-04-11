@@ -1,5 +1,4 @@
 import { isTauri } from "@tauri-apps/api/core"
-import { FileSeparator } from "./file-utils/file-utils"
 
 const isWindows = () =>
     isTauri()

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import {
+    Dialog,
     DialogClose,
     DialogContent,
     DialogFooter,
@@ -15,7 +16,8 @@ export enum FileDialogType {
     NewFolder
 }
 
-export function NewFileDialog({ onConfirm, type }: { onConfirm: (name: string) => void, type: FileDialogType }) {
+export function NewFileDialog({ open, onConfirm, type, onClose }: { open: boolean, onConfirm: (name: string) => void, type: FileDialogType, onClose: () => void }) {
+
 
 
     const [inputValue, setInputValue] = useState("")
@@ -24,29 +26,31 @@ export function NewFileDialog({ onConfirm, type }: { onConfirm: (name: string) =
     const placeholder = type === FileDialogType.NewHttpRequest ? "Request name" : "Folder name"
 
     return (
-        <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
-            <DialogHeader>
-                <DialogTitle>{title}</DialogTitle>
-            </DialogHeader>
-            <Input
-                autoFocus
-                placeholder={placeholder}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onConfirm(inputValue)}
-            />
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button variant="outline">
-                        Cancel
-                    </Button>
-                </DialogClose>
-                <DialogClose asChild>
-                    <Button onClick={() => onConfirm(inputValue)} disabled={!inputValue.trim()}>
-                        Create
-                    </Button>
-                </DialogClose>
-            </DialogFooter>
-        </DialogContent>
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                </DialogHeader>
+                <Input
+                    autoFocus
+                    placeholder={placeholder}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && onConfirm(inputValue)}
+                />
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">
+                            Cancel
+                        </Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                        <Button onClick={() => onConfirm(inputValue)} disabled={!inputValue.trim()}>
+                            Create
+                        </Button>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     )
 }
