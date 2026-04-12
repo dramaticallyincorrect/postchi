@@ -15,12 +15,25 @@ import { useTheme } from '@/app/theme/theme-context';
 import { toggleLineCommentAtStart } from '@/app/editors/toggle-line-comment';
 import { isOnlyOsCommandKey } from '@/lib/utils/keyboard-event';
 import { getResponseHistory } from '@/postchi/http/response-history/default-response-history';
+import { pathOf } from '@/lib/storage/files/join';
+import { filenameWithoutExtension, parentDir } from '@/lib/storage/files/file-utils/file-utils';
+import { REQUEST_SPEC_FILENAME_SUFFIX, RequestSpec } from '@/postchi/sources/request-spec';
+import * as yaml from 'js-yaml'
+import { useTransformedFile } from '@/hooks/use-file';
 
 export default function HttpRequestResponse({ path }: { path: string }) {
 
     const viewRef = useRef<EditorView>(null)
 
     const [response, setResponse] = useState<HttpExecutionStatus | null | undefined>(undefined)
+
+    const spec = useTransformedFile(pathOf(
+        parentDir(path),
+        filenameWithoutExtension(path) + REQUEST_SPEC_FILENAME_SUFFIX
+    ), content => {
+        const spec = yaml.load(content) as RequestSpec
+        return spec.operation ?? null
+    }, [path])
 
     const { activeEnvironment } = useEnvironment()
 
@@ -78,11 +91,11 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     const extensions = useMemo(() => {
         return [
             lintGutter(),
-            customHttp(activeEnvironment ?? undefined),
+            customHttp(activeEnvironment ?? undefined, { ...(spec ?? undefined), responses: {} }),
             Prec.highest(submitKeymap),
             EditorView.lineWrapping,
         ];
-    }, [activeEnvironment]);
+    }, [activeEnvironment, spec]);
 
     const saveOnBlur = (e: React.FocusEvent) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {

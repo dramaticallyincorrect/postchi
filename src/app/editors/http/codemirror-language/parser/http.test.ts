@@ -11,7 +11,7 @@ describe('request line', () => {
     let spec = `Request(
                 RequestLine(
                   Method,
-                  Path))`
+                  Path(QueryString(QueryKey, QueryValue, QueryKey, QueryValue))))`
     testTree(tree, spec)
 
   })
@@ -38,6 +38,20 @@ describe('request line', () => {
                   Method,
                   Path(Variable, Variable)))`
 
+    testTree(tree, spec)
+
+  })
+
+  it('query string', () => {
+    const defaultValue = `
+  POST /?key=value
+  `;
+    const tree = parser.parse(defaultValue)
+    let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path(
+                  QueryString(QueryKey, QueryValue))))`
     testTree(tree, spec)
 
   })

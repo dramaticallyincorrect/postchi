@@ -1,5 +1,6 @@
 import { describe, expect, it, test } from "vitest"
 import { bodySnippet, computeHttpCompletions, contentTypeCompletions, functionCompletions, headerCompletions, methods, pathCompletion, variableCompletions } from "./http-autocomplete"
+import { OpenAPIV3 } from "openapi-types"
 
 const vars = [
     { key: 'var1', value: 'value1' },
@@ -206,4 +207,40 @@ describe('body', () => {
             })
         })
     })
+})
+
+
+describe('with spec', () => {
+
+    it('provides spec query parameter enums', async () => {
+
+        const spec: OpenAPIV3.OperationObject = {
+            parameters: [
+                {
+                    name: 'status',
+                    in: 'query',
+                    schema: {
+                        type: 'string',
+                        enum: ['active', 'inactive', 'pending']
+                    }
+                }
+            ],
+            responses: {}
+        }
+
+
+        const httpRequest = `GET /?status=`
+        const result = await computeHttpCompletions(httpRequest.indexOf('='), httpRequest, () => 2, vars, spec)
+
+        expect(result).toEqual({
+            from: httpRequest.indexOf('=') + 1,
+            options: [
+                { label: 'active', type: 'enum' },
+                { label: 'inactive', type: 'enum' },
+                { label: 'pending', type: 'enum' }
+            ]
+        })
+
+    })
+
 })

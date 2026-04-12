@@ -14,6 +14,7 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { variableValidatorDecoration } from "./decoration/json-variable-decoration";
 import { ProjectEnvironment } from "@/app/active-environment/environment-context";
 import { httpLinter } from "@/postchi/http/linter/http-linter";
+import { OpenAPIV3 } from "openapi-types";
 
 export const customHttpLanguage = LRLanguage.define({
     parser: parser.configure({
@@ -27,7 +28,9 @@ export const customHttpLanguage = LRLanguage.define({
                 Variable: t.variableName,
                 FunctionName: t.annotation,
                 Comment: t.comment,
-                BodyStart: t.keyword
+                BodyStart: t.keyword,
+                QueryKey: t.propertyName,
+                QueryValue: t.string,
             }),
 
             foldNodeProp.add({ Body: foldInside }),
@@ -38,11 +41,11 @@ export const customHttpLanguage = LRLanguage.define({
     }),
 });
 
-export function customHttp(environment?: ProjectEnvironment): LanguageSupport {
+export function customHttp(environment?: ProjectEnvironment, spec?: OpenAPIV3.OperationObject): LanguageSupport {
     const vars = [
         environment?.variables || [],
         environment?.secrets || []
     ].flat()
-    const httpAutoComplete = autocompletion({ override: [completeHttp(vars)] })
+    const httpAutoComplete = autocompletion({ override: [completeHttp(vars, spec)] })
     return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(vars), variableValidatorDecoration(new Set(vars.map(v => v.key)))]);
 }

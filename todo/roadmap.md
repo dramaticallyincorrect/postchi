@@ -3,30 +3,33 @@
 1. **os independent paths for stored paths**
 2. Sources
    1. remove or update token from folder settings
-   2. **settings ui**
+   2. values with enum should use a value from that as default value when importing rather than <name>
+   3. **settings ui**
       1. auth 'and' logic
          1. group as one item
       2. add new auth methods
       3. no auth delete if defined in source, can add empty auth to allow it
-   3. diff
+      4. reorder auth methods from settings
+   4. diff
       1. things to change since we want to show deviations from the spec as warning (because when you are working on a backend you still haven't updated the spec but still want to be able to make a request)
       2. ~~diff against spec since if we remove a value from request temporarily don't want to get change updates for that~~
       3. merge with existing, keep changes even if they don't conform to the spec
       4. spec only change, like parameter becomes required
-   4. optional parameters
+   5. optional parameters
       1. ~~not added to request on import~~
       2. shown in right click context
-   5. authentication
+   6. authentication
       1. general
-   6. test parse failures
-   7. right click options
+   7. test parse failures
+   8. right click options
       1. reset to spec
-   8.  reorder auth methods from settings
    9.  refactor
       1. folder settings auth resolver, take request returned authenticated
    10. **spec integration**
       1. lint
       2. autocomplete
+         1. body
+         2. fill in whole body, everything required
 3. http
    1. discreate query
       1. each query on a separate line identified by leading &

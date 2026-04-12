@@ -5,17 +5,21 @@ import { asVariable } from "@/lib/utils/variable-name"
 import { json } from '@codemirror/lang-json';
 import { computeHttpAst, Expression, FormBodyNode, HeaderNode, HttpNode, HttpRequestAst } from "../parser/http-ast";
 import httpFunctions from "../functions/http-functions";
+import { OpenAPIV3 } from "openapi-types";
+import { walkSchema } from "@/lib/open-api/open-api-inspector";
+import { pathAtPosition } from "@/lib/json-parser-utils";
 
-export const completeHttp = (variables: { key: string, value: string }[]) => (context: CompletionContext) => {
+export const completeHttp = (variables: { key: string, value: string }[], spec?: OpenAPIV3.OperationObject) => (context: CompletionContext) => {
     return computeHttpCompletions(context.pos,
         context.state.doc.toString(),
         (position: number) => context.state.doc.lineAt(position).number,
-        variables)
+        variables,
+        spec)
 }
 
 export default completeHttp
 
-export async function computeHttpCompletions(position: number, doc: string, lineAt: (position: number) => number, variables: { key: string, value: string }[] = []): Promise<CompletionResult> {
+export async function computeHttpCompletions(position: number, doc: string, lineAt: (position: number) => number, variables: { key: string; value: string; }[] = [], spec?: OpenAPIV3.OperationObject): Promise<CompletionResult> {
     const ast = computeHttpAst(doc)
 
     const node = findNodeAtPosition(position, ast)
@@ -70,6 +74,18 @@ export async function computeHttpCompletions(position: number, doc: string, line
     }
 
     switch (node?.type) {
+        case 'query-param':
+            if (position >= node.key.to && spec) {
+                const name = doc.slice(node.key.from, node.key.to)
+                const enums = getQueryParamEnums(spec, name)
+                if (enums) {
+                    return {
+                        from: node.separator ? node.value.from : position,
+                        options: enums.map((e: any) => ({ label: String(e), type: 'enum' }))
+                    }
+                }
+            }
+            break;
         case "method":
             return {
                 from: node.from,
@@ -109,13 +125,38 @@ export async function computeHttpCompletions(position: number, doc: string, line
             break;
         case 'json':
             const jsonTree = json().language.parser.parse(doc)
-
             const jsonNode = jsonTree.resolveInner(position, -1)
-            if (jsonNode.name === 'String') {
-                return {
-                    from: jsonNode.from + 1,
-                    options: variableCompletions(variables),
+            const isInsideString = jsonNode.name === 'String'
+            const fromPos = jsonNode.from + 1
+
+            if (spec) {
+                const schema = extractJsonBodySchema(spec)
+                if (schema) {
+                    const location = pathAtPosition(jsonNode, doc)
+
+                    console.log(location)
+
+                    if (location?.role === 'key') {
+                        const schemaNode = walkSchema(schema, location.path)
+                        const available = schemaNode?.properties?.filter(p => !location.existingKeys.includes(p)) ?? []
+                        return { from: jsonNode.from + 1, options: available.map(p => ({ label: p, type: 'property' })) }
+                    }
+
+                    if (location?.role === 'value') {
+                        const schemaNode = walkSchema(schema, location.path)
+                        const enumOptions = schemaNode?.enum?.map(e => ({
+                            label: String(e), type: 'enum', section: {
+                                name: "From Spec",
+                                rank: -100
+                            }
+                        })) ?? []
+                        return { from: fromPos, options: [...enumOptions, ...variableCompletions(variables)] }
+                    }
                 }
+            }
+
+            if (isInsideString) {
+                return { from: fromPos, options: variableCompletions(variables) }
             }
             break;
     }
@@ -156,7 +197,11 @@ export function variableCompletions(variables: { key: string, value: string }[])
         displayLabel: variable.key,
         label: asVariable(variable.key),
         detail: variable.value,
-        type: "variable"
+        type: "variable",
+        section: {
+            name: "Variables",
+            rank: -10
+        }
     }))
 }
 
@@ -176,6 +221,39 @@ export const bodySnippet = snippetCompletion('@body\n\n{\n\t"${1}": ""\n}', {
     label: 'json body',
     type: 'text'
 })
+
+function extractJsonBodySchema(spec: OpenAPIV3.OperationObject): OpenAPIV3.SchemaObject | undefined {
+    const requestBody = spec.requestBody
+    if (!requestBody || '$ref' in requestBody) return undefined
+    const content = requestBody.content['application/json']
+    if (!content?.schema || '$ref' in content.schema) return undefined
+    return content.schema
+}
+
+function getQueryParamEnums(
+    operation: OpenAPIV3.OperationObject,
+    parameterName: string
+): any[] | undefined {
+
+    // 1. Find the specific query parameter by name and location
+    const param = operation.parameters?.find((p): p is OpenAPIV3.ParameterObject => {
+        // We check 'in' to ensure it's a query param and 'name' for the match
+        // Note: p is OpenAPIV3.ParameterObject assumes the spec is dereferenced
+        return !('$ref' in p) && p.name === parameterName && p.in === 'query';
+    });
+
+    if (!param || !param.schema) {
+        return undefined;
+    }
+
+    // 2. Extract the schema. In OAS 3.0, parameters usually have a 'schema'.
+    // We cast to SchemaObject because it could technically be a ReferenceObject 
+    // if not dereferenced.
+    const schema = param.schema as OpenAPIV3.SchemaObject;
+
+    // 3. Return the enum array
+    return schema.enum;
+}
 
 export const contentTypeCompletions = [
     // Text

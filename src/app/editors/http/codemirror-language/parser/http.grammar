@@ -6,8 +6,24 @@
 
 RequestLine { Method Path }
 
-Path { 
-    slash? (url | Variable)+
+Path {
+    slash? (urlSegment | Variable)+ QueryString?
+}
+
+QueryString {
+    "?" queryParam ("&" queryParam)*
+}
+
+queryParam {
+    QueryKey ("=" QueryValue?)?
+}
+
+QueryKey {
+    urlSegment
+}
+
+QueryValue {
+    (urlSegment | Variable)+
 }
 
 Header { Key? colon expression "\n"? }
@@ -61,11 +77,11 @@ argumentList {
   Method { "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" }
   Variable { "<" ![>]+ ">" }
   identifier { $[a-zA-Z0-9-."_+]+ ($[/@]+ $[a-zA-Z0-9-."_+]*)* }
-  url { $[a-zA-Z0-9-._~:/?#\[\]@!$&'()*+,;=%]+}
+  urlSegment { $[a-zA-Z0-9-._~:/#\[\]@!$'()*+,;%]+ }
   BodyStart { "@body" }
   slash { "/" }
   colon { ":" }
 
-  @precedence {url Comment slash}
+  @precedence {urlSegment Comment slash}
 
 }

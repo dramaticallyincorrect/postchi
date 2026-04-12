@@ -2,17 +2,28 @@ import { DocumentNode, iterator, MemberNode, parse, Token } from "@humanwhocodes
 
 export type HttpRequestAst = {
     method: Method;
-    url: (Variable | Literal)[];
+    url: UrlNode[];
     headers: HeaderNode[];
     body: JsonBodyNode | FormBodyNode | TextBodyNode | null;
 };
 
-export type HttpNode = Method | Variable | Literal | HeaderNode | FormBodyNode | JsonBodyNode | TextBodyNode | RequestFunction | JsonValueNode;
+export type HttpNode = Method | Variable | Literal | HeaderNode | FormBodyNode | JsonBodyNode | TextBodyNode | RequestFunction | JsonValueNode | UrlNode | QueryParamNode;
 
 type Method = {
     type: "method";
     from: number;
     to: number;
+}
+
+export type UrlNode = Variable | Literal | QueryParamNode
+
+export type QueryParamNode = {
+    type: "query-param";
+    from: number;
+    to: number;
+    key: Literal;
+    separator: number | undefined;
+    value: Literal | Variable;
 }
 
 export type FormBodyNode = {
@@ -104,9 +115,23 @@ export function allNodes(ast: HttpRequestAst): HttpNode[] {
         }
     }
 
+    function urlNodes(node: UrlNode | null): HttpNode[] {
+        if (!node) return [];
+        if (node.type == 'literal') {
+            return [node];
+        }
+        if (node.type == 'variable') {
+            return [node];
+        }
+        if (node.type == 'query-param') {
+            return [node, node.key, node.value];
+        }
+        return [];
+    }
+
     return [
         ast.method,
-        ...ast.url,
+        ...ast.url.flatMap(urlNodes),
         ...ast.headers.flatMap(header => headerNodes(header)),
         ...bodyNodes(ast.body)
     ];
@@ -185,7 +210,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
                     const offset = bodyStart;
                     const jsonAst = parse(bodyText, { ranges: true, tokens: true });
                     jsonAst.tokens?.map(token => {
-                        const type = getTokenKind(jsonAst, token);
+                        const type = getTokenKind(jsonAst!, token);
                         if (type === 'string-value') {
                             const text = bodyText.slice(token.loc.start.offset + 1, token.loc.end.offset - 1);
                             if (text.startsWith("<")) {
@@ -226,7 +251,7 @@ export function computeHttpAst(request: string): HttpRequestAst {
                     type: "json",
                     from: bodyStart,
                     to: bodyEnd,
-                    children: children
+                    children: children,
                 }
             } else {
                 ast.body = {
@@ -265,7 +290,7 @@ function getTokenKind(ast: DocumentNode, token: Token): TokenKind {
 }
 
 
-function parseRequestLine(range: Line, request: string): [Method, (Variable | Literal)[]] {
+function parseRequestLine(range: Line, request: string): [Method, UrlNode[]] {
     range.toNextWhitespace();
     const method: Method = {
         type: "method",
@@ -278,14 +303,56 @@ function parseRequestLine(range: Line, request: string): [Method, (Variable | Li
     return [method, segments];
 }
 
-function parseSegments(range: Line, request: string): (Variable | Literal)[] {
+function parseSegments(range: Line, request: string): UrlNode[] {
     range.skipWhitespace();
-    const segments: (Variable | Literal)[] = [];
+    const segments: UrlNode[] = [];
 
     // skip leading whitespace
 
     while (range.curr < range.end) {
-        if (request[range.curr] === "<") {
+        if (request[range.curr] === "?") {
+            range.curr++;
+
+            while (range.curr < range.end) {
+                const start = range.curr;
+                range.toBefore(['=']);
+                const keyNode: Literal = {
+                    type: "literal",
+                    from: start,
+                    to: range.curr
+                };
+                if (!range.is('=')) continue;
+                const separatorIndex = range.curr;
+                range.consume('=');
+                const valueStart = range.curr;
+                range.toBefore('&');
+                let valueNode: Literal | Variable | undefined = undefined;
+                valueNode = request[range.curr - 1] === ">" ? {
+                    type: "variable",
+                    from: valueStart,
+                    to: range.curr
+                } : {
+                    type: "literal",
+                    from: valueStart,
+                    to: range.curr
+                };
+
+                segments.push({
+                    type: "query-param",
+                    from: start,
+                    to: range.curr,
+                    key: keyNode,
+                    separator: separatorIndex,
+                    value: valueNode
+                });
+
+                if (range.is('&')) {
+                    range.consume('&');
+                }
+
+            }
+
+        } else if (request[range.curr] === "<") {
             const begin = range.curr;
             range.toAfter(">");
             segments.push({
@@ -294,7 +361,7 @@ function parseSegments(range: Line, request: string): (Variable | Literal)[] {
                 to: range.curr
             });
         } else {
-            const [start, end] = range.toNoneWhitespaceBefore("<");
+            const [start, end] = range.toBeforeRange(["<", "?"]);
             segments.push({
                 type: "literal",
                 from: start,
@@ -403,6 +470,14 @@ class Line {
             this.curr++;
         }
         return [begin, lastCharacterIndexBeforeColon];
+    }
+
+    toBeforeRange(terminator: string | string[]): [number, number] {
+        const begin = this.curr;
+        while (this.curr < this.end && (typeof terminator === "string" ? this.container[this.curr] !== terminator : !terminator.includes(this.container[this.curr]))) {
+            this.curr++;
+        }
+        return [begin, this.curr];
     }
 
     current(): string {

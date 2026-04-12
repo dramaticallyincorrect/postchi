@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest";
-import { computeHttpAst, Expression, FormBodyNode, HttpNode, HttpRequestAst, JsonBodyNode, RequestFunction, TextBodyNode } from "./http-ast";
+import { computeHttpAst, Expression, FormBodyNode, HttpNode, HttpRequestAst, JsonBodyNode, QueryParamNode, RequestFunction, TextBodyNode } from "./http-ast";
 import { newlines, whitespaces } from "@/lib/utils/test-utils";
 
 const functions = [
@@ -26,6 +26,46 @@ describe("request line", () => {
 
         assert(httpRequest, expected);
 
+    })
+
+    describe('query', () => {
+        it("method url query", async () => {
+            const httpRequest = `GET /this/is/a/test?key=value`
+
+            const ast = computeHttpAst(httpRequest);
+
+            const actual = ast.url[1] as QueryParamNode
+            expect(actual.type).toEqual("query-param");
+            expect(httpRequest.slice(actual.from, actual.to)).toEqual("key=value");
+
+        })
+
+        it("method url variable query", async () => {
+            const httpRequest = `GET /this/is/a/test?key=<value>`
+
+            const ast = computeHttpAst(httpRequest);
+
+            const actual = ast.url[1] as QueryParamNode
+            expect(actual.type).toEqual("query-param");
+            expect(httpRequest.slice(actual.from, actual.to)).toEqual("key=<value>");
+            expect(actual.value.type).toEqual('variable');
+
+        })
+
+        it("method url multiple queries", async () => {
+            const httpRequest = `GET /this/is/a/test?key1=value1&key2=value2`
+
+            const ast = computeHttpAst(httpRequest);
+
+            const actual1 = ast.url[1] as QueryParamNode
+            expect(actual1.type).toEqual("query-param");
+            expect(httpRequest.slice(actual1.from, actual1.to)).toEqual("key1=value1");
+
+            const actual2 = ast.url[2] as QueryParamNode
+            expect(actual2.type).toEqual("query-param");
+            expect(httpRequest.slice(actual2.from, actual2.to)).toEqual("key2=value2");
+
+        })
     })
 
     test("method variable", () => {
