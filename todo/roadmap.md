@@ -55,7 +55,9 @@
 9.  security
    1. stripout auth from history by default
       1. setting to override it
-10. file tree
+10. small stuff
+    1. when importing search for auth requests, and offer to pin the request or set after script
+11. file tree
     1. rename
     2. view options
        1. show/hide scripts
@@ -64,15 +66,15 @@
     5. show request urls as filenames and group by path?
     6. pin to top
        1. group pins in one folder
-11. scripts
+12. scripts
     1. single source to derive execution and auto complete options from
-12. import
+13. import
     1. postman
          1. open folder after import
     2. open api
-13. save file  
+14. save file  
     1. when closing the app
-14. errors
+15. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -81,16 +83,16 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-15. last
+16. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
     5. write tests for rust project file reader
-16. octet stream body
-17. run a task to change the base path for every request to relative
-18. bugs
-19. unverified
+17. octet stream body
+18. run a task to change the base path for every request to relative
+19. bugs
+20. unverified
     1. editor right click shows optional paramters
     2. request snippet
        1. select a range of text

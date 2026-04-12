@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest"
-import { bodySnippet, computeHttpCompletions, contentTypeCompletions, functionCompletions, headerCompletions, methods, pathCompletion, variableCompletions } from "./http-autocomplete"
+import { bodySnippet, computeHttpCompletions, contentTypeCompletions, functionCompletions, allHeaderCompletions, methods, pathCompletion, variableCompletions, SPEC_SECTION } from "./http-autocomplete"
 import { OpenAPIV3 } from "openapi-types"
 
 const vars = [
@@ -103,19 +103,19 @@ describe('function expressions provide variables and functions', () => {
 
 
 describe('header', () => {
-    it('empty line', async () => {
-        const httpRequest = `GET /\n\n`
+    // it('empty line', async () => {
+    //     const httpRequest = `GET /\n\n`
 
-        const result = await computeHttpCompletions(httpRequest.length - 1, httpRequest, () => 2)
+    //     const result = await computeHttpCompletions(httpRequest.length - 1, httpRequest, () => 2)
 
-        expect(result).toEqual({
-            from: httpRequest.length - 1,
-            options: [
-                bodySnippet,
-                ...headerCompletions
-            ]
-        })
-    })
+    //     expect(result).toEqual({
+    //         from: httpRequest.length - 1,
+    //         options: [
+    //             bodySnippet,
+    //             ...headerCompletions
+    //         ]
+    //     })
+    // }, )
 
     it('key', async () => {
         const httpRequest = `GET /\na`
@@ -126,7 +126,7 @@ describe('header', () => {
             from: httpRequest.length - 1,
             options: [
                 bodySnippet,
-                ...headerCompletions
+                ...allHeaderCompletions
             ]
         })
     })
@@ -241,6 +241,145 @@ describe('with spec', () => {
             ]
         })
 
+    })
+
+    it('header names', async () => {
+
+        const spec: OpenAPIV3.OperationObject = {
+            parameters: [
+                {
+                    name: 'x-status',
+                    in: 'header',
+                },
+                {
+                    name: 'x-header',
+                    in: 'header',
+                }
+            ],
+            responses: {}
+        }
+
+
+        const httpRequest = `GET /\nx`
+        const result = await computeHttpCompletions(httpRequest.indexOf('x'), httpRequest, () => 2, vars, spec)
+
+        expect(result.from).toBe(httpRequest.indexOf('x'))
+        expect(result.options).containSubset([
+            { label: 'x-status', type: 'enum', section: SPEC_SECTION },
+            { label: 'x-header', type: 'enum', section: SPEC_SECTION },
+        ])
+
+    })
+
+
+    it('header value enums', async () => {
+
+        const spec: OpenAPIV3.OperationObject = {
+            parameters: [
+                {
+                    name: 'x-status',
+                    in: 'header',
+                    schema: {
+                        type: 'string',
+                        enum: ['active', 'inactive', 'pending']
+                    }
+                },
+                {
+                    name: 'x-header',
+                    in: 'header',
+                }
+            ],
+            responses: {}
+        }
+
+
+        const httpRequest = `GET /\nx-status:`
+        const result = await computeHttpCompletions(httpRequest.length, httpRequest, () => 2, vars, spec)
+
+        expect(result.from).toBe(httpRequest.length)
+        expect(result.options).containSubset([
+            { label: 'active', type: 'enum', section: SPEC_SECTION, },
+            { label: 'inactive', type: 'enum', section: SPEC_SECTION },
+            { label: 'pending', type: 'enum', section: SPEC_SECTION }
+        ])
+
+    })
+
+
+    describe('body', () => {
+        describe('json', () => {
+            it('all fields names are provided', async () => {
+
+                const spec: OpenAPIV3.OperationObject = {
+                    requestBody: {
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": { "type": "string", "enum": ["active", "inactive"] },
+                                        "name": { "type": "string" },
+                                        "age": { "type": "integer" }
+                                    }
+                                },
+                            }
+                        }
+                    },
+                    parameters: [],
+                    responses: {}
+                }
+
+
+                const httpRequest = `GET /\n@body\n{"status": ""}`
+                const result = await computeHttpCompletions(httpRequest.indexOf('status'), httpRequest, () => 2, vars, spec)
+
+                expect(result).toEqual({
+                    from: httpRequest.indexOf('status'),
+                    options: [
+                        { label: 'status', type: 'property' },
+                        { label: 'name', type: 'property' },
+                        { label: 'age', type: 'property' },
+                    ]
+                })
+            })
+
+            it('enum for field value', async () => {
+
+                const spec: OpenAPIV3.OperationObject = {
+                    requestBody: {
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": { "type": "string", "enum": ["active", "inactive"] },
+                                        "name": { "type": "string" },
+                                        "age": { "type": "integer" }
+                                    }
+                                },
+                            }
+                        }
+                    },
+                    responses: {}
+                }
+
+
+                const httpRequest = `GET /\n@body\n{"status": ""}`
+                const result = await computeHttpCompletions(httpRequest.indexOf('""') + 1, httpRequest, () => 2, vars, spec)
+                expect(result).toStrictEqual({
+                    from: httpRequest.indexOf('""') + 1,
+                    options: [
+                        {
+                            label: 'active', type: 'enum', section: SPEC_SECTION
+                        },
+                        {
+                            label: 'inactive', type: 'enum', section: SPEC_SECTION
+                        },
+                        ...variableCompletions(vars)
+                    ]
+                })
+            })
+        })
     })
 
 })

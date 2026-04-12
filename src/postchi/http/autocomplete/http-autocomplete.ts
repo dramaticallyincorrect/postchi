@@ -1,4 +1,4 @@
-import { Completion, CompletionContext, CompletionResult, snippetCompletion } from "@codemirror/autocomplete"
+import { Completion, CompletionContext, CompletionResult, CompletionSection, snippetCompletion } from "@codemirror/autocomplete"
 import { httpHeaders } from "./http-headers"
 import DefaultFileStorage from "@/lib/storage/files/file-default"
 import { asVariable } from "@/lib/utils/variable-name"
@@ -19,69 +19,35 @@ export const completeHttp = (variables: { key: string, value: string }[], spec?:
 
 export default completeHttp
 
+type AutoCompleteContext = {
+    position: number
+    doc: string
+    variables: { key: string; value: string; }[]
+    spec: OpenAPIV3.OperationObject | undefined
+}
+
 export async function computeHttpCompletions(position: number, doc: string, lineAt: (position: number) => number, variables: { key: string; value: string; }[] = [], spec?: OpenAPIV3.OperationObject): Promise<CompletionResult> {
     const ast = computeHttpAst(doc)
 
     const node = findNodeAtPosition(position, ast)
 
-    async function provideFunctionCompletions(expression: Expression) {
-        if (expression.type === 'variable') {
-            return {
-                from: expression.from,
-                options: variableCompletions(variables),
-            }
-        }
-
-        if (expression.type == 'function') {
-
-            if (position < expression.name.to) {
-                return {
-                    from: 0,
-                    options: [],
-                }
-            }
-
-            const arg = expression.args.find(arg => position >= arg.from && position <= arg.to)
-
-            if (arg && arg.type == 'function') {
-                return provideFunctionCompletions(arg)
-            }
-
-            const name = doc.slice(expression.name.from, expression.name.to)
-            if (name == 'readText' || name == 'readFile') {
-
-                const from = arg?.from || position
-                const argText = arg ? doc.slice(arg.from, arg.to) : '/'
-                const completions = await pathCompletion(argText)
-                const result = {
-                    from: from,
-                    options: completions,
-                }
-                return result
-            }
-
-            return {
-                from: arg?.from || position,
-                options: [variableCompletions(variables), functionCompletions].flat(),
-            }
-
-        } else {
-            return {
-                from: expression.from,
-                options: functionCompletions,
-            }
-        }
+    const context: AutoCompleteContext = {
+        doc,
+        position,
+        variables,
+        spec
     }
+
 
     switch (node?.type) {
         case 'query-param':
             if (position >= node.key.to && spec) {
                 const name = doc.slice(node.key.from, node.key.to)
-                const enums = getQueryParamEnums(spec, name)
+                const enums = getOperationEnumsFor(spec, name)
                 if (enums) {
                     return {
                         from: node.separator ? node.value.from : position,
-                        options: enums.map((e: any) => ({ label: String(e), type: 'enum' }))
+                        options: enumCompletions(enums)
                     }
                 }
             }
@@ -92,79 +58,81 @@ export async function computeHttpCompletions(position: number, doc: string, line
                 options: methods,
             }
         case 'variable':
-            const variableOptions = variableCompletions(variables)
             return {
                 from: node.from,
-                options: variableOptions,
+                options: variableCompletions(variables),
             }
         case "header":
-            const headerNode = node as HeaderNode
-            if (position <= headerNode.key.to) {
-                return {
-                    from: headerNode.key.from,
-                    options: [
-                        bodySnippet,
-                        ...headerCompletions
-                    ],
-                }
-            } else {
-                return provideFunctionCompletions(headerNode.value).then(result => {
-                    const headerName = doc.slice(headerNode.key.from, headerNode.key.to).toLowerCase()
-                    result.options = [headerName === 'content-type' ? contentTypeCompletions : [], result.options].flat()
-                    return result
-                })
-            }
+            return headerCompletions(node as HeaderNode, context)
         case 'urlencoded':
         case 'multipart':
             const formNode = node as FormBodyNode
             const line = lineAt(position)
             const entry = formNode.entries.find(entry => line == lineAt(entry.from))
             if (entry?.separator && position > entry.separator) {
-                return provideFunctionCompletions(entry.value)
+                return provideFunctionCompletions(entry.value, context)
             }
             break;
         case 'json':
-            const jsonTree = json().language.parser.parse(doc)
-            const jsonNode = jsonTree.resolveInner(position, -1)
-            const isInsideString = jsonNode.name === 'String'
-            const fromPos = jsonNode.from + 1
-
-            if (spec) {
-                const schema = extractJsonBodySchema(spec)
-                if (schema) {
-                    const location = pathAtPosition(jsonNode, doc)
-
-                    console.log(location)
-
-                    if (location?.role === 'key') {
-                        const schemaNode = walkSchema(schema, location.path)
-                        const available = schemaNode?.properties?.filter(p => !location.existingKeys.includes(p)) ?? []
-                        return { from: jsonNode.from + 1, options: available.map(p => ({ label: p, type: 'property' })) }
-                    }
-
-                    if (location?.role === 'value') {
-                        const schemaNode = walkSchema(schema, location.path)
-                        const enumOptions = schemaNode?.enum?.map(e => ({
-                            label: String(e), type: 'enum', section: {
-                                name: "From Spec",
-                                rank: -100
-                            }
-                        })) ?? []
-                        return { from: fromPos, options: [...enumOptions, ...variableCompletions(variables)] }
-                    }
-                }
-            }
-
-            if (isInsideString) {
-                return { from: fromPos, options: variableCompletions(variables) }
-            }
+            return jsonCompletion(context)
             break;
     }
+
     return {
         from: 0,
         options: []
     }
 }
+
+async function provideFunctionCompletions(expression: Expression, context: AutoCompleteContext) {
+    if (expression.type === 'variable') {
+        return {
+            from: expression.from,
+            options: variableCompletions(context.variables),
+        }
+    }
+
+    if (expression.type == 'function') {
+
+        if (context.position < expression.name.to) {
+            return {
+                from: 0,
+                options: [],
+            }
+        }
+
+        const arg = expression.args.find(arg => context.position >= arg.from && context.position <= arg.to)
+
+        if (arg && arg.type == 'function') {
+            return provideFunctionCompletions(arg, context)
+        }
+
+        const name = context.doc.slice(expression.name.from, expression.name.to)
+        if (name == 'readText' || name == 'readFile') {
+
+            const from = arg?.from || context.position
+            const argText = arg ? context.doc.slice(arg.from, arg.to) : '/'
+            const completions = await pathCompletion(argText)
+            const result = {
+                from: from,
+                options: completions,
+            }
+            return result
+        }
+
+        return {
+            from: arg?.from || context.position,
+            options: [variableCompletions(context.variables), functionCompletions].flat(),
+        }
+
+    } else {
+        return {
+            from: expression.from,
+            options: functionCompletions,
+        }
+    }
+}
+
 
 export const methods = [
     { label: 'GET', type: "keyword" },
@@ -176,6 +144,11 @@ export const methods = [
     { label: 'OPTIONS', type: "keyword" },
 ]
 
+export const SPEC_SECTION: CompletionSection = {
+    name: "From Spec",
+    rank: -100
+}
+
 export async function pathCompletion(path: string, fileStorage = DefaultFileStorage.getInstance()): Promise<Completion[]> {
     // TODO: handle Windows file separator
     const parent = path.substring(0, path.lastIndexOf('/')) || '/'
@@ -184,6 +157,64 @@ export async function pathCompletion(path: string, fileStorage = DefaultFileStor
         label: entry.path,
         type: 'text',
     }))
+}
+
+
+async function headerCompletions(node: HeaderNode, context: AutoCompleteContext): Promise<CompletionResult> {
+    if (context.position <= node.key.to) {
+        const headerOptions = context.spec ? enumCompletions(getOperationHeaders(context.spec), SPEC_SECTION) : []
+        return {
+            from: node.key.from,
+            options: [
+                bodySnippet,
+                headerOptions,
+                allHeaderCompletions
+            ].flat(),
+        }
+    } else {
+        return provideFunctionCompletions(node.value, context).then(result => {
+            const headerName = context.doc.slice(node.key.from, node.key.to).toLowerCase()
+            const operationEnumvs = context.spec ? enumCompletions(getOperationEnumsFor(context.spec, headerName, 'header'), SPEC_SECTION) : []
+            result.options = [headerName === 'content-type' ? contentTypeCompletions : [], operationEnumvs, result.options].flat()
+            return result
+        })
+    }
+}
+
+function jsonCompletion(context: AutoCompleteContext): CompletionResult {
+    const jsonTree = json().language.parser.parse(context.doc)
+    const jsonNode = jsonTree.resolveInner(context.position, -1)
+    const isInsideString = jsonNode.name === 'String'
+    const fromPos = jsonNode.from + 1
+
+    const spec = context.spec
+    if (spec) {
+        const schema = extractJsonBodySchema(spec)
+        if (schema) {
+            const location = pathAtPosition(jsonNode, context.doc)
+
+            if (location?.role === 'key') {
+                const schemaNode = walkSchema(schema, location.path)
+                const available = schemaNode?.properties?.filter(p => !location.existingKeys.includes(p)) ?? []
+                return { from: jsonNode.from + 1, options: available.map(p => ({ label: p, type: 'property' })) }
+            }
+
+            if (location?.role === 'value') {
+                const schemaNode = walkSchema(schema, location.path)
+                const enumOptions = enumCompletions(schemaNode?.enum, SPEC_SECTION) ?? []
+                return { from: fromPos, options: [...enumOptions, ...variableCompletions(context.variables)] }
+            }
+        }
+    }
+
+    if (isInsideString) {
+        return { from: fromPos, options: variableCompletions(context.variables) }
+    }
+
+    return {
+        from: 0,
+        options: []
+    }
 }
 
 function findNodeAtPosition(position: number, ast: HttpRequestAst): HttpNode | undefined {
@@ -215,7 +246,7 @@ export const functionCompletions = Array.from(httpFunctions.entries()).map(([nam
     })
 })
 
-export const headerCompletions = httpHeaders.map(header => ({ label: `${header}:`, type: "keyword" }))
+export const allHeaderCompletions = httpHeaders.map(header => ({ label: `${header}:`, type: "keyword" }))
 
 export const bodySnippet = snippetCompletion('@body\n\n{\n\t"${1}": ""\n}', {
     label: 'json body',
@@ -230,29 +261,47 @@ function extractJsonBodySchema(spec: OpenAPIV3.OperationObject): OpenAPIV3.Schem
     return content.schema
 }
 
-function getQueryParamEnums(
+
+type ParameterSchemaLocation = 'query' | 'header'
+
+function enumCompletions(enums: any[] | undefined, section: CompletionSection | undefined = undefined): Completion[] {
+    return enums?.map(e => ({ label: String(e), type: 'enum', section })) ?? []
+}
+
+function getOperationEnumsFor(
     operation: OpenAPIV3.OperationObject,
-    parameterName: string
+    parameterName: string,
+    location: ParameterSchemaLocation = 'query'
 ): any[] | undefined {
 
-    // 1. Find the specific query parameter by name and location
+
     const param = operation.parameters?.find((p): p is OpenAPIV3.ParameterObject => {
-        // We check 'in' to ensure it's a query param and 'name' for the match
-        // Note: p is OpenAPIV3.ParameterObject assumes the spec is dereferenced
-        return !('$ref' in p) && p.name === parameterName && p.in === 'query';
+        return !('$ref' in p) && p.name === parameterName && p.in === location;
     });
 
     if (!param || !param.schema) {
         return undefined;
     }
 
-    // 2. Extract the schema. In OAS 3.0, parameters usually have a 'schema'.
-    // We cast to SchemaObject because it could technically be a ReferenceObject 
-    // if not dereferenced.
     const schema = param.schema as OpenAPIV3.SchemaObject;
 
-    // 3. Return the enum array
     return schema.enum;
+}
+
+
+function getOperationHeaders(
+    operation: OpenAPIV3.OperationObject,
+): any[] {
+
+    // 1. Find the specific query parameter by name and location
+    const params = operation.parameters?.filter((p): p is OpenAPIV3.ParameterObject => {
+        // We check 'in' to ensure it's a query param and 'name' for the match
+        // Note: p is OpenAPIV3.ParameterObject assumes the spec is dereferenced
+        return !('$ref' in p) && p.in === 'header';
+    });
+
+
+    return params?.map(p => p.name) ?? [];
 }
 
 export const contentTypeCompletions = [
