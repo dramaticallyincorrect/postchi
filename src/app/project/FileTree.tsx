@@ -305,9 +305,10 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                         <>
                             <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
                             <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuSeparator />
                         </>
                     )}
-                    <ContextMenuSeparator />
+                    
                     <ContextMenuItem onClick={() => revealInFinder(item.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
                     <ContextMenuItem onClick={deleteItem} variant="destructive">
                         <TrashIcon className="size-4 mx-1" />Delete
