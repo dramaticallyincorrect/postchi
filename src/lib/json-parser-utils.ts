@@ -50,11 +50,11 @@ export function pathAtPosition(node: SyntaxNode, doc: string): CursorLocation {
     return { role: 'value', path: ancestorPath(node.parent ?? null, doc) }
 }
 
-function propertyNameText(node: SyntaxNode, doc: string): string {
+export function propertyNameText(node: SyntaxNode, doc: string): string {
     return doc.slice(node.from + 1, node.to - 1)
 }
 
-function objectKeys(objectNode: SyntaxNode, doc: string): string[] {
+export function objectKeys(objectNode: SyntaxNode, doc: string): string[] {
     return objectNode.getChildren('Property')
         .flatMap(p => {
             const name = p.getChild('PropertyName')
@@ -63,7 +63,7 @@ function objectKeys(objectNode: SyntaxNode, doc: string): string[] {
 }
 
 /** Walks up the tree from `node`, collecting the key name of every ancestor Property. */
-function ancestorPath(node: SyntaxNode | null, doc: string): string[] {
+export function ancestorPath(node: SyntaxNode | null, doc: string): string[] {
     const path: string[] = []
     let current = node
 

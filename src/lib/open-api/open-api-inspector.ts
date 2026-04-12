@@ -1,4 +1,6 @@
 import { OpenAPIV3 } from "openapi-types"
+import { Tree } from "@lezer/common"
+import { ancestorPath, objectKeys } from "@/lib/json-parser-utils"
 
 type SchemaType = OpenAPIV3.NonArraySchemaObjectType | OpenAPIV3.ArraySchemaObjectType
 
@@ -69,4 +71,56 @@ function mergeAllOf(schema: OpenAPIV3.SchemaObject): OpenAPIV3.SchemaObject {
         properties: mergedProperties,
         required:   mergedRequired.length > 0 ? mergedRequired : undefined,
     }
+}
+
+/** A required field that is absent from a JSON body object at a given path. */
+export type MissingField = {
+    /** The key name that is required but not present. */
+    key:  string
+    /** The schema path to the object that is missing the field. */
+    path: string[]
+    /** Source range of the object node, for positioning the diagnostic. */
+    from: number
+    to:   number
+}
+
+/**
+ * Walks a parsed JSON body tree and returns every required schema field that is
+ * absent from its corresponding object, at any nesting depth.
+ *
+ * `tree` should be produced by CodeMirror's error-tolerant JSON parser so that
+ * partially-written bodies are still checked.
+ */
+export function missingRequiredFields(
+    tree: Tree,
+    schema: OpenAPIV3.SchemaObject,
+    doc: string
+): MissingField[] {
+    const results: MissingField[] = []
+
+    tree.iterate({
+        enter(ref) {
+            if (ref.name !== 'Object') return
+            const path = ancestorPath(ref.node.parent ?? null, doc)
+            const schemaNode = walkSchema(schema, path)
+            if (!schemaNode?.required) return
+
+            const present = objectKeys(ref.node, doc)
+            for (const key of schemaNode.required) {
+                if (!present.includes(key)) {
+                    results.push({ key, path, from: ref.from, to: ref.to })
+                }
+            }
+        }
+    })
+
+    return results
+}
+
+export function extractJsonBodySchema(spec: OpenAPIV3.OperationObject): OpenAPIV3.SchemaObject | undefined {
+    const requestBody = spec.requestBody
+    if (!requestBody || '$ref' in requestBody) return undefined
+    const content = requestBody.content['application/json']
+    if (!content?.schema || '$ref' in content.schema) return undefined
+    return content.schema
 }

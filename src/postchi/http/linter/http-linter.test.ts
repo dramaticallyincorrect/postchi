@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { computeHttpDiagnostics, errorDiagnostic, HttpErrorMessage } from './http-linter';
 import { endOf, whitespaces } from '@/lib/utils/test-utils';
 import { Diagnostic } from '@codemirror/lint';
+import { OpenAPIV3 } from 'openapi-types';
 
 
 function allFunctions(describeLabel: string, fn: string, error: HttpErrorMessage) {
@@ -186,4 +187,145 @@ describe('http lints', () => {
         })
 
     })
+
+
+    describe('spec lints', () => {
+        // it('missing required body field', () => {
+
+        //     const spec: OpenAPIV3.OperationObject = {
+        //         requestBody: {
+        //             content: {
+        //                 'application/json': {
+        //                     schema: {
+        //                         "type": "object",
+        //                         "properties": {
+        //                             "status": { "type": "string", "enum": ["active", "inactive"] },
+        //                             "name": { "type": "string" },
+        //                             "age": { "type": "integer" }
+        //                         },
+        //                         required: [
+        //                             'status',
+        //                             'name'
+        //                         ],
+        //                     },
+        //                 }
+        //             }
+        //         },
+        //         parameters: [],
+        //         responses: {}
+        //     }
+
+        //     const request = 'GET /'
+
+        //     const diagnostics = computeHttpDiagnostics(request, [], spec)
+
+        // expect(diagnostics).containSubset([
+        //     {
+        //         severity: "warning",
+        //         message: 'json body field status is required',
+        //     }
+        // ])
+
+        // })
+
+
+        it('missing required query parameter', async () => {
+
+            const spec: OpenAPIV3.OperationObject = {
+                parameters: [
+                    {
+                        name: 'status',
+                        in: 'query',
+                        schema: {
+                            type: 'string',
+                            enum: ['active', 'inactive', 'pending'],
+                        },
+                        required: true
+                    }
+                ],
+                responses: {}
+            }
+
+
+            const httpRequest = `GET /`
+            const diagnostics = computeHttpDiagnostics(httpRequest, [], spec)
+
+            expect(diagnostics).containSubset([
+                {
+                    from: httpRequest.length,
+                    to: httpRequest.length,
+                    severity: "warning",
+                    message: 'missing required query parameter, status',
+                }
+            ])
+
+        })
+
+        it('invalid query value', async () => {
+
+            const spec: OpenAPIV3.OperationObject = {
+                parameters: [
+                    {
+                        name: 'status',
+                        in: 'query',
+                        schema: {
+                            type: 'string',
+                            enum: ['active', 'inactive', 'pending'],
+                        },
+                        required: true
+                    }
+                ],
+                responses: {}
+            }
+
+
+            const httpRequest = `GET /?status=deactive`
+            const diagnostics = computeHttpDiagnostics(httpRequest, [], spec)
+
+            expect(diagnostics).containSubset([
+                {
+                    from: httpRequest.indexOf('status=deactive'),
+                    to: httpRequest.indexOf('status=deactive') + 'status=deactive'.length,
+                    severity: "warning",
+                    message: 'invalid query value, deactive for query parameter status',
+                }
+            ])
+
+        })
+
+        it('unrecognized query parameter', async () => {
+
+            const spec: OpenAPIV3.OperationObject = {
+                parameters: [
+                    {
+                        name: 'status',
+                        in: 'query',
+                        schema: {
+                            type: 'string',
+                            enum: ['active', 'inactive', 'pending'],
+                        },
+                        required: true
+                    }
+                ],
+                responses: {}
+            }
+
+
+            const httpRequest = `GET /?notreal=deactive`
+            const diagnostics = computeHttpDiagnostics(httpRequest, [], spec)
+
+            expect(diagnostics).containSubset([
+                {
+                    from: httpRequest.indexOf('notreal=deactive'),
+                    to: httpRequest.indexOf('notreal=deactive') + 'notreal=deactive'.length,
+                    severity: "warning",
+                    message: 'query paramter, notreal is not defined in the request spec',
+                }
+            ])
+
+        })
+
+    })
+
+
 })

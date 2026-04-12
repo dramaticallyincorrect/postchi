@@ -5,13 +5,15 @@ import { allNodes, computeHttpAst, Expression, HeaderNode, HttpNode } from "../p
 
 import { getVariableName, isVariable } from "@/lib/utils/variable-name";
 import httpFunctions, { readFileFunction } from "../functions/http-functions";
+import { OpenAPIV3 } from "openapi-types";
+import { getOperationParamters, getParameterEnums } from "@/lib/open-api/operation-utils";
 
-export const httpLinter = (variables: { key: string, value: string }[] = []) => linter(view => {
-  const diagnostics = computeHttpDiagnostics(view.state.doc, variables)
+export const httpLinter = (variables: { key: string, value: string }[] = [], spec?: OpenAPIV3.OperationObject) => linter(view => {
+  const diagnostics = computeHttpDiagnostics(view.state.doc, variables, spec)
   return diagnostics
 })
 
-export function computeHttpDiagnostics(doc: string | Text, variables: { key: string, value: string }[] = []): Diagnostic[] {
+export function computeHttpDiagnostics(doc: string | Text, variables: { key: string, value: string }[] = [], spec?: OpenAPIV3.OperationObject): Diagnostic[] {
 
   const slice = (node: HttpNode) => sliceInput(doc, node.from, node.to)
 
@@ -80,7 +82,7 @@ export function computeHttpDiagnostics(doc: string | Text, variables: { key: str
   allNodes(ast).forEach(node => {
     if (node.type === 'function' || node.type === 'variable') {
       checkExpression(node)
-    }else if (node.type === 'header') {
+    } else if (node.type === 'header') {
       checkMissingKeyValue(node)
     }
   })
@@ -111,6 +113,58 @@ export function computeHttpDiagnostics(doc: string | Text, variables: { key: str
     })
   }
 
+  if (spec) {
+
+    const queryParameters = getOperationParamters(spec)
+    if (queryParameters) {
+      const requestParameters = ast.url.filter(n => n.type == 'query-param')
+      const requestParamsNames = new Set(requestParameters.map(p => slice(p.key)))
+      const paramStart = ast.url.find(p => p.type == 'query-param')?.from ?? ast.url[ast.url.length - 1].to ?? doc.length
+      queryParameters.forEach(p => {
+        if (!requestParamsNames.has(p.name) && p.required) {
+          diagnostics.push({
+            from: paramStart,
+            to: paramStart,
+            message: `missing required query parameter, ${p.name}`,
+            severity: 'warning'
+          })
+        }
+
+        const parameters = requestParameters.filter(rp => slice(rp.key) == p.name)
+
+        const values = getParameterEnums(p,);
+        if (values) {
+
+          parameters.forEach(rp => {
+            if (rp.value.type == 'literal' && !values.some(v => v == slice(rp.value))) {
+              diagnostics.push({
+                from: rp.from,
+                to: rp.to,
+                message: `invalid query value, ${slice(rp.value)} for query parameter ${p.name}`,
+                severity: 'warning'
+              })
+            }
+
+          })
+        }
+
+      })
+
+      requestParameters.forEach(rp => {
+        if (!queryParameters.some(p => p.name == slice(rp.key))) {
+          diagnostics.push({
+            from: rp.from,
+            to: rp.to,
+            message: `query paramter, ${slice(rp.key)} is not defined in the request spec`,
+            severity: 'warning'
+          })
+        }
+      })
+    }
+
+
+  }
+
 
   return diagnostics;
 }
@@ -135,5 +189,6 @@ export enum HttpErrorMessage {
   UrlEncodedWithAttachedFile = "URL encoded body cannot have files attached to it, consider using multipart form data instead",
   UnrecognizedFunction = "Unrecognized function",
   MissingParameters = "Missing function parameters",
-  ExtraParameters = "Too many parameters provided to function"
+  ExtraParameters = "Too many parameters provided to function",
+  MissingRequiredBodyField = 'MissingRequiredBodyField'
 }

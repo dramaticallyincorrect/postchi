@@ -47,5 +47,5 @@ export function customHttp(environment?: ProjectEnvironment, spec?: OpenAPIV3.Op
         environment?.secrets || []
     ].flat()
     const httpAutoComplete = autocompletion({ override: [completeHttp(vars, spec)] })
-    return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(vars), variableValidatorDecoration(new Set(vars.map(v => v.key)))]);
+    return new LanguageSupport(customHttpLanguage, [json(), httpAutoComplete, httpLinter(vars,spec), variableValidatorDecoration(new Set(vars.map(v => v.key)))]);
 }

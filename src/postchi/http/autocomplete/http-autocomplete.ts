@@ -6,8 +6,9 @@ import { json } from '@codemirror/lang-json';
 import { computeHttpAst, Expression, FormBodyNode, HeaderNode, HttpNode, HttpRequestAst } from "../parser/http-ast";
 import httpFunctions from "../functions/http-functions";
 import { OpenAPIV3 } from "openapi-types";
-import { walkSchema } from "@/lib/open-api/open-api-inspector";
+import { extractJsonBodySchema, walkSchema } from "@/lib/open-api/open-api-inspector";
 import { pathAtPosition } from "@/lib/json-parser-utils";
+import { getOperationEnumsFor } from "@/lib/open-api/operation-utils";
 
 export const completeHttp = (variables: { key: string, value: string }[], spec?: OpenAPIV3.OperationObject) => (context: CompletionContext) => {
     return computeHttpCompletions(context.pos,
@@ -253,40 +254,15 @@ export const bodySnippet = snippetCompletion('@body\n\n{\n\t"${1}": ""\n}', {
     type: 'text'
 })
 
-function extractJsonBodySchema(spec: OpenAPIV3.OperationObject): OpenAPIV3.SchemaObject | undefined {
-    const requestBody = spec.requestBody
-    if (!requestBody || '$ref' in requestBody) return undefined
-    const content = requestBody.content['application/json']
-    if (!content?.schema || '$ref' in content.schema) return undefined
-    return content.schema
-}
 
 
-type ParameterSchemaLocation = 'query' | 'header'
+
 
 function enumCompletions(enums: any[] | undefined, section: CompletionSection | undefined = undefined): Completion[] {
     return enums?.map(e => ({ label: String(e), type: 'enum', section })) ?? []
 }
 
-function getOperationEnumsFor(
-    operation: OpenAPIV3.OperationObject,
-    parameterName: string,
-    location: ParameterSchemaLocation = 'query'
-): any[] | undefined {
 
-
-    const param = operation.parameters?.find((p): p is OpenAPIV3.ParameterObject => {
-        return !('$ref' in p) && p.name === parameterName && p.in === location;
-    });
-
-    if (!param || !param.schema) {
-        return undefined;
-    }
-
-    const schema = param.schema as OpenAPIV3.SchemaObject;
-
-    return schema.enum;
-}
 
 
 function getOperationHeaders(
