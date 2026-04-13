@@ -93,7 +93,7 @@ export function SourceChangesButton({ project }: { project: Project }) {
         return <Button
             variant="outline"
             size="sm"
-            className="text-foreground mt-1.5 mx-2"
+            className="text-foreground mx-2"
             onClick={() => {
                 setClosed(true);
                 openView({ type: 'SOURCE_TOKENS', params: null })
@@ -109,7 +109,7 @@ export function SourceChangesButton({ project }: { project: Project }) {
             <Button
                 variant="outline"
                 size="sm"
-                className="text-foreground mt-1.5 mx-2"
+                className="text-foreground mx-2"
                 onClick={() => setOpen(true)}
             >
                 <RefreshCwIcon className="size-3" />

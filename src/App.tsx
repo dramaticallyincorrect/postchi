@@ -27,7 +27,6 @@ import { FileWatchEventType } from './lib/storage/files/file';
 import { fileMenuItems } from './app/menu/project-menu'
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
-import { SourceChangesButton } from './app/sources/source-changes-dialog';
 import { useFileWatch } from './hooks/file-watch';
 import { getFileTypeFromPath } from './postchi/project/file-types/file-type-recognizer';
 import { FileType } from './postchi/project/file-types/supported-filetypes';
@@ -126,17 +125,15 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
     return <div className="titlebar bg-background-panel">
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
-            <div className="flex items-center mt-1.5">
+            <div className="flex items-center mt-1 mb-0.5">
                 <Button title={`${osCommandKey} + S`} variant="ghost" size="icon" className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1'} onClick={onToggleFileTree}>
                     <PanelLeftIcon />
                 </Button>
-                <FileMenu projectName={project.name} isTemp={isTemp} />
-                <span className='text-muted-foreground mx-1 select-none'>•</span>
-                <ActiveEnvironment />
-                <ButtonGroup>
+                {!isMac() && < FileMenu projectName={project.name} isTemp={isTemp} />}
+                <ButtonGroup className='mr-2'>
                     <Tooltip delayDuration={1200}>
                         <TooltipTrigger asChild>
-                            <Button disabled={!canGoBack} variant="outline" size="icon-sm" aria-label="Go Back" className='w-10' onClick={goBack}>
+                            <Button disabled={!canGoBack} variant="ghost" size="icon-sm" aria-label="Go Back" className='w-10' onClick={goBack}>
                                 <ArrowLeftIcon />
                             </Button>
                         </TooltipTrigger>
@@ -147,7 +144,7 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
 
                     <Tooltip delayDuration={1200}>
                         <TooltipTrigger asChild>
-                            <Button disabled={!canGoForward} variant="outline" size="icon-sm" aria-label="Go Forward" className='w-10' onClick={goForward}>
+                            <Button disabled={!canGoForward} variant="ghost" size="icon-sm" aria-label="Go Forward" className='w-10' onClick={goForward}>
                                 <ArrowRightIcon />
                             </Button>
                         </TooltipTrigger>
@@ -160,7 +157,7 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
             </div>
 
             <div className="ml-auto" />
-            <SourceChangesButton project={project} />
+            <ActiveEnvironment classname='mr-2' />
             {!isMac() && <MsWindowControls />}
 
         </div>

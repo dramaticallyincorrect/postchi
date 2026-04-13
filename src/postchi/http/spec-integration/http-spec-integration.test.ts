@@ -8,9 +8,6 @@ describe('spec integration', () => {
 
     it('collapse, reduces the request to minimum required fields', () => {
 
-
-        const request = 'GET /api/v2/contents?content_types=Activity&source_id=<source_id>&source_code=<source_code>'
-
         const collapsed = collapseHttpRequest(exampleRequestSpec)
 
 

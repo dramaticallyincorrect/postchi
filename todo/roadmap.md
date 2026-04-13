@@ -22,8 +22,6 @@
       1. general
    7. test parse failures
    8. right click options
-      1. ~~collapse~~
-      2. ~~expand~~
       3. sub item for query items with enum or array
    9.  refactor
       1. folder settings auth resolver, take request returned authenticated
@@ -42,9 +40,9 @@
       1. each query on a separate line identified by leading &
    2. context options
       1. remove all optional parameters
-4. ~~**back and forward recent requests**~~
-5. performance optimizations
+5. performance optimizations 
    1. scope tree changes to the folder that changed
+   2. render file tree items lazyly
 6. end to end tests
    1. import
       1. postman

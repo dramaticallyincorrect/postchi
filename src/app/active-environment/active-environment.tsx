@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { isOsCommandKey } from "@/lib/utils/keyboard-event";
 
 
-export const ActiveEnvironment = () => {
+export const ActiveEnvironment = ({ classname }: { classname?: string }) => {
 
     const { environments, activeEnvironment, setActiveEnvironment } = useEnvironment()
 
@@ -23,7 +23,7 @@ export const ActiveEnvironment = () => {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild className={classname}>
                 <Button variant="ghost">{activeEnvironment?.name || "No Environment"}</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-max min-w-(--radix-dropdown-menu-trigger-width)">
