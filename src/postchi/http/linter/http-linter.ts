@@ -117,7 +117,7 @@ export function computeHttpDiagnostics(doc: string | Text, variables: { key: str
 
     const queryParameters = getOperationParamters(spec)
     if (queryParameters) {
-      const requestParameters = ast.url.filter(n => n.type == 'query-param')
+      const requestParameters = ast.url.filter(n => n.type == 'query-param' ).filter(p => slice(p).length > 0)
       const requestParamsNames = new Set(requestParameters.map(p => slice(p.key)))
       const paramStart = ast.url.find(p => p.type == 'query-param')?.from ?? ast.url[ast.url.length - 1].to ?? doc.length
       queryParameters.forEach(p => {
@@ -130,17 +130,17 @@ export function computeHttpDiagnostics(doc: string | Text, variables: { key: str
           })
         }
 
-        const parameters = requestParameters.filter(rp => slice(rp.key) == p.name)
+        const parameters = requestParameters.filter(rp => slice(rp).length > 0 && slice(rp.key) == p.name)
 
         const values = getParameterEnums(p,);
         if (values) {
 
           parameters.forEach(rp => {
-            if (rp.value.type == 'literal' && !values.some(v => v == slice(rp.value))) {
+            if (rp.value!.type == 'literal' && !values.some(v => v == slice(rp.value!))) {
               diagnostics.push({
                 from: rp.from,
                 to: rp.to,
-                message: `invalid query value, ${slice(rp.value)} for query parameter ${p.name}`,
+                message: `invalid query value, ${slice(rp.value!)} for query parameter ${p.name}`,
                 severity: 'warning'
               })
             }

@@ -23,7 +23,7 @@ export type QueryParamNode = {
     to: number;
     key: Literal;
     separator: number | undefined;
-    value: Literal | Variable;
+    value: Literal | Variable | undefined;
 }
 
 export type FormBodyNode = {
@@ -124,7 +124,7 @@ export function allNodes(ast: HttpRequestAst): HttpNode[] {
             return [node];
         }
         if (node.type == 'query-param') {
-            return [node, node.key, node.value];
+            return [node, node.key, node.value ?? []].flat();
         }
         return [];
     }
@@ -313,38 +313,14 @@ function parseSegments(range: Line, request: string): UrlNode[] {
         if (request[range.curr] === "?") {
             range.curr++;
 
-            while (range.curr < range.end) {
-                const start = range.curr;
-                range.toBefore(['=']);
-                const keyNode: Literal = {
-                    type: "literal",
-                    from: start,
-                    to: range.curr
-                };
-                if (!range.is('=')) continue;
-                const separatorIndex = range.curr;
-                range.consume('=');
-                const valueStart = range.curr;
-                range.toBefore('&');
-                let valueNode: Literal | Variable | undefined = undefined;
-                valueNode = request[range.curr - 1] === ">" ? {
-                    type: "variable",
-                    from: valueStart,
-                    to: range.curr
-                } : {
-                    type: "literal",
-                    from: valueStart,
-                    to: range.curr
-                };
+            if (range.curr == range.end) {
+                segments.push(query(range));
+                break
+            }
 
-                segments.push({
-                    type: "query-param",
-                    from: start,
-                    to: range.curr,
-                    key: keyNode,
-                    separator: separatorIndex,
-                    value: valueNode
-                });
+            while (range.curr < range.end) {
+
+                segments.push(query(range));
 
                 if (range.is('&')) {
                     range.consume('&');
@@ -373,6 +349,69 @@ function parseSegments(range: Line, request: string): UrlNode[] {
 
 
     return segments;
+}
+
+function query(line: Line): QueryParamNode {
+    const key = literal(line, ['='])
+
+    const separator = literalOf(line, ['='])
+
+    const value = separator ? variable(line, ['&', '#']) ?? literal(line, ['&', '#']) : undefined
+
+    return {
+        type: 'query-param',
+        from: key.from,
+        to: value?.to ?? separator?.to ?? key.to,
+        separator: separator?.from,
+        key: key,
+        value: value
+    }
+
+}
+
+function literal(line: Line, terminator: string[]): Literal {
+    const start = line.curr;
+    line.toBefore(terminator);
+    return {
+        type: "literal",
+        from: start,
+        to: line.curr
+    };
+}
+
+function variable(line: Line, terminator: string[]): Variable | undefined {
+    if (line.is('<')) {
+        const start = line.curr
+        line.toBefore(['>', ...terminator])
+        line.consume('>')
+        const end = line.curr
+
+        return {
+            type: "variable",
+            from: start,
+            to: end
+        };
+    }
+
+    return undefined
+}
+
+
+function literalOf(line: Line, literals: string[]): Literal | undefined {
+    let literal;
+    for (const char of literals) {
+        if (line.is(char)) {
+            const start = line.curr
+            line.consume(char)
+            return {
+                type: 'literal',
+                from: start,
+                to: start + 1
+            }
+        }
+    }
+
+    return literal ?? undefined
 }
 
 function pair(line: Line, request: string, separator: string): HeaderNode {
@@ -530,6 +569,7 @@ function* lines(input: string): Generator<Line> {
         start = end + 1;
     }
 }
+
 
 
 function expression(range: Line): Expression {

@@ -8,7 +8,7 @@ import httpFunctions from "../functions/http-functions";
 import { OpenAPIV3 } from "openapi-types";
 import { extractJsonBodySchema, walkSchema } from "@/lib/open-api/open-api-inspector";
 import { pathAtPosition } from "@/lib/json-parser-utils";
-import { getOperationEnumsFor } from "@/lib/open-api/operation-utils";
+import { getOperationEnumsFor, getOperationParamters } from "@/lib/open-api/operation-utils";
 
 export const completeHttp = (variables: { key: string, value: string }[], spec?: OpenAPIV3.OperationObject) => (context: CompletionContext) => {
     return computeHttpCompletions(context.pos,
@@ -42,12 +42,26 @@ export async function computeHttpCompletions(position: number, doc: string, line
 
     switch (node?.type) {
         case 'query-param':
+            if (spec && (node.separator == undefined || position < node.separator)) {
+                const params = getOperationParamters(spec!).map(p => {
+                    return {
+                        label: p.name,
+                        type: 'text'
+                    }
+                })
+                return {
+                    from: node.from,
+                    options: params
+                }
+            }
             if (position >= node.key.to && spec) {
                 const name = doc.slice(node.key.from, node.key.to)
                 const enums = getOperationEnumsFor(spec, name)
                 if (enums) {
+
+                    // maybe instead of null for value it should be a collapsed range
                     return {
-                        from: node.separator ? node.value.from : position,
+                        from: node.separator ? node.value!.from : position,
                         options: enumCompletions(enums)
                     }
                 }

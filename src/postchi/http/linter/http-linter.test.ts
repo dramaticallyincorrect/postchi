@@ -325,6 +325,31 @@ describe('http lints', () => {
 
         })
 
+        it('no lint when query is empty -> ?', async () => {
+
+            const spec: OpenAPIV3.OperationObject = {
+                parameters: [
+                    {
+                        name: 'status',
+                        in: 'query',
+                        schema: {
+                            type: 'string',
+                            enum: ['active', 'inactive', 'pending'],
+                        },
+                        required: false
+                    }
+                ],
+                responses: {}
+            }
+
+
+            const httpRequest = `GET /?`
+            const diagnostics = computeHttpDiagnostics(httpRequest, [], spec)
+
+            expect(diagnostics).toStrictEqual([])
+
+        })
+
     })
 
 

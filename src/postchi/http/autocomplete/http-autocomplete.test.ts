@@ -212,6 +212,43 @@ describe('body', () => {
 
 describe('with spec', () => {
 
+    it('spec query names', async () => {
+
+        const spec: OpenAPIV3.OperationObject = {
+            parameters: [
+                {
+                    name: 'status',
+                    in: 'query',
+                    schema: {
+                        type: 'string',
+                        enum: ['active', 'inactive', 'pending']
+                    }
+                },
+                {
+                    name: 'age',
+                    in: 'query',
+                    schema: {
+                        type: 'string',
+                    }
+                }
+            ],
+            responses: {}
+        }
+
+
+        const httpRequest = `GET /?`
+        const result = await computeHttpCompletions(httpRequest.length, httpRequest, () => 1, vars, spec)
+
+        expect(result).toEqual({
+            from: httpRequest.length,
+            options: [
+                { label: 'status', type: 'text' },
+                { label: 'age', type: 'text' },
+            ]
+        })
+
+    })
+
     it('provides spec query parameter enums', async () => {
 
         const spec: OpenAPIV3.OperationObject = {

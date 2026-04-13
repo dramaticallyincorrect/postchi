@@ -29,7 +29,23 @@ describe("request line", () => {
     })
 
     describe('query', () => {
-        it("method url query", async () => {
+
+        it("empty query has collapsed node", async () => {
+            const httpRequest = `GET /?`
+
+            const ast = computeHttpAst(httpRequest);
+
+            const actual = ast.url[1] as QueryParamNode
+            expect(actual.type).toEqual("query-param");
+            expect(actual.to).toBe(httpRequest.length)
+            expect(actual.from).toBe(httpRequest.length)
+            expect(actual.separator).toBeUndefined()
+            expect(actual.value).toBeUndefined()
+            expect(httpRequest.slice(actual.from, actual.to)).toEqual("");
+
+        })
+
+        it("full query", async () => {
             const httpRequest = `GET /this/is/a/test?key=value`
 
             const ast = computeHttpAst(httpRequest);
@@ -40,7 +56,33 @@ describe("request line", () => {
 
         })
 
-        it("method url variable query", async () => {
+        it("no value has collapsed value node", async () => {
+            const httpRequest = `GET /?key=`
+
+            const ast = computeHttpAst(httpRequest);
+
+            const actual = ast.url[1] as QueryParamNode
+            expect(actual.type).toEqual("query-param");
+            expect(actual.separator).toEqual(httpRequest.indexOf('='))
+            expect(actual.value).toBeDefined()
+            expect(httpRequest.slice(actual.from, actual.to)).toEqual("key=");
+
+        })
+
+        it("no separator has undefined value", async () => {
+            const httpRequest = `GET /?key`
+
+            const ast = computeHttpAst(httpRequest);
+
+            const actual = ast.url[1] as QueryParamNode
+            expect(actual.type).toEqual("query-param");
+            expect(actual.separator).toBeUndefined()
+            expect(actual.value).toBeUndefined()
+            expect(httpRequest.slice(actual.from, actual.to)).toEqual("key");
+
+        })
+
+        it("variable query", async () => {
             const httpRequest = `GET /this/is/a/test?key=<value>`
 
             const ast = computeHttpAst(httpRequest);
@@ -48,11 +90,11 @@ describe("request line", () => {
             const actual = ast.url[1] as QueryParamNode
             expect(actual.type).toEqual("query-param");
             expect(httpRequest.slice(actual.from, actual.to)).toEqual("key=<value>");
-            expect(actual.value.type).toEqual('variable');
+            expect(actual.value?.type).toEqual('variable');
 
         })
 
-        it("method url multiple queries", async () => {
+        it("multiple queries", async () => {
             const httpRequest = `GET /this/is/a/test?key1=value1&key2=value2`
 
             const ast = computeHttpAst(httpRequest);

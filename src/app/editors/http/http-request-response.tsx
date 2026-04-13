@@ -1,7 +1,6 @@
 import CodeMirror, { EditorView, keymap, Prec } from '@uiw/react-codemirror';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
-import { CopyIcon, RotateCcwIcon } from 'lucide-react';
-import { buildRequestText } from '@/postchi/import/open-api/open-api-parser';
+import { CopyIcon, Maximize, Minimize } from 'lucide-react';
 import HttpResponseView from "@/app/editors/http/http-response-view";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -23,6 +22,7 @@ import { filenameWithoutExtension, parentDir } from '@/lib/storage/files/file-ut
 import { REQUEST_SPEC_FILENAME_SUFFIX, RequestSpec } from '@/postchi/sources/request-spec';
 import * as yaml from 'js-yaml'
 import { useTransformedFile } from '@/hooks/use-file';
+import { collapseHttpRequest, expandHttpRequest } from '@/postchi/http/spec-integration/http-spec-integration';
 
 export default function HttpRequestResponse({ path }: { path: string }) {
 
@@ -99,24 +99,12 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         ];
     }, [activeEnvironment, spec]);
 
-    const resetToSpec = () => {
-        if (!spec || !viewRef.current) return;
-        console.log(spec)
-        const newText = buildRequestText({
-            pathPattern: spec.path,
-            method: spec.method,
-            operation: {
-                ...spec.operation,
-                responses: {}
-            },
-            pathLevelParams: [],
-            securitySchemes: {}
-        }, false);
-        viewRef.current.dispatch({
-            changes: { from: 0, to: viewRef.current.state.doc.length, insert: newText }
-        });
-        DefaultFileStorage.getInstance().writeText(path, newText);
-    };
+    const setDocumentText = (text: string) => viewRef.current?.dispatch({
+        changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
+    });
+
+    const expand = () => setDocumentText(expandHttpRequest(viewRef.current?.state.doc.toString() ?? '', spec!))
+    const collapse = () => setDocumentText(collapseHttpRequest(spec!))
 
     const copySelection = () => {
         const view = viewRef.current;
@@ -167,15 +155,18 @@ export default function HttpRequestResponse({ path }: { path: string }) {
                             extensions={extensions}
                         />
                     </ContextMenuTrigger>
-                    <ContextMenuContent>
+                    <ContextMenuContent className='w-46'>
                         <ContextMenuItem onClick={copySelection}>
                             <CopyIcon className="size-4 mx-1" />Copy
                         </ContextMenuItem>
                         {spec && (
                             <>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem onClick={resetToSpec}>
-                                    <RotateCcwIcon className="size-4 mx-1" />Reset to Spec
+                                <ContextMenuItem onClick={collapse}>
+                                    <Minimize className="size-4 mx-1" />Collapse
+                                </ContextMenuItem>
+                                <ContextMenuItem onClick={expand}>
+                                    <Maximize className="size-4 mx-1" />Expand
                                 </ContextMenuItem>
                             </>
                         )}
