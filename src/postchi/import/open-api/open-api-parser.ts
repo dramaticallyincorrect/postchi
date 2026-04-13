@@ -165,7 +165,7 @@ function valueOf(schemaObject: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObjec
     return schema?.default !== undefined ? String(schema.default) : schema?.example !== undefined ? String(schema.example) : null
 }
 
-function buildRequestText(tuple: OperationTuple, includeOptionals: boolean): string {
+export function buildRequestText(tuple: OperationTuple, includeOptionals: boolean): string {
     const { pathPattern, method, operation, pathLevelParams, securitySchemes } = tuple;
 
     // Merge path-level and operation-level params; operation-level wins on (name, in) conflict

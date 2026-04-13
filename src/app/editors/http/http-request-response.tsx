@@ -1,4 +1,7 @@
 import CodeMirror, { EditorView, keymap, Prec } from '@uiw/react-codemirror';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { CopyIcon, RotateCcwIcon } from 'lucide-react';
+import { buildRequestText } from '@/postchi/import/open-api/open-api-parser';
 import HttpResponseView from "@/app/editors/http/http-response-view";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -31,8 +34,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
         parentDir(path),
         filenameWithoutExtension(path) + REQUEST_SPEC_FILENAME_SUFFIX
     ), content => {
-        const spec = yaml.load(content) as RequestSpec
-        return spec.operation ?? null
+        return yaml.load(content) as RequestSpec
     }, [path])
 
     const { activeEnvironment } = useEnvironment()
@@ -91,11 +93,38 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     const extensions = useMemo(() => {
         return [
             lintGutter(),
-            customHttp(activeEnvironment ?? undefined, { ...(spec ?? undefined), responses: {} }),
+            customHttp(activeEnvironment ?? undefined, { ...(spec?.operation ?? undefined), responses: {} }),
             Prec.highest(submitKeymap),
             EditorView.lineWrapping,
         ];
     }, [activeEnvironment, spec]);
+
+    const resetToSpec = () => {
+        if (!spec || !viewRef.current) return;
+        console.log(spec)
+        const newText = buildRequestText({
+            pathPattern: spec.path,
+            method: spec.method,
+            operation: {
+                ...spec.operation,
+                responses: {}
+            },
+            pathLevelParams: [],
+            securitySchemes: {}
+        }, false);
+        viewRef.current.dispatch({
+            changes: { from: 0, to: viewRef.current.state.doc.length, insert: newText }
+        });
+        DefaultFileStorage.getInstance().writeText(path, newText);
+    };
+
+    const copySelection = () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        const text = view.state.sliceDoc(from, to);
+        navigator.clipboard.writeText(text);
+    };
 
     const saveOnBlur = (e: React.FocusEvent) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
@@ -125,16 +154,33 @@ export default function HttpRequestResponse({ path }: { path: string }) {
             orientation="horizontal"
             className="w-full h-full">
             <ResizablePanel defaultSize="50%" className={g ? 'bg-background-panel' : 'rounded-xl bg-background-panel'}>
-                <CodeMirror
-                    onCreateEditor={(view) => {
-                        viewRef.current = view;
-                        loadText(view, path);
-                    }}
-                    height='100%'
-                    theme={[theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]}
-                    className='height: 100% outline-none'
-                    extensions={extensions}
-                />
+                <ContextMenu>
+                    <ContextMenuTrigger asChild>
+                        <CodeMirror
+                            onCreateEditor={(view) => {
+                                viewRef.current = view;
+                                loadText(view, path);
+                            }}
+                            height='100%'
+                            theme={[theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]}
+                            className='height: 100% outline-none'
+                            extensions={extensions}
+                        />
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                        <ContextMenuItem onClick={copySelection}>
+                            <CopyIcon className="size-4 mx-1" />Copy
+                        </ContextMenuItem>
+                        {spec && (
+                            <>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem onClick={resetToSpec}>
+                                    <RotateCcwIcon className="size-4 mx-1" />Reset to Spec
+                                </ContextMenuItem>
+                            </>
+                        )}
+                    </ContextMenuContent>
+                </ContextMenu>
             </ResizablePanel>
 
             <ResizableHandle className={g ? 'w-px bg-muted' : 'bg-muted/70'} />
