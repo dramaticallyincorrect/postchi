@@ -1,4 +1,4 @@
-import { PanelLeftIcon } from 'lucide-react';
+import { ArrowLeftIcon, ArrowRightIcon, PanelLeftIcon } from 'lucide-react';
 import { Button } from './components/ui/button';
 import {
     ResizableHandle,
@@ -39,6 +39,9 @@ import { ImportData } from './app/import/import';
 import { SourceTokensManagement } from './app/sources/manage-sources';
 import { getActiveProject } from './lib/project-state';
 import { osCommandKey } from './lib/utils/platform-modifiers';
+import { ButtonGroup } from './components/ui/button-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from './components/ui/tooltip';
+import { useKeydown } from './hooks/use-keydown';
 
 
 export default function App({ project, isTemp }: { project: Project, isTemp: boolean }) {
@@ -108,6 +111,18 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
 }
 
 const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isTemp: boolean; onToggleFileTree: () => void }) => {
+    const { goBack, goForward, canGoBack, canGoForward } = usePanel()
+
+    useKeydown((e) => {
+        if (isOsCommandKey(e) && e.key === '[') {
+            e.preventDefault()
+            goBack()
+        } else if (isOsCommandKey(e) && e.key === ']') {
+            e.preventDefault()
+            goForward()
+        }
+    },)
+
     return <div className="titlebar bg-background-panel">
         <div data-tauri-drag-region className='flex items-center justify-between w-full h-full'>
 
@@ -118,6 +133,30 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
                 <FileMenu projectName={project.name} isTemp={isTemp} />
                 <span className='text-muted-foreground mx-1 select-none'>•</span>
                 <ActiveEnvironment />
+                <ButtonGroup>
+                    <Tooltip delayDuration={1200}>
+                        <TooltipTrigger asChild>
+                            <Button disabled={!canGoBack} variant="outline" size="icon-sm" aria-label="Go Back" className='w-10' onClick={goBack}>
+                                <ArrowLeftIcon />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="">
+                            {`${osCommandKey} [`}
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip delayDuration={1200}>
+                        <TooltipTrigger asChild>
+                            <Button disabled={!canGoForward} variant="outline" size="icon-sm" aria-label="Go Forward" className='w-10' onClick={goForward}>
+                                <ArrowRightIcon />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {`${osCommandKey} ]`}
+                        </TooltipContent>
+                    </Tooltip>
+
+                </ButtonGroup>
             </div>
 
             <div className="ml-auto" />

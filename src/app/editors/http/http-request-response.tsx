@@ -78,6 +78,14 @@ export default function HttpRequestResponse({ path }: { path: string }) {
             run: () => { return true; }
         },
         {
+            key: "Mod-[",
+            run: () => { return true; }
+        },
+        {
+            key: "Mod-]",
+            run: () => { return true; }
+        },
+        {
             key: "Mod-/",
             run: toggleLineCommentAtStart
         }

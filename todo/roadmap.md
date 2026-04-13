@@ -22,7 +22,9 @@
       1. general
    7. test parse failures
    8. right click options
-      1. reset to spec
+      1. ~~collapse~~
+      2. ~~expand~~
+      3. sub item for query items with enum or array
    9.  refactor
       1. folder settings auth resolver, take request returned authenticated
    10. **spec integration**
@@ -30,12 +32,17 @@
       2. autocomplete
          1. body
          2. fill in whole body, everything required
+      3. default value in right click menu?
+      4. hover tooltip
+         1. default value
+         2. optional or required
+         3. arrays -> one or more of ...items
 3. http
    1. discreate query
       1. each query on a separate line identified by leading &
    2. context options
       1. remove all optional parameters
-4. **back and forward recent requests**
+4. ~~**back and forward recent requests**~~
 5. performance optimizations
    1. scope tree changes to the folder that changed
 6. end to end tests
@@ -47,8 +54,9 @@
    3. send request
       1. normal
       2. base path + env change
-7.  actions - pin rethink
+7.  actions
    1. show hint when it's empty
+   2. pass current request to actions if a request is active when executing the action
 8.  search
    1. recent requests
    2. request text search
