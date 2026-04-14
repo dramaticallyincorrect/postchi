@@ -41,8 +41,10 @@ export default class DefaultFileStorage implements FileStorage {
     }
 
     async create(path: string, text?: string): Promise<void> {
+        const exists = await this.exists(path)
         await this.storage.create(path, text)
-        this.emitSynthetic({ type: await this.exists(path) ? FileWatchEventType.Modified : FileWatchEventType.Created, path })
+        this.pendingSyntheticDeletes.add(path)
+        this.emitSynthetic({ type: exists ? FileWatchEventType.Modified : FileWatchEventType.Created, path })
     }
 
     async mkdir(path: string): Promise<void> {
