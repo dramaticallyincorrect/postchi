@@ -52,6 +52,7 @@ const HttpResponseView = ({ execution }: { execution: HttpExecution }) => {
 }
 
 const BodyView = ({ body, contentTypeInfo }: { body: string | ArrayBuffer, contentTypeInfo: ContentTypeInfo }) => {
+    if (!body) return
     if (contentTypeInfo.kind === 'binary') {
         return <div>Binary content of type {contentTypeInfo.mimeType}</div>;
     } else {
