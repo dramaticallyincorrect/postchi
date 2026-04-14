@@ -79,7 +79,7 @@ export function SourceChangesButton({ project }: { project: Project }) {
     const [open, setOpen] = useState(false)
 
     const totalCount = result?.changes.reduce((sum, s) => sum + s.changes.length, 0) || 0
-    if (loading  || result == null) return null
+    if (loading || result == null) return null
 
     const onApply = async () => {
         if (!result) return
@@ -93,7 +93,7 @@ export function SourceChangesButton({ project }: { project: Project }) {
         return <Button
             variant="outline"
             size="sm"
-            className="text-foreground mx-2"
+            className="text-foreground mx-2 mb-2"
             onClick={() => {
                 setClosed(true);
                 openView({ type: 'SOURCE_TOKENS', params: null })
@@ -109,7 +109,7 @@ export function SourceChangesButton({ project }: { project: Project }) {
             <Button
                 variant="outline"
                 size="sm"
-                className="text-foreground mx-2"
+                className="text-foreground mx-2 mb-2"
                 onClick={() => setOpen(true)}
             >
                 <RefreshCwIcon className="size-3" />

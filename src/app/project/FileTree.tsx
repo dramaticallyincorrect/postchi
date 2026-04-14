@@ -28,6 +28,7 @@ import { deleteSource } from "@/postchi/sources/sources"
 import { FileExecution } from "./item-execution"
 import { addToPinned, removePinned } from "@/postchi/project/pin/pin"
 import { getActiveProject } from "@/lib/project-state"
+import { SourceChangesButton } from "../sources/source-changes-dialog"
 
 const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
 
@@ -51,17 +52,20 @@ export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
 }) => {
 
     return (
-        <ScrollArea className="h-full text-foreground/64">
-            {items.map((item) => (
-                <FileTreeEntry
-                    key={item.path}
-                    item={item}
-                    actionsPath={actionsPath}
-                    onItemClick={onItemClick}
-                    selectedPath={selectedPath}
-                />
-            ))}
-        </ScrollArea>
+        <div className="flex flex-col h-full">
+            <ScrollArea className="h-full text-foreground/64 flex-1">
+                {items.map((item) => (
+                    <FileTreeEntry
+                        key={item.path}
+                        item={item}
+                        actionsPath={actionsPath}
+                        onItemClick={onItemClick}
+                        selectedPath={selectedPath}
+                    />
+                ))}
+            </ScrollArea>
+            <SourceChangesButton project={getActiveProject()!}></SourceChangesButton>
+        </div>
     );
 };
 
@@ -308,7 +312,7 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                             <ContextMenuSeparator />
                         </>
                     )}
-                    
+
                     <ContextMenuItem onClick={() => revealInFinder(item.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
                     <ContextMenuItem onClick={deleteItem} variant="destructive">
                         <TrashIcon className="size-4 mx-1" />Delete

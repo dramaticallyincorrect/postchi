@@ -7,13 +7,11 @@
    3. **settings ui**
       1. auth 'and' logic
          1. group as one item
-      2. add new auth methods
       3. no auth delete if defined in source, can add empty auth to allow it
-      4. reorder auth methods from settings
    4. diff
       1. things to change since we want to show deviations from the spec as warning (because when you are working on a backend you still haven't updated the spec but still want to be able to make a request)
       2. ~~diff against spec since if we remove a value from request temporarily don't want to get change updates for that~~
-      3. merge with existing, keep changes even if they don't conform to the spec
+      3. **merge with existing, keep changes even if they don't conform to the spec**
       4. spec only change, like parameter becomes required
    5. optional parameters
       1. ~~not added to request on import~~
@@ -96,7 +94,11 @@
     4. none json body in response view
     5. write tests for rust project file reader
 17. octet stream body
-18. run a task to change the base path for every request to relative
+18. folder settings
+    1. **set auth**
+       1. add auth methods
+       2. reorder auth methods from settings
+    2. run a task to change the base path for every request to relative
 19. bugs
 20. unverified
     1. editor right click shows optional paramters

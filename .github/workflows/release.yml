@@ -14,10 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: macos-latest
+          - platform: macos-26
             args: --target aarch64-apple-darwin
             rust_target: aarch64-apple-darwin
-          - platform: macos-latest
+          - platform: macos-26-intel
             args: --target x86_64-apple-darwin
             rust_target: x86_64-apple-darwin
           - platform: windows-latest
@@ -50,7 +50,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: '24'
           cache: pnpm
 
       - name: Setup Rust
@@ -68,7 +68,7 @@ jobs:
 
       # ── macOS: import signing cert and write notarization API key ────────────
       - name: Import Apple certificate
-        if: matrix.platform == 'macos-latest'
+        if: startsWith(matrix.platform, 'macos-')
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -89,7 +89,7 @@ jobs:
           echo "CERT_ID=$CERT_ID" >> "$GITHUB_ENV"
 
       - name: Write Apple notarization API key
-        if: matrix.platform == 'macos-latest'
+        if: startsWith(matrix.platform, 'macos-')
         run: echo "${{ secrets.APPLE_API_KEY_CONTENT }}" | base64 --decode > /tmp/apple_api_key.p8
 
       # ── Build and upload to draft release ────────────────────────────────────
