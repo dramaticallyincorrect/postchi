@@ -252,16 +252,20 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
         storage.delete(item.path)
     }
 
-    const addBeforeScript = () => {
+    const addBeforeScript = async () => {
         if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = beforeScriptPath(item.path);
-        storage.create(scriptPath, '// Before script\n// Available: request (method, url, headers, body), env, fetch\n');
+        if (!await storage.exists(scriptPath)) {
+            storage.create(scriptPath, '// Before script\n// Available: request (method, url, headers, body), env, fetch\n');
+        }
     }
 
-    const addAfterScript = () => {
+    const addAfterScript = async () => {
         if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = afterScriptPath(item.path);
-        storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
+        if (!await storage.exists(scriptPath)) {
+            storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
+        }
     }
 
     const onPin = () => {
