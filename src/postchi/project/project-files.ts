@@ -143,7 +143,7 @@ export function collectHttpFiles(items: FileTreeItem[]): FileItem[] {
     return items.flatMap(item =>
         item instanceof FolderItem
             ? collectHttpFiles(item.items)
-            : item.path.endsWith('.get') ? [item] : []
+            : item.path.endsWith(FileType.HTTP) ? [item] : []
     )
 }
 

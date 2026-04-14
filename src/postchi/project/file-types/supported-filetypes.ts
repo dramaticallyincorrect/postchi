@@ -1,5 +1,5 @@
 export enum FileType {
-    HTTP = '.get',
+    HTTP = '.chttp',
     ENVIRONMENT = '.cenv',
     BEFORE_SCRIPT = '.before.js',
     AFTER_SCRIPT = '.after.js',

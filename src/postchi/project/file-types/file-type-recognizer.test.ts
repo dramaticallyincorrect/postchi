@@ -4,7 +4,7 @@ import { getFileTypeFromPath } from "./file-type-recognizer";
 
 describe('get type of file from path', () => {
     it('http', () => {
-        const path = '/test/test.get'
+        const path = '/test/test.chttp'
 
         expect(getFileTypeFromPath(path)).toBe(FileType.HTTP)
 

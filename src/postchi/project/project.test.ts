@@ -144,7 +144,7 @@ describe('patchFolderSettings', () => {
                     'MyAuth': {
                         type: 'http',
                         scheme: 'bearer',
-                        tokenVariable: '<MY_TOKEN>'
+                        tokenVariable: 'MY_TOKEN'
                     }
                 }
             ]

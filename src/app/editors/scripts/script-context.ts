@@ -79,7 +79,7 @@ export const SCRIPT_CONTEXT_ENTRIES: ScriptContextEntry[] = [
     {
         name: 'executeRequest',
         contexts: ['quick-action'],
-        completion: { label: 'executeRequest', type: 'function', detail: '(path: string): Promise<Response>', info: 'Execute an HTTP request from the collections folder. Path is relative to the collections folder, e.g. "/api/login.get"' },
+        completion: { label: 'executeRequest', type: 'function', detail: '(path: string): Promise<Response>', info: 'Execute an HTTP request from the collections folder. Path is relative to the requests folder, e.g. "/api/login.chttp"' },
     },
     {
         name: 'console',
