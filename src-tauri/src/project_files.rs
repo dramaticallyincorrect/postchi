@@ -91,7 +91,7 @@ pub fn read_project_file_tree(paths: ProjectPaths) -> Result<Vec<FileTreeItem>, 
     let mut all_items = pinned_items;
     all_items.extend(vec![
         FileTreeItem::Folder(FolderItem {
-            name: "collections".into(),
+            name: "requests".into(),
             path: paths.collections_path,
             items: collection_items,
             is_source: false,

@@ -151,7 +151,7 @@ export async function createQuickAction(actionsPath: string, name: string, fileS
     return path
 }
 
-const collectionsDirName = "collections"
+const collectionsDirName = "requests"
 const actionsDirName = "actions"
 const environmentsName = "environments"
 const secretsName = "secrets"
