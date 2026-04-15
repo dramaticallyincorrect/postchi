@@ -117,9 +117,10 @@ export function computeHttpDiagnostics(doc: string | Text, variables: { key: str
 
     const queryParameters = getOperationParamters(spec)
     if (queryParameters) {
-      const requestParameters = ast.url.filter(n => n.type == 'query-param' ).filter(p => slice(p).length > 0)
+      const requestParameters = ast.url.filter(n => n.type == 'query-param').filter(p => slice(p).length > 0)
       const requestParamsNames = new Set(requestParameters.map(p => slice(p.key)))
-      const paramStart = ast.url.find(p => p.type == 'query-param')?.from ?? ast.url[ast.url.length - 1].to ?? doc.length
+
+      const paramStart = ast.url.length > 0 ? (ast.url.find(p => p.type == 'query-param')?.from ?? ast.url[ast.url.length - 1].to ?? doc.length) : doc.length
       queryParameters.forEach(p => {
         if (!requestParamsNames.has(p.name) && p.required) {
           diagnostics.push({
