@@ -24,6 +24,7 @@ export async function createProject(path: string, fileStorage: FileStorage = Def
     await createIfNotExists(pathOf(path, environmentsName + envExtension), fileStorage)
     await createIfNotExists(pathOf(path, secretsName + envExtension), fileStorage)
     await createIfNotExists(pathOf(path, postchiDirName, sourcesFileName), fileStorage, JSON.stringify({ sources: [] }, null, 2))
+    await createIfNotExists(pinnedPathForProject(path), fileStorage, JSON.stringify({ sources: [] }, null, 2))
     return {
         name,
         path,
