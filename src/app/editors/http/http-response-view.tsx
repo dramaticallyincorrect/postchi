@@ -170,7 +170,7 @@ const JsonView = ({ body }: { body: string }) => {
     const { theme } = useTheme();
     return (
         <CodeMirror
-            value={body}
+            value={JSON.stringify(JSON.parse(body), null, 2)}
             theme={[theme.codemirror.editorTheme, theme.codemirror.syntaxHighlighting]}
             readOnly={true}
             className='height: 100% outline-none'
