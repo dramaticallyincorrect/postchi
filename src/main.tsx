@@ -11,8 +11,6 @@ import { loadStore } from "./lib/storage/store/store";
 import { checkForUpdate } from "./app/updater/updater";
 import { UpdateDialog } from "./app/updater/update-dialog";
 import { Update } from "@tauri-apps/plugin-updater";
-import { LicenseDialog } from "./app/license/license-dialog"
-import { LicenseContext } from "./app/license/license-context"
 import { AboutDialog } from "./app/about/about-dialog";
 import { SettingsWindow } from "./app/settings/settings-window";
 import { Toaster } from "@/components/ui/sonner";
@@ -22,7 +20,6 @@ import { setActiveProject } from "./lib/project-state";
 import { ThemeProvider } from "./app/theme/theme-context";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { openSettingsWindow } from "./app/windows/window-manager";
-import { getInitialLicenseStatus, validateLicenseStatus } from "./postchi/license/license";
 import { getDefaultProjectPath, createProject, copyProject, Project, createTestProject } from "./postchi/project/project";
 import { PanelProvider, usePanel } from "./app/project/panel-context";
 import usePersistentState from "./hooks/persistent-state";
@@ -41,7 +38,6 @@ const windowLabel = isTauri() ? getCurrentWebviewWindow().label : 'main'
 
 let tempPath = ''
 let initialProject: Project | null = null
-let initialLicenseStatus: Awaited<ReturnType<typeof getInitialLicenseStatus>> = 'free'
 
 if (windowLabel === 'main') {
     tempPath = await getDefaultProjectPath()
@@ -53,22 +49,15 @@ if (windowLabel === 'main') {
 
     setActiveProject(initialProject)
 
-    initialLicenseStatus = await getInitialLicenseStatus()
-
     await initMenu(lastPath === tempPath)
 }
 
 function AppShell() {
     const [project, setProject] = useState<Project>(initialProject!)
     const [availableUpdate, setAvailableUpdate] = useState<Update | null>(null)
-    const [isPro, setIsPro] = useState(initialLicenseStatus === 'pro')
 
     const { openView } = usePanel()
 
-    const refreshLicense = async () => {
-        const status = await validateLicenseStatus()
-        setIsPro(status === 'pro')
-    }
 
     useEffect(() => {
         setActiveProject(project)
@@ -81,9 +70,6 @@ function AppShell() {
         }).catch(() => { })
     }, [])
 
-    useEffect(() => {
-        refreshLicense().catch(() => { })
-    }, [])
 
     const switchProject = async (newProject: Project) => {
         const store = await loadStore(SETTINGS_STORE)
@@ -145,7 +131,7 @@ function AppShell() {
     }, [project])
 
     return (
-        <LicenseContext.Provider value={{ isPro, refreshLicense }}>
+        <>
             <App
                 key={project.path}
                 project={project}
@@ -162,14 +148,9 @@ function AppShell() {
                 update={availableUpdate}
                 onClose={() => setAvailableUpdate(null)}
             />
-            <LicenseDialog
-                onActivated={async () => {
-                    setIsPro(true)
-                }}
-            />
             <AboutDialog />
             <Toaster />
-        </LicenseContext.Provider>
+        </>
     )
 }
 

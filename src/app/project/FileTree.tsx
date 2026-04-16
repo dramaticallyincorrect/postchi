@@ -13,7 +13,6 @@ import { FileDialogType, NewFileDialog } from "@/app/file-dialogs/new-file-dialo
 import DefaultFileStorage from "@/lib/storage/files/file-default"
 import { pathOf } from "@/lib/storage/files/join"
 import { useEffect, useMemo, useState } from "react"
-import { useLicense } from "@/app/license/license-context"
 import { NewQuickActionDialog } from "../../components/new-quick-action-dialog"
 import FileJavascriptIcon from "../../components/icons/file-js"
 import { isTauri } from "@tauri-apps/api/core"
@@ -94,7 +93,6 @@ const FolderNode = ({
     const [dialogType, setDialogType] = useState<FileDialogType | null>(null);
     const { openView } = usePanel()
     const [open, setOpen] = useState(() => isAncestor(folder.path, selectedPath));
-    const { isPro } = useLicense();
 
     useEffect(() => {
         if (isAncestor(folder.path, selectedPath)) {
@@ -120,7 +118,6 @@ const FolderNode = ({
     };
 
     const onSettingsClick = () => {
-        if (!isPro) { openLicenseDialog(); return; }
         openView({
             type: 'FOLDER_SETTINGS',
             params: {
@@ -131,13 +128,11 @@ const FolderNode = ({
 
 
     const addFolderBeforeScript = () => {
-        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = pathOf(folder.path, FileType.FOLDER_BEFORE_SCRIPT);
         fileStorage.create(scriptPath, '// Folder before script - runs before every request in this folder and subfolders\n// Available: request (method, url, headers, body), env, fetch, setEnvironmentVariable\n');
     }
 
     const addFolderAfterScript = () => {
-        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = pathOf(folder.path, FileType.FOLDER_AFTER_SCRIPT);
         fileStorage.create(scriptPath, '// Folder after script - runs after every request in this folder and subfolders\n// Available: response (status, headers, body, durationInMillies), request, env, fetch, setEnvironmentVariable\n');
     }
@@ -154,7 +149,6 @@ const FolderNode = ({
     const [quickActionDialogOpen, setQuickActionDialogOpen] = useState(false)
 
     const addQuickAction = () => {
-        if (!isPro) { openLicenseDialog(); return; }
         setQuickActionDialogOpen(true)
     }
 
@@ -199,7 +193,7 @@ const FolderNode = ({
                 <ContextMenuContent className="w-50">
                     {isActionsFolder ? (
                         <>
-                            <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><ZapIcon className="size-4" />New Action</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={addQuickAction} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><ZapIcon className="size-4" />New Action</span> </ContextMenuItem>
                             <ContextMenuSeparator />
                             <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4" />{revealLabel}</ContextMenuItem>
                         </>
@@ -207,9 +201,9 @@ const FolderNode = ({
                         <>
                             <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewHttpRequest)}><FilePlus2Icon className="size-4 mx-1" />New Request</ContextMenuItem>
                             <ContextMenuItem onClick={() => setDialogType(FileDialogType.NewFolder)}><FolderPlusIcon className="size-4 mx-1" />New Folder</ContextMenuItem>
-                            <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                            <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                            <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><Settings2Icon className="size-4 mx-1" />Settings</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={addFolderBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span></ContextMenuItem>
+                            <ContextMenuItem onClick={addFolderAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span></ContextMenuItem>
+                            <ContextMenuItem onClick={onSettingsClick} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><Settings2Icon className="size-4 mx-1" />Settings</span></ContextMenuItem>
                             <ContextMenuSeparator />
                             <ContextMenuItem onClick={() => revealInFinder(folder.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
                             <ContextMenuItem onClick={deleteItem} variant="destructive">
@@ -242,7 +236,6 @@ const FolderNode = ({
 
 const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item: FileItem, isInActionsFolder?: boolean, onItemClick: any, selectedPath: string }) => {
     const storage = DefaultFileStorage.getInstance();
-    const { isPro } = useLicense();
     const isBeforeScript = item.name.endsWith(FileType.BEFORE_SCRIPT) || item.name === FileType.FOLDER_BEFORE_SCRIPT;
     const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT) || item.name === FileType.FOLDER_AFTER_SCRIPT;
 
@@ -253,7 +246,6 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
     }
 
     const addBeforeScript = async () => {
-        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = beforeScriptPath(item.path);
         if (!await storage.exists(scriptPath)) {
             storage.create(scriptPath, '// Before script\n// Available: request (method, url, headers, body), env, fetch\n');
@@ -261,7 +253,6 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
     }
 
     const addAfterScript = async () => {
-        if (!isPro) { openLicenseDialog(); return; }
         const scriptPath = afterScriptPath(item.path);
         if (!await storage.exists(scriptPath)) {
             storage.create(scriptPath, '// After script\n// Available: response (status, headers, body, durationInMillies), request, env, fetch\n');
@@ -269,7 +260,6 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
     }
 
     const onPin = () => {
-        if (!isPro) { openLicenseDialog(); return; }
         addToPinned(item.path, getActiveProject()!.path)
     }
 
@@ -304,15 +294,15 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-50">
                     {
-                        item.traits.includes('pinable') && <ContextMenuItem onClick={onPin} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><PinIcon className="size-4 mx-1" />Pin</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                        item.traits.includes('pinable') && <ContextMenuItem onClick={onPin} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><PinIcon className="size-4 mx-1" />Pin</span></ContextMenuItem>
                     }
                     {
-                        item.isPinned && <ContextMenuItem onClick={unPin} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><PinOffIcon className="size-4 mx-1" />Unpin</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                        item.isPinned && <ContextMenuItem onClick={unPin} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><PinOffIcon className="size-4 mx-1" />Unpin</span></ContextMenuItem>
                     }
                     {!isInActionsFolder && (
                         <>
-                            <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
-                            <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span> {!isPro && <LockIcon className="size-3 text-muted-foreground" />}</ContextMenuItem>
+                            <ContextMenuItem onClick={addBeforeScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />Before Script</span></ContextMenuItem>
+                            <ContextMenuItem onClick={addAfterScript} className="flex items-center justify-between gap-4"><span className="flex items-center gap-2"><FileJavascriptIcon className="size-4 mx-1" />After Script</span></ContextMenuItem>
                             <ContextMenuSeparator />
                         </>
                     )}

@@ -62,11 +62,6 @@ const PostchiMenu = [
         accelerator: 'CmdOrCtrl+,',
         action: async () => emitMenuEvent(MenuActions.SETTINGS),
     },
-    {
-        id: 'activate_license',
-        text: 'Activate License…',
-        action: async () => emitMenuEvent(MenuActions.ACTIVATE_LICENSE),
-    },
     { item: "Separator" as const },
     {
         id: "quit",

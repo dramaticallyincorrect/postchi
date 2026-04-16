@@ -1,8 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MenuActions } from "@/app/menu/menu-events";
-import { getAppVersion } from "@/postchi/license/license";
 import { useMemo } from "react";
 import { useMenuTrigger } from "@/hooks/use-menu-trigger";
+import { isTauri } from "@/lib/utils/os";
 
 export const AboutDialog = () => {
     const [open, setOpen] = useMenuTrigger(MenuActions.ABOUT_POSTCHI);
@@ -10,6 +10,7 @@ export const AboutDialog = () => {
     const version = useMemo(() => {
         return getAppVersion();
     }, []);
+    
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="p-12" aria-describedby={undefined}>
@@ -21,4 +22,10 @@ export const AboutDialog = () => {
             </DialogContent>
         </Dialog>
     )
+}
+
+async function getAppVersion(): Promise<string> {
+    if (!isTauri()) return '0.0.0'
+    const { getVersion } = await import('@tauri-apps/api/app')
+    return getVersion()
 }

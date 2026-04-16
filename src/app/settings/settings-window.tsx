@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
     Select,
     SelectContent,
@@ -9,14 +9,9 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { useTheme } from '@/app/theme/theme-context'
 import { themes } from '@/app/theme/themes'
-import { LicenseContext, useLicense } from '@/app/license/license-context'
-import { emitMenuEvent, MenuActions } from '@/app/menu/menu-events'
-import { getInitialLicenseStatus, validateLicenseStatus } from '@/postchi/license/license'
-import { CheckIcon } from 'lucide-react'
 import MsWindowControls from '@/components/window-controls'
 import { isMac } from '@/lib/utils/os'
 
@@ -48,7 +43,6 @@ function SettingsWindowShell() {
                     </div>
                     <div className='px-12 py-4'>
                         {section === 'appearance' && <AppearanceSection />}
-                        {section === 'license' && <LicenseSection />}
                     </div>
                 </div>
             </div>
@@ -120,39 +114,6 @@ function AppearanceSection() {
     )
 }
 
-function LicenseSection() {
-    const { isPro } = useLicense()
-
-    const handleActivate = () => {
-        emitMenuEvent(MenuActions.ACTIVATE_LICENSE)
-    }
-
-    return (
-        <div className="space-y-6">
-            <SettingsRow label="Status" description="Your current license plan">
-                {isPro
-                    ? <Badge variant="default" className="bg-primary text-primary-foreground gap-1.5"><CheckIcon className="h-3 w-3" />Pro</Badge>
-                    : <Badge variant="outline">Free</Badge>
-                }
-            </SettingsRow>
-
-            {isPro ? (
-                <div className="text-sm text-muted-foreground">
-                    You have access to all Pro features.
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                        Upgrade to Pro to unlock request scripts, folder scripts, folder configuration, and base path support.
-                    </p>
-                    <Button size="sm" onClick={handleActivate}>
-                        Activate License
-                    </Button>
-                </div>
-            )}
-        </div>
-    )
-}
 
 function SettingsRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
     return (
@@ -166,30 +127,9 @@ function SettingsRow({ label, description, children }: { label: string; descript
     )
 }
 
-function LicenseProvider({ children }: { children: React.ReactNode }) {
-    const [isPro, setIsPro] = useState(false)
-
-    useEffect(() => {
-        getInitialLicenseStatus().then(status => setIsPro(status === 'pro')).catch(() => { })
-        validateLicenseStatus().then(status => setIsPro(status === 'pro')).catch(() => { })
-    }, [])
-
-    const refreshLicense = async () => {
-        const status = await validateLicenseStatus()
-        setIsPro(status === 'pro')
-    }
-
-    return (
-        <LicenseContext.Provider value={{ isPro, refreshLicense }}>
-            {children}
-        </LicenseContext.Provider>
-    )
-}
 
 export function SettingsWindow() {
     return (
-        <LicenseProvider>
-            <SettingsWindowShell />
-        </LicenseProvider>
+        <SettingsWindowShell />
     )
 }
