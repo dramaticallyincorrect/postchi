@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, LockIcon, PinIcon, PinOffIcon, ServerIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, PinIcon, PinOffIcon, ServerIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/postchi/project/project-files"
@@ -17,7 +17,6 @@ import { NewQuickActionDialog } from "../../components/new-quick-action-dialog"
 import FileJavascriptIcon from "../../components/icons/file-js"
 import { isTauri } from "@tauri-apps/api/core"
 import { isMac } from "@/lib/utils/os"
-import { emitMenuEvent, MenuActions } from "@/app/menu/menu-events"
 import { afterScriptPath } from "@/postchi/http/scripts/after/after-script-executor"
 import { beforeScriptPath } from "@/postchi/http/scripts/before/before-script-executor"
 import { createHttpRequest, createQuickAction } from "@/postchi/project/project"
@@ -36,10 +35,6 @@ const revealInFinder = async (path: string) => {
     const { revealItemInDir } = await import('@tauri-apps/plugin-opener');
     await revealItemInDir(path);
 };
-
-const openLicenseDialog = () => {
-    emitMenuEvent(MenuActions.ACTIVATE_LICENSE);
-}
 
 
 
