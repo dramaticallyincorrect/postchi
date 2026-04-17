@@ -41,6 +41,8 @@ import { osCommandKey } from './lib/utils/platform-modifiers';
 import { ButtonGroup } from './components/ui/button-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from './components/ui/tooltip';
 import { useKeydown } from './hooks/use-keydown';
+import { Kbd, KbdGroup } from './components/ui/kbd';
+import { Row } from './components/layout';
 
 
 export default function App({ project, isTemp }: { project: Project, isTemp: boolean }) {
@@ -200,6 +202,31 @@ const MainPanel = () => {
             return <ImportData />
         case 'SOURCE_TOKENS':
             return <SourceTokensManagement projectPath={getActiveProject()!.path} />
+        default:
+            return <div className='flex flex-col justify-center items-start h-full w-min mx-auto min-w-64 font-light'>
+                <Row className='justify-between w-full'>
+                    <span>Search</span>
+                    <KbdGroup>
+                        <Kbd>⌘</Kbd>
+                        <Kbd>K</Kbd>
+                    </KbdGroup>
+                </Row>
+                <Row className='justify-between w-full'>
+                    <span>Toggle Side Panel</span>
+                    <KbdGroup>
+                        <Kbd>⌘</Kbd>
+                        <Kbd>S</Kbd>
+                    </KbdGroup>
+                </Row>
+                <Row className='gap-8 justify-between w-full'>
+                    <span>Back/Forward</span>
+                    <KbdGroup>
+                        <Kbd>⌘</Kbd>
+                        <Kbd>[</Kbd>
+                        <Kbd>]</Kbd>
+                    </KbdGroup>
+                </Row>
+            </div>
     }
 }
 

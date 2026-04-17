@@ -8,7 +8,7 @@
       1. plus move update trigger to side panel
    5. recent projects
    6. ask to buy license every once in a while
-   7. show shortcuts on empty view
+   7. ~~show shortcuts on empty view~~
    8. folder settings
       1. add auth methods
       2. reorder auth methods from settings
