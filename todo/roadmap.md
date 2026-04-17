@@ -1,7 +1,7 @@
 # Roadmap
 
 1. v1.1.0
-   1. set cargo version
+   1. ~~set cargo version~~
    2. disable auto correct in textfields
    3. os independent paths for stored paths
    4. release notes
