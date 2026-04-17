@@ -15,7 +15,7 @@ import { themes } from '@/app/theme/themes'
 import MsWindowControls from '@/components/window-controls'
 import { isMac } from '@/lib/utils/os'
 
-type Section = 'appearance' | 'license'
+type Section = 'appearance'
 
 function SettingsWindowShell() {
     const [section, setSection] = useState<Section>('appearance')
@@ -30,9 +30,6 @@ function SettingsWindowShell() {
                     <div className='p-3 flex flex-col gap-1.5'>
                         <NavItem active={section === 'appearance'} onClick={() => setSection('appearance')}>
                             Appearance
-                        </NavItem>
-                        <NavItem active={section === 'license'} onClick={() => setSection('license')}>
-                            License
                         </NavItem>
                     </div>
 

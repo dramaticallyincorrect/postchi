@@ -2,8 +2,11 @@
 
 1. **os independent paths for stored paths**
 2. release notes
-3. ~~no license enforcment~~
-4. Sources
+3. multi window
+4. recent projects
+5. ask to buy license every once in a while
+6. ~~no license enforcment~~
+7. Sources
    1. remove or update token from folder settings
    2. values with enum should use a value from that as default value when importing rather than <name>
    3. **settings ui**
@@ -13,7 +16,7 @@
    4. diff
       1. things to change since we want to show deviations from the spec as warning (because when you are working on a backend you still haven't updated the spec but still want to be able to make a request)
       2. ~~diff against spec since if we remove a value from request temporarily don't want to get change updates for that~~
-      3. *check if files on disk exist, if not consider that an add, this solves sharing the project without commiting the requests*
+      3. ~~*check if files on disk exist, if not consider that an add, this solves sharing the project without commiting the requests*~~
       4. *merge with existing, keep changes even if they don't conform to the spec*
       5. spec only change, like parameter becomes required
    5. optional parameters
@@ -36,15 +39,15 @@
          1. default value
          2. optional or required
          3. arrays -> one or more of ...items
-5. http
+8. http
    1. discreate query
       1. each query on a separate line identified by leading &
    2. context options
       1. remove all optional parameters
-6. performance optimizations 
+9.  performance optimizations 
    1. scope tree changes to the folder that changed
    2. render file tree items lazyly
-7. end to end tests
+10. end to end tests
    1. import
       1. postman
       2. open api
@@ -53,21 +56,21 @@
    3. send request
       1. normal
       2. base path + env change
-8. actions
+11. actions
    1. show hint when it's empty
    2. pass current request to actions if a request is active when executing the action
-9. search
+12. search
    1. recent requests
    2. request text search
-10. cross platform sharing
+13. cross platform sharing
    1. *stored paths should be linux style and converted to windows paths on windows*
       1. pinned
-11. security
+14. security
    1. stripout auth from history by default
       1. setting to override it
-12. small stuff
+15. small stuff
     1. when importing search for auth requests, and offer to pin the request or set after script
-13. file tree
+16. file tree
     1. rename
     2. view options
        1. show/hide scripts
@@ -76,15 +79,15 @@
     5. show request urls as filenames and group by path?
     6. pin to top
        1. group pins in one folder
-14. scripts
+17. scripts
     1. single source to derive execution and auto complete options from
-15. import
+18. import
     1. postman
          1. open folder after import
     2. open api
-16. save file  
+19. save file  
     1. when closing the app
-17. errors
+20. errors
     1. unexpected token, text after a variable or function in header
     2. MissingKey
     3. DuplicateValue
@@ -93,20 +96,21 @@
     6. PathIsDirectory
     7. InvalidContentType
     8. Invalid Environment (empty name)
-18. last
+21. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. none json body in response view
     5. write tests for rust project file reader
-19. octet stream body
-20. folder settings
+22. octet stream body
+23. folder settings
     1. **set auth**
        1. add auth methods
        2. reorder auth methods from settings
     2. run a task to change the base path for every request to relative
-21. bugs
-22. unverified
+24. bugs
+    1.  sending request to localhost with no server gives ambiguis error -> error sending request for url (http://localhost:8080/login)
+25. unverified
     1. editor right click shows optional paramters
     2. request snippet
        1. select a range of text

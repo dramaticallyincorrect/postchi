@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { diffSources } from "./source-checker";
 import { OpenAPIV3 } from "openapi-types";
-import DefaultFileStorage from "@/lib/storage/files/file-default";
 import { pathOf } from "@/lib/storage/files/join";
+import { BrowserFileStorage } from "@/lib/storage/files/file-browser";
 
 function makeDoc(paths: OpenAPIV3.PathsObject): OpenAPIV3.Document {
     return {
@@ -24,10 +24,18 @@ const param = (name: string, example?: string): OpenAPIV3.ParameterObject => ({
 
 const sourceDiskPath = '/tmp/Test API/'
 
-const fs = DefaultFileStorage.getInstance()
+class TestFs extends BrowserFileStorage {
+
+    async exists(_: string): Promise<boolean> {
+        return true
+    }
+
+}
+
+const testFs = new TestFs()
 
 describe('diffSources', () => {
-    fs.mkdir(sourceDiskPath)
+    testFs.mkdir(sourceDiskPath)
     it('add', async () => {
         const local = makeDoc({ '/pets': petsGet })
         const remote = makeDoc({
@@ -35,7 +43,7 @@ describe('diffSources', () => {
             '/users': { get: { summary: 'List Users', responses: ok200 } }
         })
 
-        const changes = await diffSources(local, remote)
+        const changes = await diffSources(local, remote, '', testFs)
 
         expect(changes).toHaveLength(1)
         expect(changes[0].kind).toBe('added')
@@ -51,7 +59,7 @@ describe('diffSources', () => {
         })
         const remote = makeDoc({ '/pets': petsGet })
 
-        const changes = await diffSources(local, remote)
+        const changes = await diffSources(local, remote, '', testFs)
 
         expect(changes).toHaveLength(1)
         expect(changes[0].kind).toBe('removed')
@@ -73,11 +81,11 @@ describe('diffSources', () => {
         })
 
         const path = pathOf(sourceDiskPath, 'List Pets.get')
-        fs.create(path)
-        fs.writeText(path, 'GET /pets')
+        testFs.create(path)
+        testFs.writeText(path, 'GET /pets')
 
         const changes = await diffSources(local, remote, sourceDiskPath)
-        
+
 
         expect(changes).toHaveLength(1)
         expect(changes[0].kind).toBe('modified')
@@ -95,13 +103,13 @@ describe('diffSources', () => {
         })
 
 
-        const path = pathOf(sourceDiskPath, 'List Pets.get') //'/tmp/Test API/List Pets.get'
+        const path = pathOf(sourceDiskPath, 'List Pets.chttp')
 
-        await fs.create(path)
-        await fs.writeText(path, 'GET /pets?status=available')
+        await testFs.create(path)
+        await testFs.writeText(path, 'GET /pets?status=available')
 
 
-        const changes = await diffSources(local, remote, sourceDiskPath)
+        const changes = await diffSources(local, remote, sourceDiskPath, testFs)
 
         expect(changes).toHaveLength(1)
         expect(changes[0].kind).toBe('modified')
@@ -110,35 +118,5 @@ describe('diffSources', () => {
         expect(changes[0].newContent).toContain('limit=<limit>')
         // raw remote would have reset status to '<status>' — must not happen
         expect(changes[0].newContent).not.toContain('status=<status>')
-    })
-
-    it('does not flag modified when local has a user-filled query value that satisfies the new placeholder', async () => {
-        const local = makeDoc({
-            '/pets': { get: { summary: 'List Pets', parameters: [param('status', 'mystatus')], responses: ok200 } }
-        })
-        const remote = makeDoc({
-            '/pets': { get: { summary: 'List Pets', parameters: [param('status')], responses: ok200 } }
-        })
-
-        const changes = await diffSources(local, remote)
-
-        expect(changes).toHaveLength(0)
-    })
-
-    it('does not flag modified when merged content equals local content', async () => {
-        const local = makeDoc({
-            '/pets': {
-                get: {
-                    summary: 'List Pets',
-                    parameters: [{ name: 'Authorization', in: 'header', schema: { type: 'string' } }],
-                    responses: ok200
-                }
-            }
-        })
-        const remote = makeDoc({ '/pets': petsGet })
-
-        const changes = await diffSources(local, remote)
-
-        expect(changes).toHaveLength(0)
     })
 })

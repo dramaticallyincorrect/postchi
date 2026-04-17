@@ -12,6 +12,7 @@ import { FileType } from "../project/file-types/supported-filetypes"
 import { RequestSpec } from "./request-spec"
 import { getActiveProject } from "@/lib/project-state"
 import { fromPromise } from "true-myth/task"
+import { FileStorage } from "@/lib/storage/files/file"
 
 export const SOURCE_SPEC_FILENAME = 'source.yaml'
 
@@ -93,12 +94,12 @@ export async function checkSources(
     }
 }
 
-export async function diffSources(local: OpenAPIV3.Document, remote: OpenAPIV3.Document, sourceFolderPath = ''): Promise<SourceChange[]> {
+export async function diffSources(local: OpenAPIV3.Document, remote: OpenAPIV3.Document, sourceFolderPath = '', fileStorage : FileStorage = DefaultFileStorage.getInstance()): Promise<SourceChange[]> {
     try {
         const localFlat = flattenImportedFolder(convertDocumentToFolder(local, true), sourceFolderPath)
         const localMap = new Map<string, string>([...localFlat].map(([p, e]) => [p, e.content]))
         const remoteMap = flattenImportedFolder(convertDocumentToFolder(remote, true), sourceFolderPath)
-        return await diffMaps(localMap, remoteMap)
+        return await diffMaps(localMap, remoteMap, fileStorage)
     } catch (e) {
         console.error(`[sources] Failed to diff sources:`, e)
         return []
@@ -127,31 +128,22 @@ function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string,
     return map
 }
 
-async function diffMaps(local: Map<string, string>, remote: Map<string, FlattenedEntry>): Promise<SourceChange[]> {
+async function diffMaps(local: Map<string, string>, remote: Map<string, FlattenedEntry>, fileStorage = DefaultFileStorage.getInstance()): Promise<SourceChange[]> {
     const changes: SourceChange[] = []
 
     for (const [path, { content: newContent, spec }] of remote) {
-        if (path.includes('Pet')) {
-            console.log('check path ', path)
-        }
         if (!local.has(path)) {
             changes.push({ kind: 'added', path, newContent, spec })
         } else {
-            if (local.get(path) !== newContent) {
-                if (path.endsWith('Update an existing pet.get')) {
-                    console.log('pet')
-                }
-                const onDiskResult = fromPromise(DefaultFileStorage.getInstance().readText(path))
-                const merged = mergeRequestContent((await onDiskResult).unwrapOr(local.get(path)) ?? '', newContent ?? '')
+            if (local.get(path) !== newContent || !(await fileStorage.exists(path))) {
+                const onDiskResult = await fromPromise(DefaultFileStorage.getInstance().readText(path))
+                const merged = mergeRequestContent(onDiskResult.unwrapOr(local.get(path)) ?? '', newContent ?? '')
                 changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent: merged, spec })
             }
         }
     }
 
     for (const [path, oldContent] of local) {
-        if (path.includes('Pet')) {
-            console.log('check path ', path)
-        }
         if (!remote.has(path)) {
             changes.push({ kind: 'removed', path, oldContent })
         }
