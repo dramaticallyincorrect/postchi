@@ -82,6 +82,7 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
                                 <Label htmlFor="baseUrl">Base URL</Label>
                                 <Input
                                     id="baseUrl"
+                                    autoCorrect="off"
                                     placeholder="https://api.example.com"
                                     value={baseUrl}
                                     onChange={e => {

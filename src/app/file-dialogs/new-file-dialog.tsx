@@ -37,6 +37,7 @@ export function NewFileDialog({ open, onConfirm, type, onClose }: { open: boolea
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && onConfirm(inputValue)}
+                    autoCorrect="off"
                 />
                 <DialogFooter>
                     <DialogClose asChild>
