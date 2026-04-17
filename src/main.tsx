@@ -162,13 +162,20 @@ function RootComponent() {
 
     const [selectedFile] = usePersistentState<FileItem | null>(`selectedFile:${initialProject!.path}`, null)
 
-    return (
-        <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
+    const isDev = import.meta.env.DEV
+
+    if (isDev) {
+        return <PanelProvider initialState={selectedFile ? { type: 'EDITOR', params: { path: selectedFile?.path } } : null}>
+            <AppShell />
+        </PanelProvider>
+    } else {
+        return <PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN} options={options}>
             <PanelProvider initialState={selectedFile ? { type: 'EDITOR', params: { path: selectedFile?.path } } : null}>
                 <AppShell />
             </PanelProvider>
         </PostHogProvider>
-    )
+    }
+
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
