@@ -59,7 +59,7 @@ export function SearchDialog({ open, onOpenChange, onSelect, collectionsPath, fi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="overflow-hidden p-0 max-w-2xl sm:max-w-2xl" showCloseButton={false} aria-describedby={undefined}>
+            <DialogContent className="overflow-hidden p-0 max-w-2xl sm:max-w-2xl top-[20%] translate-y-0" showCloseButton={false} aria-describedby={undefined}>
                 <DialogTitle className='sr-only'>
                     Search Requests
                 </DialogTitle>
