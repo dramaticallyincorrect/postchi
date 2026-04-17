@@ -203,30 +203,7 @@ const MainPanel = () => {
         case 'SOURCE_TOKENS':
             return <SourceTokensManagement projectPath={getActiveProject()!.path} />
         default:
-            return <div className='flex flex-col justify-center items-start h-full w-min mx-auto min-w-64 font-light'>
-                <Row className='justify-between w-full'>
-                    <span>Search</span>
-                    <KbdGroup>
-                        <Kbd>⌘</Kbd>
-                        <Kbd>K</Kbd>
-                    </KbdGroup>
-                </Row>
-                <Row className='justify-between w-full'>
-                    <span>Toggle Side Panel</span>
-                    <KbdGroup>
-                        <Kbd>⌘</Kbd>
-                        <Kbd>S</Kbd>
-                    </KbdGroup>
-                </Row>
-                <Row className='gap-8 justify-between w-full'>
-                    <span>Back/Forward</span>
-                    <KbdGroup>
-                        <Kbd>⌘</Kbd>
-                        <Kbd>[</Kbd>
-                        <Kbd>]</Kbd>
-                    </KbdGroup>
-                </Row>
-            </div>
+            return <AppShortcuts />
     }
 }
 
@@ -287,4 +264,31 @@ function Split(props: { children: React.ReactNode[]; isFileTreeVisible: boolean 
             </ResizablePanel>
         </ResizablePanelGroup>
     )
+}
+
+function AppShortcuts() {
+    return <div className='flex flex-col justify-center items-start h-full space-y-2 w-min mx-auto min-w-64 font-light text-foreground/70 text-[16px]'>
+        <Row className='justify-between w-full'>
+            <span>Search</span>
+            <KbdGroup>
+                <Kbd className='text-foreground'>⌘</Kbd>
+                <Kbd className='text-foreground'>K</Kbd>
+            </KbdGroup>
+        </Row>
+        <Row className='justify-between w-full'>
+            <span>Toggle Side Panel</span>
+            <KbdGroup>
+                <Kbd className='text-foreground'>⌘</Kbd>
+                <Kbd className='text-foreground'>S</Kbd>
+            </KbdGroup>
+        </Row>
+        <Row className='gap-8 justify-between w-full'>
+            <span>Back/Forward</span>
+            <KbdGroup>
+                <Kbd className='text-foreground'>⌘</Kbd>
+                <Kbd className='text-foreground'>[</Kbd>
+                <Kbd className='text-foreground'>]</Kbd>
+            </KbdGroup>
+        </Row>
+    </div>
 }
