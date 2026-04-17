@@ -6,7 +6,7 @@ import { isVariable } from "@/lib/utils/variable-name";
 import { ProjectEnvironment, useEnvironment } from "../active-environment/environment-context";
 import { filename } from "@/lib/storage/files/file-utils/file-utils";
 import { LabeledVarInput } from "../components/variable-selector";
-import { AlertTriangleIcon, Layers, Shield } from "lucide-react";
+import { AlertTriangleIcon, DeleteIcon, Layers, PlusIcon, Shield } from "lucide-react";
 import { debounce } from "perfect-debounce";
 import { cn } from "@/lib/utils";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -15,6 +15,8 @@ import { EnvironmentEditor } from "../editors/environment-editor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Fill, Row } from "@/components/layout";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const isValidBaseUrl = (url: string): boolean => {
     if (url === '' || isVariable(url)) return true;
@@ -65,13 +67,44 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
 
     const [showEnvironment, setShowEnvironment] = useState(false);
 
+    const AddBearerSecurity = () => {
+        saveAuthentication(
+            [
+                {
+                    'bearer': {
+                        scheme: 'bearer',
+                        tokenVariable: '',
+                        type: 'http'
+                    } as HttpBearerAuth
+                } as SecurityRequirement,
+                ...security
+            ]
+        )
+    }
+
+    const AddBasicSecurity = () => {
+        saveAuthentication(
+            [
+                {
+                    'bearer': {
+                        scheme: 'basic',
+                        type: 'http',
+                        passwordVariable: '',
+                        usernameVariable: ''
+                    }
+                } as SecurityRequirement,
+                ...security
+            ]
+        )
+    }
+
     return (
 
         <ResizablePanelGroup
             orientation="horizontal"
             className="w-full h-full">
             <ResizablePanel defaultSize="50%" className='bg-background-panel'>
-                <div className="h-full flex flex-col items-center justify-center p-4">
+                <div className="h-full flex flex-col items-center justify-start mt-16 p-4">
                     <div className="sm:max-w-162 min-w-75 w-full">
                         <div className="my-8">
                             <div>{filename(folderPath)} Settings</div>
@@ -100,8 +133,28 @@ export const FolderSettings = ({ folderPath }: { folderPath: string }) => {
                                 </p>
                             </div>
 
-                            <div className="space-y-2 flex flex-col" hidden={security.length === 0}>
-                                <Label className="text-md font-medium">Authentication</Label>
+                            <div className="space-y-2 flex flex-col " >
+                                <Row className="justify-between">
+                                    <Label className="text-md font-medium">Authentication</Label>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline">
+                                                Add Authentication
+                                                <PlusIcon />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem onClick={AddBearerSecurity}>
+                                                    Bearer
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={AddBasicSecurity}>
+                                                    Basic Auth
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </Row>
                                 <SecurityStep securities={security} onImport={v => saveAuthentication(v)} vars={[...vars]} secrets={[...secrets]} />
                                 <Button className="place-self-end" variant="secondary" size="sm" onClick={() => setShowEnvironment(prev => !prev)}>
                                     <Layers className="mr-2 h-3.5 w-3.5" />
@@ -168,6 +221,9 @@ function SecurityStep({
                         vars={vars}
                         secrets={secrets}
                         onChange={m => updateScheme(reqIdx, schemeName, m)}
+                        onDlete={() => {
+                            onImport(securities.filter((_, index) => index != reqIdx))
+                        }}
                     />
                 )),
             )}
@@ -176,12 +232,13 @@ function SecurityStep({
 }
 
 function SchemeConfig({
-    method, vars, secrets, onChange,
+    method, vars, secrets, onChange, onDlete
 }: {
     method: AuthMethod;
     vars: string[];
     secrets: string[];
     onChange: (m: AuthMethod) => void;
+    onDlete: () => void;
 }) {
 
     const { environments } = useEnvironment();
@@ -198,6 +255,10 @@ function SchemeConfig({
                 <span className="text-[11px] text-primary bg-muted px-1.5 py-0.5 rounded">
                     {authLabel}
                 </span>
+                <Fill />
+                <Button size='icon' variant='destructive' onClick={onDlete}>
+                    <DeleteIcon />
+                </Button>
             </div>
             {method.type === 'http' && method.scheme === 'bearer' && (
                 <LabeledVarInput
