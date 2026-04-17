@@ -21,13 +21,6 @@ type Props = {
     files?: FileItem[]
 }
 
-function dir(displayPath: string): string {
-    const sep = displayPath.includes('/') ? '/' : '\\'
-    const lastSep = displayPath.lastIndexOf(sep)
-    if (lastSep === -1) return ''
-    return displayPath.slice(0, lastSep + 1)
-}
-
 function useVisibleItems<T>(items: T[]) {
     const [count, setCount] = useState(BATCH_SIZE)
     const sentinelRef = useRef<HTMLDivElement>(null)
@@ -75,23 +68,16 @@ export function SearchDialog({ open, onOpenChange, onSelect, collectionsPath, fi
                         <CommandGroup>
                             {visible.map(file => {
                                 const path = displayPath(file.path)
-                                const folder = dir(path)
                                 return (
                                     <CommandItem
                                         key={file.path}
                                         onSelect={() => onSelect(file)}
-                                        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg mx-1"
+                                        className="flex items-center gap-2 px-3 cursor-pointer rounded-lg mx-1 min-w-0"
                                     >
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-medium truncate">
-                                                {file.name}
-                                            </span>
-                                            {folder && (
-                                                <span className="text-xs text-muted-foreground truncate font-mono">
-                                                    {folder}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <span className="text-sm font-medium shrink-0">{file.name}</span>
+                                        <span className="text-xs text-foreground/60 truncate font-mono">
+                                            <Highlight text={path} query={query} />
+                                        </span>
                                     </CommandItem>
                                 )
                             })}
@@ -101,5 +87,19 @@ export function SearchDialog({ open, onOpenChange, onSelect, collectionsPath, fi
                 </Command>
             </DialogContent>
         </Dialog>
+    )
+}
+
+
+function Highlight({ text, query }: { text: string; query: string }) {
+    if (!query) return <>{text}</>
+    const index = text.toLowerCase().indexOf(query.toLowerCase())
+    if (index === -1) return <>{text}</>
+    return (
+        <>
+            {text.slice(0, index)}
+            <mark className="bg-transparent text-primary font-semibold underline">{text.slice(index, index + query.length)}</mark>
+            {text.slice(index + query.length)}
+        </>
     )
 }
