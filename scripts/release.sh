@@ -3,7 +3,8 @@ set -e
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-VERSION="${1:?Usage: release.sh <version> (e.g. 1.2.3)}"
+VERSION="${1:?Usage: release.sh <version> <commit-message> (e.g. 1.2.3 'add dark mode')}"
+COMMIT_MSG="${2:?Usage: release.sh <version> <commit-message> (e.g. 1.2.3 'add dark mode')}"
 TAG="v$VERSION"
 
 echo "→ Setting version to $VERSION..."
@@ -25,8 +26,8 @@ echo "→ Checking Build..."
 pnpm --dir "$ROOT_DIR" build
 
 echo "→ Committing version bump..."
-git -C "$ROOT_DIR" add src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
-git -C "$ROOT_DIR" commit -m "chore: release $TAG"
+git -C "$ROOT_DIR" add -A
+git -C "$ROOT_DIR" commit -m "$COMMIT_MSG"
 
 echo "→ Tagging and releasing $TAG..."
 git -C "$ROOT_DIR" push origin main
