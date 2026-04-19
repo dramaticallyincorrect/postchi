@@ -4,6 +4,7 @@ import { readClosestFile } from "@/lib/storage/files/file-utils/file-utils"
 import { pathOf } from "@/lib/storage/files/join"
 import { isTauri } from "@tauri-apps/api/core"
 import { FileType } from "./file-types/supported-filetypes"
+import { join } from "@tauri-apps/api/path"
 
 export type Project = {
     name: string
@@ -163,7 +164,7 @@ export const sourcesFileName = "sources.json"
 export async function getDefaultProjectPath(): Promise<string> {
     if (isTauri()) {
         const { appDataDir } = await import('@tauri-apps/api/path')
-        return `${await appDataDir()}/temporary project`
+        return join(await appDataDir(),'temporary project')
     }
     return '/tmp/temporary project'
 }

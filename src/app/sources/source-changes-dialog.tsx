@@ -19,6 +19,7 @@ import { applySourceChanges } from '@/postchi/sources/source-applier'
 import { Project } from '@/postchi/project/project'
 import { useAsync } from '@/hooks/use-async'
 import { EditorView } from '@codemirror/view'
+import path from 'path-browserify-esm'
 
 const { Original, Modified } = CodeMirrorMerge
 
@@ -31,7 +32,7 @@ type DiffTreeNode = DiffFolderNode | DiffFileNode
  *  `change.path` may be an absolute filesystem path or a relative path; either way
  *  we strip everything up to and including the source folder name segment. */
 function relativeParts(changePath: string, sourceFolderName: string): string[] {
-    const parts = changePath.split('/').filter(Boolean)
+    const parts = changePath.split(path.sep).filter(Boolean)
     const idx = parts.lastIndexOf(sourceFolderName)
     return idx >= 0 ? parts.slice(idx + 1) : parts
 }
