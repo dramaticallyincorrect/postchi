@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import {
     Command,
@@ -10,8 +10,8 @@ import {
 } from '@/components/ui/command'
 import { FileItem } from '@/postchi/project/project-files'
 import { useProjectSearch } from '@/hooks/use-project-search'
+import { useVisibleItems } from '@/hooks/use-visible-items'
 
-const BATCH_SIZE = 20
 
 type Props = {
     open: boolean
@@ -21,23 +21,11 @@ type Props = {
     files?: FileItem[]
 }
 
-function useVisibleItems<T>(items: T[]) {
-    const [count, setCount] = useState(BATCH_SIZE)
-    const sentinelRef = useRef<HTMLDivElement>(null)
-
-    useEffect(() => setCount(BATCH_SIZE), [items])
-
-    useEffect(() => {
-        const el = sentinelRef.current
-        if (!el) return
-        const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) setCount(c => Math.min(c + BATCH_SIZE, items.length))
-        })
-        observer.observe(el)
-        return () => observer.disconnect()
-    }, [items])
-
-    return { visible: items.slice(0, count), sentinelRef, hasMore: count < items.length }
+function dir(displayPath: string): string {
+    const sep = displayPath.includes('/') ? '/' : '\\'
+    const lastSep = displayPath.lastIndexOf(sep)
+    if (lastSep === -1) return ''
+    return displayPath.slice(0, lastSep + 1)
 }
 
 export function SearchDialog({ open, onOpenChange, onSelect, collectionsPath, files }: Props) {
