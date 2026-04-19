@@ -4,7 +4,7 @@ import { readClosestFile } from "@/lib/storage/files/file-utils/file-utils"
 import { pathOf } from "@/lib/storage/files/join"
 import { isTauri } from "@tauri-apps/api/core"
 import { FileType } from "./file-types/supported-filetypes"
-import { join } from "@tauri-apps/api/path"
+import path from 'path-browserify-esm';
 
 export type Project = {
     name: string
@@ -16,24 +16,24 @@ export type Project = {
     actionsPath: string
 }
 
-export async function createProject(path: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
-    const name = path.split('/').filter(Boolean).pop() ?? path
-    await fileStorage.mkdir(path)
-    await fileStorage.mkdir(pathOf(path, collectionsDirName))
-    await fileStorage.mkdir(pathOf(path, actionsDirName))
-    await fileStorage.mkdir(pathOf(path, postchiDirName))
-    await createIfNotExists(pathOf(path, environmentsName + envExtension), fileStorage)
-    await createIfNotExists(pathOf(path, secretsName + envExtension), fileStorage)
-    await createIfNotExists(pathOf(path, postchiDirName, sourcesFileName), fileStorage, JSON.stringify({ sources: [] }, null, 2))
-    await createIfNotExists(pinnedPathForProject(path), fileStorage, '')
+export async function createProject(projectPath: string, fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<Project> {
+    const name = path.basename(projectPath)
+    await fileStorage.mkdir(projectPath)
+    await fileStorage.mkdir(pathOf(projectPath, collectionsDirName))
+    await fileStorage.mkdir(pathOf(projectPath, actionsDirName))
+    await fileStorage.mkdir(pathOf(projectPath, postchiDirName))
+    await createIfNotExists(pathOf(projectPath, environmentsName + envExtension), fileStorage)
+    await createIfNotExists(pathOf(projectPath, secretsName + envExtension), fileStorage)
+    await createIfNotExists(pathOf(projectPath, postchiDirName, sourcesFileName), fileStorage, JSON.stringify({ sources: [] }, null, 2))
+    await createIfNotExists(pinnedPathForProject(projectPath), fileStorage, '')
     return {
         name,
-        path,
-        postchiPath: pathOf(path, postchiDirName),
-        envPath: pathOf(path, environmentsName + envExtension),
-        secretsPath: pathOf(path, secretsName + envExtension),
-        collectionsPath: pathOf(path, collectionsDirName),
-        actionsPath: pathOf(path, actionsDirName),
+        path: projectPath,
+        postchiPath: pathOf(projectPath, postchiDirName),
+        envPath: pathOf(projectPath, environmentsName + envExtension),
+        secretsPath: pathOf(projectPath, secretsName + envExtension),
+        collectionsPath: pathOf(projectPath, collectionsDirName),
+        actionsPath: pathOf(projectPath, actionsDirName),
     };
 }
 
@@ -164,7 +164,7 @@ export const sourcesFileName = "sources.json"
 export async function getDefaultProjectPath(): Promise<string> {
     if (isTauri()) {
         const { appDataDir } = await import('@tauri-apps/api/path')
-        return join(await appDataDir(),'temporary project')
+        return path.join(await appDataDir(),'temporary project')
     }
     return '/tmp/temporary project'
 }

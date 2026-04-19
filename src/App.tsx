@@ -27,7 +27,7 @@ import MsWindowControls from './components/window-controls';
 import { isDesktopMac, isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
 import { FileWatchEventType } from './lib/storage/files/file';
-import { noneMacTopMenuItems, topMenuItems } from './app/menu/project-menu'
+import { noneMacTopMenuItems } from './app/menu/project-menu'
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
 import { useFileWatch } from './hooks/file-watch';
