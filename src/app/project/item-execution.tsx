@@ -10,6 +10,7 @@ import DefaultFileStorage from "@/lib/storage/files/file-default";
 import { isOsCommandKey } from "@/lib/utils/keyboard-event";
 import { osCommandKey, osShiftKey } from "@/lib/utils/platform-modifiers";
 import { cn } from "@/lib/utils";
+import { isMac } from "@/lib/utils/os";
 
 async function runPath(path: string): Promise<QuickActionResult> {
     if (path.startsWith(getActiveProject()!.actionsPath)) {
@@ -84,12 +85,14 @@ export const FileExecution = ({ path, className, shortcutEnabled }: { path: stri
                 {errorMessage && shortcutEnabled ? (
                     null
                 ) : <div className="max-w-xs whitespace-pre-wrap text-sm">
-                    {osShiftKey}{osCommandKey}⏎
+                    {osShiftKey}{noneMacDelimiter}{osCommandKey}{noneMacDelimiter}⏎
                 </div>}
             </TooltipContent>
         </Tooltip>
     );
 };
+
+const noneMacDelimiter = isMac() ? '' : ' '
 
 
 const StatusIcon = ({ state }: { state: string }) => {
