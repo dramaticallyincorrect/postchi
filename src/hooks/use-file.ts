@@ -10,7 +10,7 @@ export function useFile(path: string, deps: any[] = []): string | null {
             if (isMounted) {
                 setContent(text)
             }
-        }).catch(() => { })
+        }).catch(() => { setContent(null) })
         return () => {
             isMounted = false
         }
@@ -25,7 +25,7 @@ export function useTransformedFile<T>(path: string, transform: (content: string)
     const [transformed, setTransformed] = useState<T | null>(null)
 
     useEffect(() => {
-        if (content !== null) {
+        if (content) {
             try {
                 const result = transform(content)
                 setTransformed(result)
@@ -35,7 +35,7 @@ export function useTransformedFile<T>(path: string, transform: (content: string)
         } else {
             setTransformed(null)
         }
-    }, [content, ...deps])
+    }, [content])
 
     return transformed
 }

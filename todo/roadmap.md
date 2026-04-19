@@ -4,10 +4,11 @@
    3. ~~os independent paths for stored paths~~
    5. plus move update trigger to side panel
    6. ask to buy license every once in a while
-   7. multi tabs
-   8. none json body in response view
-   9. octet stream body
-   10. temporary request + add to empty view shortcuts
+   8. split view
+   9. multi tabs
+   10. none json body in response view
+   11. octet stream body
+   12. temporary request + add to empty view shortcuts
 2. copy as cURL
 3. paste cURL
 4. settings -> disable usage and diagnostic tracking

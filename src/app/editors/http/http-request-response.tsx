@@ -101,7 +101,7 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     const extensions = useMemo(() => {
         return [
             lintGutter(),
-            customHttp(activeEnvironment ?? undefined, { ...(spec?.operation ?? undefined), responses: {} }),
+            customHttp(activeEnvironment ?? undefined, spec?.operation ? { ...(spec?.operation ?? undefined), responses: {} } : undefined),
             Prec.highest(submitKeymap),
             EditorView.lineWrapping,
         ];
