@@ -1,37 +1,32 @@
 # Roadmap
 
-1. v1.1.0
-   1. ~~set cargo version~~
-   2. ~~disable auto correct in textfields~~
+1. v1.2.0
    3. os independent paths for stored paths
-   4. release notes
-      1. plus move update trigger to side panel
+   5. plus move update trigger to side panel
    6. ask to buy license every once in a while
-   7. ~~show shortcuts on empty view~~
-   8. ~~folder settings~~
-      1. ~~add auth methods~~
-2. multi tabs
-3. none json body in response view
-4. octet stream body
-5. copy as cURL
-6.  paste cURL
-7.  temporary request + add to empty view shortcuts
-8.  errors
-    1. unexpected token, text after a variable or function in header
-    2. MissingKey
-    3. DuplicateValue
-    4. MissingValue
-    5. FilePathNotExist
-    6. PathIsDirectory
-    7. InvalidContentType
-    8. Invalid Environment (empty name)
-9.  multi window
-10. recent projects
-11. view
-    1.  split view
-    2.  overlay view
-    3.  folder settings opens overlaying response panel when a request is in view
-12. Sources
+   7. multi tabs
+   8. none json body in response view
+   9. octet stream body
+   10. temporary request + add to empty view shortcuts
+2. copy as cURL
+3. paste cURL
+4. settings -> disable usage and diagnostic tracking
+5. errors
+   1. unexpected token, text after a variable or function in header
+   2.  MissingKey
+   3.  DuplicateValue
+   4.  MissingValue
+   5.  FilePathNotExist
+   6.  PathIsDirectory
+   7.  InvalidContentType
+   8.  Invalid Environment (empty name)
+6. multi window
+7. recent projects
+8. view
+   1.  split view
+   2.  overlay view
+   3.  folder settings opens overlaying response panel when a request is in view
+9.  Sources
    1. values with enum should use a value from that as default value when importing rather than <name>
    2. settings ui
       1. auth 'and' logic
@@ -64,10 +59,10 @@
          1. default value
          2. optional or required
          3. arrays -> one or more of ...items
-13. performance optimizations 
+10. performance optimizations 
    1. scope tree changes to the folder that changed
    2. render file tree items lazyly
-14. end to end tests
+11. end to end tests
    1. import
       1. postman
       2. open api
@@ -76,16 +71,16 @@
    3. send request
       1. normal
       2. base path + env change
-15. actions
+12. actions
    1. show hint when it's empty
    2. pass current request to actions if a request is active when executing the action
-16. search
+13. search
    1. recent requests
    2. request text search
-17. security
+14. security
    1. stripout auth from history by default
       1. setting to override it
-18. file tree
+15. file tree
         1. rename
         2. view options
            1. show/hide scripts
@@ -94,12 +89,12 @@
         5. show request urls as filenames and group by path?
         6. pin to top
            1. group pins in one folder
-19. save file  
+16. save file  
     1. when closing the app
-20. last
+17. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. write tests for rust project file reader
-21. bugs
+18. bugs
     1. sending request to localhost with no server gives ambiguis error -> error sending request for url (http://localhost:8080/login)
