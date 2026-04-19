@@ -144,10 +144,30 @@ export default function HttpRequestResponse({ path }: { path: string }) {
     const { theme, gapless } = useTheme()
     const g = gapless
 
+    const containerRef = useRef(null);
+    const [direction, setDirection] = useState("horizontal");
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                // Change to vertical if the container width is less than 600px
+                const width = entry.contentRect.width;
+                console.log('width is ', width)
+                setDirection(width < 772 ? "vertical" : "horizontal");
+            }
+        });
+
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <ResizablePanelGroup
+            elementRef={containerRef}
             onBlur={saveOnBlur}
-            orientation="horizontal"
+            orientation={direction as 'horizontal' | 'vertical'}
             className="w-full h-full">
             <ResizablePanel defaultSize="50%" className={g ? 'bg-background-panel' : 'rounded-xl bg-background-panel'}>
                 <ContextMenu>

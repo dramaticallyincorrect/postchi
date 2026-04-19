@@ -10,9 +10,14 @@ export type ViewState =
     | { type: 'IMPORT'; params: undefined }
     | { type: 'SOURCE_TOKENS'; params: null }
 
+export type PanelState = {
+    first: ViewState | null,
+    second?: ViewState
+}
+
 export interface PanelContextType {
-    viewState: ViewState | null;
-    openView: (state: ViewState | null) => void;
+    viewState: PanelState | null;
+    openView: (state: ViewState | PanelState | null) => void;
     openEditor: (path: string) => void;
     goBack: () => void;
     goForward: () => void;
@@ -31,23 +36,41 @@ const PanelContext = createContext<PanelContextType>({
     canGoForward: false,
 })
 
-const forwardHistory: (ViewState | null)[] = []
-const navigationHistory: (ViewState | null)[] = []
+const forwardHistory: (PanelState | null)[] = []
+const navigationHistory: (PanelState | null)[] = []
 
 export const PanelProvider = ({ initialState, children }: { initialState: ViewState | null; children: React.ReactNode }) => {
-    const [viewState, setViewState] = useState<ViewState | null>(initialState);
+    const [viewState, setViewState] = useState<PanelState | null>({
+        first: initialState
+    });
 
-    const openView = (state: ViewState | null) => {
-        navigationHistory.push(state);
-        forwardHistory.splice(0)
-        setViewState(state)
+    const openView = (state: ViewState | PanelState | null) => {
+        if (state == null) {
+            setViewState(null)
+            return
+        }
+        if ('first' in state) {
+            navigationHistory.push(state);
+            forwardHistory.splice(0)
+            setViewState(state)
+        } else {
+            const panelState = {
+                first: state
+            }
+            navigationHistory.push(panelState);
+            forwardHistory.splice(0)
+            setViewState(panelState)
+        }
+
     };
 
     const openEditor = (path: string) => {
         openView({
-            type: 'EDITOR',
-            params: {
-                path: path
+            first: {
+                type: 'EDITOR',
+                params: {
+                    path: path
+                }
             }
         })
     }

@@ -58,9 +58,9 @@ export default function App({ project, isTemp }: { project: Project, isTemp: boo
     const { viewState, openView } = usePanel()
 
     let selectedPath = undefined
-    switch (viewState?.type) {
+    switch (viewState?.first?.type) {
         case 'EDITOR':
-            selectedPath = viewState.params.path;
+            selectedPath = viewState?.first.params.path;
     }
 
     useFileWatch(selectedPath ?? null, (event) => {
@@ -219,11 +219,25 @@ const InAppMenu = ({ projectName, isTemp }: { projectName: string; isTemp: boole
 
 const MainPanel = () => {
     const { viewState } = usePanel()
-    switch (viewState?.type) {
+    switch (viewState?.first?.type) {
         case 'EDITOR':
-            return <Editor path={viewState.params.path} />
+            return <ResizablePanelGroup
+                orientation="horizontal"
+                className="w-full h-full" >
+                <ResizablePanel defaultSize='50%'>
+                    <Editor path={viewState?.first.params.path} />
+                </ResizablePanel>
+
+                <ResizableHandle className='bg-foreground' />
+
+                <ResizablePanel>
+                    {
+                        viewState?.second?.params?.path && <Editor path={viewState.second.params.path} />
+                    }
+                </ResizablePanel>
+            </ResizablePanelGroup>
         case 'FOLDER_SETTINGS':
-            return <FolderSettings folderPath={viewState.params.path} />
+            return <FolderSettings folderPath={viewState?.first.params.path} />
         case 'IMPORT':
             return <ImportData />
         case 'SOURCE_TOKENS':
