@@ -12,6 +12,9 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from './components/ui/dropdown-menu';
 import { FileTree } from './app/project/FileTree';
@@ -24,7 +27,7 @@ import MsWindowControls from './components/window-controls';
 import { isDesktopMac, isMac } from './lib/utils/os';
 import { cn } from './lib/utils';
 import { FileWatchEventType } from './lib/storage/files/file';
-import { fileMenuItems } from './app/menu/project-menu'
+import { noneMacTopMenuItems, topMenuItems } from './app/menu/project-menu'
 import { SearchDialog } from './components/search-dialog';
 import { isOsCommandKey } from './lib/utils/keyboard-event';
 import { useFileWatch } from './hooks/file-watch';
@@ -131,7 +134,7 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
                 <Button title={`${osCommandKey} + S`} variant="ghost" size="icon" className={cn(isDesktopMac() ? 'ms-22' : 'ms-4') + ' me-1'} onClick={onToggleFileTree}>
                     <PanelLeftIcon />
                 </Button>
-                {!isMac() && < FileMenu projectName={project.name} isTemp={isTemp} />}
+                {!isMac() && <InAppMenu isTemp={isTemp} projectName={project.name} />}
                 <ButtonGroup className='mr-2'>
                     <Tooltip delayDuration={1200}>
                         <TooltipTrigger asChild>
@@ -166,27 +169,50 @@ const TitleBar = ({ project, isTemp, onToggleFileTree }: { project: Project; isT
     </div>
 }
 
-const FileMenu = ({ projectName, isTemp }: { projectName: string; isTemp: boolean }) => {
+const InAppMenu = ({ projectName, isTemp }: { projectName: string; isTemp: boolean }) => {
+    const menus = noneMacTopMenuItems(isTemp).items
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className='hover:bg-muted-foreground'>{projectName}</Button>
+                <Button variant="ghost" size="sm" className="px-2 text-sm">{projectName}</Button>
             </DropdownMenuTrigger>
-            {
-                !isDesktopMac() && <DropdownMenuContent className='w-full'>
-                    {fileMenuItems(isTemp).map((item, index) =>
-                        'item' in item ? (
-                            <DropdownMenuSeparator key={`separator-${index}`} />
-                        ) : (
-                            <DropdownMenuItem
-                                key={item.id}
-                                onClick={item.action}>
-                                {item.text}
+            <DropdownMenuContent className='w-full'>
+                {menus.map((menu, index) => {
+                    if ('item' in menu && menu.item === 'Separator') {
+                        return <DropdownMenuSeparator key={index} />
+                    }
+                    if ('items' in menu) {
+                        return (
+                            <DropdownMenuSub key={menu.text}>
+                                <DropdownMenuSubTrigger>{menu.text}</DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent className='w-full'>
+                                    {menu.items!.map((item, i) => {
+                                        if ('item' in item && item.item === 'Separator') {
+                                            return <DropdownMenuSeparator key={i} />
+                                        }
+                                        if ('action' in item) {
+                                            return (
+                                                <DropdownMenuItem key={item.id} onClick={item.action}>
+                                                    {item.text}
+                                                </DropdownMenuItem>
+                                            )
+                                        }
+                                        return null
+                                    })}
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                        )
+                    }
+                    if ('action' in menu) {
+                        return (
+                            <DropdownMenuItem key={menu.id} onClick={menu.action}>
+                                {menu.text}
                             </DropdownMenuItem>
                         )
-                    )}
-                </DropdownMenuContent>
-            }
+                    }
+                    return null
+                })}
+            </DropdownMenuContent>
         </DropdownMenu>
     )
 }

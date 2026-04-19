@@ -163,9 +163,9 @@ export const sourcesFileName = "sources.json"
 export async function getDefaultProjectPath(): Promise<string> {
     if (isTauri()) {
         const { appDataDir } = await import('@tauri-apps/api/path')
-        return `${await appDataDir()}/postchi-project`
+        return `${await appDataDir()}/temporary project`
     }
-    return '/tmp/postchi-project'
+    return '/tmp/temporary project'
 }
 
 export async function copyProject(

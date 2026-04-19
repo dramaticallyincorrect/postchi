@@ -106,7 +106,7 @@ const editMenuItems = [
     { item: 'SelectAll' as const },
 ]
 
-function topMenuItems(isTemp: boolean) {
+export function topMenuItems(isTemp: boolean) {
     return {
         items: [
             {
@@ -128,6 +128,48 @@ function topMenuItems(isTemp: boolean) {
             {
                 text: 'Help',
                 items: helpMenuItems,
+            },
+        ],
+    }
+}
+
+export function noneMacTopMenuItems(isTemp: boolean) {
+    return {
+        items: [
+            {
+                text: 'File',
+                items: fileMenuItems(isTemp),
+            },
+            {
+                text: 'View',
+                items: viewMenuItmes(),
+            },
+            {
+                id: 'check_for_updates',
+                text: 'Check for Updates…',
+                action: async () => emitMenuEvent(MenuActions.CHECK_FOR_UPDATES),
+            },
+            { item: "Separator" as const },
+            {
+                id: 'settings',
+                text: 'Settings',
+                accelerator: 'CmdOrCtrl+,',
+                action: async () => emitMenuEvent(MenuActions.SETTINGS),
+            },
+            {
+                id: 'about_postchi',
+                text: 'About Postchi',
+                action: async () => emitMenuEvent(MenuActions.ABOUT_POSTCHI),
+            },
+            { item: "Separator" as const },
+            {
+                id: "quit",
+                text: "Quit",
+                accelerator: 'CmdOrCtrl+Q',
+                action: async () => {
+                    const { exit } = await import('@tauri-apps/plugin-process');
+                    exit(0);
+                },
             },
         ],
     }
