@@ -20,6 +20,14 @@ describe('pin', () => {
         expect(fs.readFileSync(pinnedPathForProject(root), 'utf-8').toString()).toBe(testPinnedPath + '\n')
     })
 
+    it('stores paths with unix style', async () => {
+        const windowsPath = 'C:\\tmp\\project\\collections\\request.chttp'
+        const root = 'C:\\tmp\\project'
+        await addToPinned(windowsPath, root)
+        const pinnedItems = fs.readFileSync(pinnedPathForProject(root), 'utf-8').toString()
+        expect(pinnedItems).toBe(testPinnedPath + '\n')
+    })
+
     it('removes pin', async () => {
         await addToPinned(fullTestPath, root)
         await addToPinned(fullTestPath + '2', root)

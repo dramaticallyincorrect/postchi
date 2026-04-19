@@ -1,7 +1,7 @@
 # Roadmap
 
 1. v1.2.0
-   3. os independent paths for stored paths
+   3. ~~os independent paths for stored paths~~
    5. plus move update trigger to side panel
    6. ask to buy license every once in a while
    7. multi tabs

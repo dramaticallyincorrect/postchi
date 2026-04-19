@@ -8,8 +8,8 @@ export async function addToPinned(path: string, project: string, fileStorage = D
         fileStorage.writeText(pinnedPath, '')
     }
 
-    const relativePath = relative(path, project)
-    return fileStorage.writeText(pinnedPath, relativePath + '\n', true)
+    const relativePath = relative(toUnix(path), toUnix(project))
+    return fileStorage.writeText(pinnedPath, relativePath  + '\n', true)
 }
 
 export async function removePinned(path: string, project: string, fileStorage = DefaultFileStorage.getInstance()): Promise<void> {
@@ -24,6 +24,8 @@ export async function removePinned(path: string, project: string, fileStorage = 
         return fileStorage.writeText(pinnedPath, lines.join('\n'))
     })
 }
+
+function toUnix(p: string) {return p.replace(/\\/g, "/")}
 
 function relative(path: string, project: string) {
     return path.startsWith(project) ? path.slice(project.length).replace(/^\//, '') : path
