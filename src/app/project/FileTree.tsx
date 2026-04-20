@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, PinIcon, PinOffIcon, ServerIcon, Settings2Icon, TrashIcon, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, PinIcon, PinOffIcon, ServerIcon, Settings2Icon, SquareArrowOutUpRight, TrashIcon, X, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/postchi/project/project-files"
@@ -27,6 +27,8 @@ import { FileExecution } from "./item-execution"
 import { addToPinned, removePinned } from "@/postchi/project/pin/pin"
 import { getActiveProject } from "@/lib/project-state"
 import { SourceChangesButton } from "../sources/source-changes-dialog"
+import { filenameWithoutExtension } from "@/lib/storage/files/file-utils/file-utils"
+import { Separator } from "@/components/ui/separator"
 
 const revealLabel = isMac() ? 'Show in Finder' : 'Show in Explorer';
 
@@ -45,9 +47,11 @@ export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
     selectedPath?: string
 }) => {
 
+    const { tabs, openTab, closeTab } = usePanel()
+
     return (
         <div className="flex flex-col h-full">
-            <ScrollArea className="h-full text-foreground/64 flex-1">
+            <ScrollArea className="h-full text-foreground/64 flex-1 min-h-0">
                 {items.map((item) => (
                     <FileTreeEntry
                         key={item.path}
@@ -58,6 +62,35 @@ export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
                     />
                 ))}
             </ScrollArea>
+            {
+                tabs.panels.length > 1 && < Separator className="my-1" />
+            }
+            {
+                tabs.panels.length > 1 && tabs.panels.map((t, index) => {
+                    return <div key={index} className="mt-1 mx-2">
+                        <Button variant="ghost"
+                            size='sm'
+                            onClick={() => openTab(t)}
+                            className={cn('justify-start w-full group', tabs.active == t ? 'bg-muted text-foreground' : '')}>
+                            <FileCodeIcon className="mr-1" />
+                            <span className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                                <span className="truncate">{filenameWithoutExtension(t.first!.params!.path)}</span>
+                            </span>
+
+                            <Button size='icon-sm' variant='ghost' onClick={(e) => {
+                                e.stopPropagation()
+                                console.log('close ', t, index)
+                                closeTab(t)
+                            }} className={cn(tabs.active == t ? '' : 'invisible group-hover:visible')}>
+                                <X />
+                            </Button>
+                        </Button>
+                    </div>
+                })
+            }
+            {
+                tabs.panels.length > 1 && <span className="mb-2" />
+            }
             <SourceChangesButton project={getActiveProject()!}></SourceChangesButton>
         </div>
     );
@@ -236,6 +269,8 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
 
     const hasScripts = item instanceof FileItem && (item.before || item.after);
 
+    const { openTab } = usePanel()
+
     const deleteItem = () => {
         storage.delete(item.path)
     }
@@ -301,7 +336,6 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
                             <ContextMenuSeparator />
                         </>
                     )}
-
                     <ContextMenuItem onClick={() => revealInFinder(item.path)}><FolderOpenIcon className="size-4 mx-1" />{revealLabel}</ContextMenuItem>
                     <ContextMenuItem onClick={deleteItem} variant="destructive">
                         <TrashIcon className="size-4 mx-1" />Delete

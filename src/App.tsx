@@ -228,13 +228,16 @@ const MainPanel = () => {
                     <Editor path={viewState?.first.params.path} />
                 </ResizablePanel>
 
-                <ResizableHandle className='bg-foreground' />
+                {
+                    viewState?.second?.params?.path && <>
+                        <ResizableHandle className='bg-foreground' />
 
-                <ResizablePanel>
-                    {
-                        viewState?.second?.params?.path && <Editor path={viewState.second.params.path} />
-                    }
-                </ResizablePanel>
+                        <ResizablePanel>
+                            {
+                                viewState?.second?.params?.path && <Editor path={viewState.second.params.path} />
+                            }
+                        </ResizablePanel></>
+                }
             </ResizablePanelGroup>
         case 'FOLDER_SETTINGS':
             return <FolderSettings folderPath={viewState?.first.params.path} />

@@ -4,8 +4,8 @@
    3. ~~os independent paths for stored paths~~
    5. plus move update trigger to side panel
    6. ask to buy license every once in a while
-   8. split view
-   9. multi tabs
+   8. ~~split view -> code is there but disabled til i'm more sure of the ui~~
+   9. ~~multi tabs -> code is there but disabled til i'm more sure of the ui~~
    10. none json body in response view
    11. octet stream body
    12. temporary request + add to empty view shortcuts
@@ -23,11 +23,15 @@
    8.  Invalid Environment (empty name)
 6. multi window
 7. recent projects
-8. view
+8. script improvements
+   1. auto complete using typescript compiler
+   2. tests
+9. graphQL
+10. view
    1.  split view
    2.  overlay view
    3.  folder settings opens overlaying response panel when a request is in view
-9.  Sources
+11. Sources
    1. values with enum should use a value from that as default value when importing rather than <name>
    2. settings ui
       1. auth 'and' logic
@@ -60,10 +64,10 @@
          1. default value
          2. optional or required
          3. arrays -> one or more of ...items
-10. performance optimizations 
+12. performance optimizations 
    1. scope tree changes to the folder that changed
    2. render file tree items lazyly
-11. end to end tests
+13. end to end tests
    1. import
       1. postman
       2. open api
@@ -72,16 +76,17 @@
    3. send request
       1. normal
       2. base path + env change
-12. actions
+14. actions
    1. show hint when it's empty
    2. pass current request to actions if a request is active when executing the action
-13. search
+15. search
    1. recent requests
    2. request text search
-14. security
+   3. open tabs
+16. security
    1. stripout auth from history by default
       1. setting to override it
-15. file tree
+17. file tree
         1. rename
         2. view options
            1. show/hide scripts
@@ -90,12 +95,12 @@
         5. show request urls as filenames and group by path?
         6. pin to top
            1. group pins in one folder
-16. save file  
+18. save file  
     1. when closing the app
-17. last
+19. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. write tests for rust project file reader
-18. bugs
+20. bugs
     1. sending request to localhost with no server gives ambiguis error -> error sending request for url (http://localhost:8080/login)
