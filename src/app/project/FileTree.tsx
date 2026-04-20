@@ -4,7 +4,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, PinIcon, PinOffIcon, ServerIcon, Settings2Icon, SquareArrowOutUpRight, TrashIcon, X, ZapIcon } from "lucide-react"
+import { ChevronRightIcon, DeleteIcon, FileCodeIcon, FilePlus2Icon, FolderIcon, FolderOpenIcon, FolderPlusIcon, PinIcon, PinOffIcon, ServerIcon, Settings2Icon, TrashIcon, X, ZapIcon } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { FileItem, FileTreeItem, FolderItem } from "@/postchi/project/project-files"
@@ -268,8 +268,6 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
     const isAfterScript = item.name.endsWith(FileType.AFTER_SCRIPT) || item.name === FileType.FOLDER_AFTER_SCRIPT;
 
     const hasScripts = item instanceof FileItem && (item.before || item.after);
-
-    const { openTab } = usePanel()
 
     const deleteItem = () => {
         storage.delete(item.path)

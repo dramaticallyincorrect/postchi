@@ -21,13 +21,6 @@ type Props = {
     files?: FileItem[]
 }
 
-function dir(displayPath: string): string {
-    const sep = displayPath.includes('/') ? '/' : '\\'
-    const lastSep = displayPath.lastIndexOf(sep)
-    if (lastSep === -1) return ''
-    return displayPath.slice(0, lastSep + 1)
-}
-
 export function SearchDialog({ open, onOpenChange, onSelect, collectionsPath, files }: Props) {
     const [query, setQuery] = useState('')
     const results = useProjectSearch(collectionsPath, query, files)
