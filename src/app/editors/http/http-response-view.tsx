@@ -2,13 +2,18 @@ import { Bullet } from '../../../components/bullet';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { HttpExecution } from '@/postchi/http/runner/http-runner';
-import { ContentTypeInfo } from '@/lib/network/http/body-classifier/http-body-classifier';
+import { BinaryContent, ContentTypeInfo } from '@/lib/network/http/body-classifier/http-body-classifier';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/app/theme/theme-context';
 import { customHttpLanguage } from '@/app/editors/http/codemirror-language/http-language';
 import { HttpRequest } from '@/lib/network/http/http-client';
 import usePersistentState from '@/hooks/persistent-state';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeFile } from '@tauri-apps/plugin-fs';
+import { FileDown } from 'lucide-react';
+import { useState } from 'react';
+import { formatFileSize } from '@/lib/utils/file-size-format';
 
 export type HttpResponse = {
     status: number,
@@ -54,7 +59,7 @@ const HttpResponseView = ({ execution }: { execution: HttpExecution }) => {
 const BodyView = ({ body, contentTypeInfo }: { body: string | ArrayBuffer, contentTypeInfo: ContentTypeInfo }) => {
     if (!body) return
     if (contentTypeInfo.kind === 'binary') {
-        return <div>Binary content of type {contentTypeInfo.mimeType}</div>;
+        return <BinaryBodyView body={body as ArrayBuffer} contentTypeInfo={contentTypeInfo} />;
     } else {
         switch (contentTypeInfo.type) {
             case 'json':
@@ -63,6 +68,64 @@ const BodyView = ({ body, contentTypeInfo }: { body: string | ArrayBuffer, conte
                 return <div>Text content of type {contentTypeInfo.mimeType}</div>;
         }
     }
+}
+
+const BINARY_TYPE_LABELS: Record<BinaryContent['type'], string> = {
+    image: 'Image',
+    video: 'Video',
+    audio: 'Audio',
+    pdf: 'PDF Document',
+    binary: 'Binary Data',
+};
+
+function suggestedFilename(mimeType: string): string {
+    const ext = mimeType.split('/')[1]?.split(';')[0]?.trim();
+    return ext ? `response.${ext}` : 'response.bin';
+}
+
+const BinaryBodyView = ({ body, contentTypeInfo }: { body: ArrayBuffer, contentTypeInfo: BinaryContent }) => {
+    const [saving, setSaving] = useState<'saving' | 'saved' | 'idle'>('idle');
+
+    const handleSave = async () => {
+        setSaving('saving');
+        try {
+            const path = await save({ defaultPath: suggestedFilename(contentTypeInfo.mimeType) });
+            if (path) {
+                await writeFile(path, new Uint8Array(body));
+                setSaving('saved')
+            }else {
+                setSaving('idle')
+            }
+        } catch (e) {
+            setSaving('idle');
+        }
+    };
+
+    let buttonText;
+    switch (saving) {
+        case 'idle':
+            buttonText = 'Save to disk'
+            break
+        case 'saving':
+            buttonText = 'Saving'
+            break
+        case 'saved':
+            buttonText = 'Saved!'
+            break
+    }
+
+    return (
+        <div className='flex flex-col items-center justify-center flex-1 gap-4 py-12 text-muted-foreground'>
+            <div className='flex flex-col items-center gap-2'>
+                <FileDown className='w-12 h-12 opacity-40'  />
+                <p className='text-sm font-medium'>{BINARY_TYPE_LABELS[contentTypeInfo.type]}</p>
+                <p className='text-xs opacity-60'>{contentTypeInfo.mimeType} &middot; {formatFileSize(body.byteLength)}</p>
+            </div>
+            <Button size='sm' onClick={handleSave} disabled={saving == 'saving'} className={saving == 'saved' ? 'bg-success text-accent' : 'bg-secondary border border-border'}>
+                {buttonText}
+            </Button>
+        </div>
+    );
 }
 
 const ResponseHeaders = ({ headers }: { headers: Headers }) => {
