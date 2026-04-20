@@ -311,6 +311,11 @@ function parseSegments(range: Line, request: string): UrlNode[] {
 
     while (range.curr < range.end) {
         if (request[range.curr] === "?") {
+            segments.push({
+                type: 'literal',
+                from: range.curr,
+                to: range.curr + 1
+            })
             range.curr++;
 
             if (range.curr == range.end) {

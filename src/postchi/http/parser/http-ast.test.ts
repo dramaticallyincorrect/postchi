@@ -21,8 +21,8 @@ describe("request line", () => {
     })
 
     test("method url", () => {
-        const httpRequest = `GET /this/is/a/test`
-        const expected = expectation("GET", ["/this/is/a/test"]);
+        const httpRequest = `GET /this/is/a/test?query=a`
+        const expected = expectation("GET", ["/this/is/a/test", "?", "query=a"]);
 
         assert(httpRequest, expected);
 
@@ -35,7 +35,7 @@ describe("request line", () => {
 
             const ast = computeHttpAst(httpRequest);
 
-            const actual = ast.url[1] as QueryParamNode
+            const actual = ast.url[2] as QueryParamNode
             expect(actual.type).toEqual("query-param");
             expect(actual.to).toBe(httpRequest.length)
             expect(actual.from).toBe(httpRequest.length)
@@ -50,7 +50,7 @@ describe("request line", () => {
 
             const ast = computeHttpAst(httpRequest);
 
-            const actual = ast.url[1] as QueryParamNode
+            const actual = ast.url[2] as QueryParamNode
             expect(actual.type).toEqual("query-param");
             expect(httpRequest.slice(actual.from, actual.to)).toEqual("key=value");
 
@@ -61,7 +61,7 @@ describe("request line", () => {
 
             const ast = computeHttpAst(httpRequest);
 
-            const actual = ast.url[1] as QueryParamNode
+            const actual = ast.url[2] as QueryParamNode
             expect(actual.type).toEqual("query-param");
             expect(actual.separator).toEqual(httpRequest.indexOf('='))
             expect(actual.value).toBeDefined()
@@ -74,7 +74,7 @@ describe("request line", () => {
 
             const ast = computeHttpAst(httpRequest);
 
-            const actual = ast.url[1] as QueryParamNode
+            const actual = ast.url[2] as QueryParamNode
             expect(actual.type).toEqual("query-param");
             expect(actual.separator).toBeUndefined()
             expect(actual.value).toBeUndefined()
@@ -87,7 +87,7 @@ describe("request line", () => {
 
             const ast = computeHttpAst(httpRequest);
 
-            const actual = ast.url[1] as QueryParamNode
+            const actual = ast.url[2] as QueryParamNode
             expect(actual.type).toEqual("query-param");
             expect(httpRequest.slice(actual.from, actual.to)).toEqual("key=<value>");
             expect(actual.value?.type).toEqual('variable');
@@ -99,11 +99,11 @@ describe("request line", () => {
 
             const ast = computeHttpAst(httpRequest);
 
-            const actual1 = ast.url[1] as QueryParamNode
+            const actual1 = ast.url[2] as QueryParamNode
             expect(actual1.type).toEqual("query-param");
             expect(httpRequest.slice(actual1.from, actual1.to)).toEqual("key1=value1");
 
-            const actual2 = ast.url[2] as QueryParamNode
+            const actual2 = ast.url[3] as QueryParamNode
             expect(actual2.type).toEqual("query-param");
             expect(httpRequest.slice(actual2.from, actual2.to)).toEqual("key2=value2");
 
