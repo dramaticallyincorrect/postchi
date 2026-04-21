@@ -36,7 +36,7 @@ describe('executeBeforeScript', () => {
     });
 
     it('adds a header via the before script', async () => {
-        fs.writeFileSync(`${root}/login.before.js`, `request.headers['Authorization'] = 'Bearer token123';`);
+        fs.writeFileSync(`${root}/login.before.js`, `chi.request.headers['Authorization'] = 'Bearer token123';`);
 
         const request = await executeBeforeScript(requestPath, baseRequest, []);
 
@@ -44,7 +44,7 @@ describe('executeBeforeScript', () => {
     });
 
     it('modifies the URL via the before script', async () => {
-        fs.writeFileSync(`${root}/login.before.js`, `request.url += '?debug=true';`);
+        fs.writeFileSync(`${root}/login.before.js`, `chi.request.url += '?debug=true';`);
 
         const request = await executeBeforeScript(requestPath, baseRequest, []);
 
@@ -52,7 +52,7 @@ describe('executeBeforeScript', () => {
     });
 
     it('exposes env variables to the script', async () => {
-        fs.writeFileSync(`${root}/login.before.js`, `request.headers['X-Token'] = env.TOKEN;`);
+        fs.writeFileSync(`${root}/login.before.js`, `chi.request.headers['X-Token'] = chi.env.TOKEN;`);
 
         const request = await executeBeforeScript(requestPath, baseRequest, [{ key: 'TOKEN', value: 'secret' }]);
 
@@ -60,7 +60,7 @@ describe('executeBeforeScript', () => {
     });
 
     it('preserves original headers alongside added ones', async () => {
-        fs.writeFileSync(`${root}/login.before.js`, `request.headers['X-Extra'] = 'extra';`);
+        fs.writeFileSync(`${root}/login.before.js`, `chi.request.headers['X-Extra'] = 'extra';`);
 
         const request = await executeBeforeScript(requestPath, baseRequest, []);
 
@@ -87,8 +87,8 @@ describe('executeBeforeScript', () => {
     });
 
     it('executes folder before.js then request-level before.js in order', async () => {
-        fs.writeFileSync(`${root}/before.js`, `request.headers['X-Order'] = '1';`);
-        fs.writeFileSync(`${root}/login.before.js`, `request.headers['X-Order'] = request.headers['X-Order'] + ',2';`);
+        fs.writeFileSync(`${root}/before.js`, `chi.request.headers['X-Order'] = '1';`);
+        fs.writeFileSync(`${root}/login.before.js`, `chi.request.headers['X-Order'] = chi.request.headers['X-Order'] + ',2';`);
 
         const request = await executeBeforeScript(requestPath, baseRequest, []);
 

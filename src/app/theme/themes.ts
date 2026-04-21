@@ -1,5 +1,5 @@
 import { EditorColorsInput, PostchiTheme, SyntaxTokens, ThemeType, VarColors } from "./theme";
-import { buildEditorTheme, buildSyntaxHighlighting, resolveEditorColors, resolveThemeVars } from "./theme-builder";
+import { buildEditorTheme, buildMonacoTheme, buildSyntaxHighlighting, resolveEditorColors, resolveThemeVars } from "./theme-builder";
 
 function defineTheme(config: {
     id: string;
@@ -22,6 +22,7 @@ function defineTheme(config: {
             tokens: config.tokens,
             colors: editorColors,
         },
+        monaco: buildMonacoTheme(config.id, config.type === 'dark', editorColors, config.tokens),
         _source: {
             vars: config.vars,
             tokens: config.tokens,

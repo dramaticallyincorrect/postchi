@@ -18,9 +18,11 @@ async function runBeforeScriptContent(
     const scriptRequest: ScriptRequest = buildScriptRequest(request);
 
     await executeScript({
-        request: scriptRequest,
-        env: buildEnv(variables),
-        fetch: globalThis.fetch,
+        chi: {
+            request: scriptRequest,
+            env: buildEnv(variables),
+            fetch: globalThis.fetch,
+        },
     }, scriptContent);
 
     return {

@@ -40,12 +40,32 @@ export type CodeMirrorTheme = {
     colors: EditorColors;
 };
 
+export type MonacoThemeRule = {
+    token: string;
+    foreground?: string;
+    background?: string;
+    fontStyle?: string;
+};
+
+export type MonacoThemeData = {
+    base: 'vs' | 'vs-dark' | 'hc-black' | 'hc-light';
+    inherit: boolean;
+    rules: MonacoThemeRule[];
+    colors: Record<string, string>;
+};
+
+export type MonacoTheme = {
+    name: string;
+    data: MonacoThemeData;
+};
+
 export type PostchiTheme = {
     id: string;
     name: string;
     type: ThemeType;
     vars: ResolvedVarColors;
     codemirror: CodeMirrorTheme;
+    monaco: MonacoTheme;
     /** Raw inputs preserved for recomputation when user toggles flags */
     _source: {
         vars: VarColors;

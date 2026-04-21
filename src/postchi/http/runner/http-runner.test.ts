@@ -48,7 +48,7 @@ describe('execute http template', () => {
 
     describe('scripts', () => {
         it('sets environment variables', async () => {
-            fs.writeFileSync(after, 'setEnvironmentVariable("testKey", "testValue")');
+            fs.writeFileSync(after, 'chi.setEnvironmentVariable("testKey", "testValue")');
             fs.writeFileSync(envPath, serializeEnvironments([{
                 name: 'production', variables: [
                     { key: 'api', value: 'http://' }

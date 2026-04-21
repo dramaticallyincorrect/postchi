@@ -48,32 +48,32 @@ describe('executeAfterScript', () => {
     });
 
     it('exposes response status to the script', async () => {
-        await expect(run(`if (response.status !== 200) throw new Error('unexpected status');`)).resolves.toEqual(emptyMutations);
+        await expect(run(`if (chi.response.status !== 200) throw new Error('unexpected status');`)).resolves.toEqual(emptyMutations);
     });
 
     it('exposes response body to the script', async () => {
         await expect(run(`
-            const data = JSON.parse(response.body);
+            const data = JSON.parse(chi.response.body);
             if (data.token !== 'abc123') throw new Error('wrong token');
         `)).resolves.toEqual(emptyMutations);
     });
 
     it('exposes response headers to the script', async () => {
         await expect(run(`
-            if (response.headers['content-type'] !== 'application/json') throw new Error('wrong content-type');
+            if (chi.response.headers['content-type'] !== 'application/json') throw new Error('wrong content-type');
         `)).resolves.toEqual(emptyMutations);
     });
 
     it('exposes the final request to the script', async () => {
         await expect(run(`
-            if (request.method !== 'GET') throw new Error('wrong method');
-            if (request.url !== 'https://example.com/api') throw new Error('wrong url');
+            if (chi.request.method !== 'GET') throw new Error('wrong method');
+            if (chi.request.url !== 'https://example.com/api') throw new Error('wrong url');
         `)).resolves.toEqual(emptyMutations);
     });
 
     it('exposes env variables to the script', async () => {
         fs.writeFileSync(`${root}/login.after.js`, `
-            if (env.EXPECTED_STATUS !== '200') throw new Error('env not available');
+            if (chi.env.EXPECTED_STATUS !== '200') throw new Error('env not available');
         `);
         await expect(
             executeAfterScript(requestPath, baseRequest, baseResponse, [{ key: 'EXPECTED_STATUS', value: '200' }])
@@ -87,7 +87,7 @@ describe('executeAfterScript', () => {
     it('body is null for binary responses', async () => {
         const binaryResponse: ScriptResponse = { ...baseResponse, body: null };
         fs.writeFileSync(`${root}/login.after.js`, `
-            if (response.body !== null) throw new Error('expected null body');
+            if (chi.response.body !== null) throw new Error('expected null body');
         `);
         await expect(
             executeAfterScript(requestPath, baseRequest, binaryResponse, [])
@@ -96,8 +96,8 @@ describe('executeAfterScript', () => {
 
     it('returns env mutation from setEnvironmentVariable', async () => {
         const result = await run(`
-            const data = JSON.parse(response.body);
-            setEnvironmentVariable('token', data.token);
+            const data = JSON.parse(chi.response.body);
+            chi.setEnvironmentVariable('token', data.token);
         `);
         expect(result.envMutations).toEqual([{ key: 'token', value: 'abc123' }]);
         expect(result.secretMutations).toEqual([]);
@@ -105,8 +105,8 @@ describe('executeAfterScript', () => {
 
     it('returns secret mutation from setSecret', async () => {
         const result = await run(`
-            const data = JSON.parse(response.body);
-            setSecret('token', data.token);
+            const data = JSON.parse(chi.response.body);
+            chi.setSecret('token', data.token);
         `);
         expect(result.secretMutations).toEqual([{ key: 'token', value: 'abc123' }]);
         expect(result.envMutations).toEqual([]);
@@ -114,9 +114,9 @@ describe('executeAfterScript', () => {
 
     it('returns mutations from both setEnvironmentVariable and setSecret', async () => {
         const result = await run(`
-            const data = JSON.parse(response.body);
-            setEnvironmentVariable('env_token', data.token);
-            setSecret('secret_token', data.token);
+            const data = JSON.parse(chi.response.body);
+            chi.setEnvironmentVariable('env_token', data.token);
+            chi.setSecret('secret_token', data.token);
         `);
         expect(result.envMutations).toEqual([{ key: 'env_token', value: 'abc123' }]);
         expect(result.secretMutations).toEqual([{ key: 'secret_token', value: 'abc123' }]);

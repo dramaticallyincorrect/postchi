@@ -2,18 +2,18 @@
 
 1. v1.2.0
    3. ~~os independent paths for stored paths~~
-   5. plus move update trigger to side panel
-   6. ask to buy license every once in a while
-   8. ~~split view -> code is there but disabled til i'm more sure of the ui~~
-   9. ~~multi tabs -> code is there but disabled til i'm more sure of the ui~~
-   10. ~~none json body in response view~~
-   11. ~~octet stream body~~
-   12. temporary request + add to empty view shortcuts
+   4. move update trigger to side panel
+   5. ask to buy license every once in a while
+   6. ~~split view -> code is there but disabled til i'm more sure of the ui~~
+   7. ~~multi tabs -> code is there but disabled til i'm more sure of the ui~~
+   8.  ~~none json body in response view~~
+   9.  ~~octet stream body~~
+   10. temporary request + add to empty view shortcuts
 2. copy as cURL
 3. animate split view and new tab inserted
 4. paste cURL
 5. sources -> spec only change, like parameter becomes required
-6. settings -> disable usage and diagnostic tracking
+6. settings -> disable usage and diagnostic trackings
 7. errors
    1. unexpected token, text after a variable or function in header
    2.  MissingKey
@@ -27,7 +27,13 @@
 9. recent projects
 10. script improvements
    1. auto complete using typescript compiler
-   2. tests
+   2. code clean up
+      1. unifiy running scripts
+      2. decide weather to have scripts affect the env when they run or only schedule the updates
+      3. improve http runner and scripts readability
+   3. tests
+      1. plan the scope
+      2. ui design
 11. graphQL
 12. view
    1.  split view

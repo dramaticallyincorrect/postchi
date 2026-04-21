@@ -297,7 +297,7 @@ const FileNode = ({ item, isInActionsFolder, onItemClick, selectedPath }: { item
 
     const icon = item.isPinned ? <PinIcon className="" /> : isBeforeScript || isAfterScript || isInActionsFolder ? <FileJavascriptIcon /> : <FileCodeIcon />;
 
-    const executable = item.traits.includes('executable') ? <FileExecution path={item.path} shortcutEnabled={item.traits.includes('shortcutExecutable')} /> : null;
+    const executable = item.traits?.includes('executable') ? <FileExecution path={item.path} shortcutEnabled={item.traits.includes('shortcutExecutable')} /> : null;
 
     return (
         <div>

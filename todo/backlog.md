@@ -8,3 +8,5 @@
        4. folder snippets??
 3. Folder setings
     1. run a task to change the base path for every request to relative
+4. http editor
+   1. paste a url auto replaces the request url

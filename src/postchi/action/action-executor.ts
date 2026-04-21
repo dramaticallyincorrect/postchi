@@ -42,11 +42,13 @@ export async function executeQuickAction(
     try {
         // TODO: refactor to avoid the mapping
         await executeScript({
-            env: buildEnv(state.environment.variables.concat(state.environment.secrets)),
-            fetch: globalThis.fetch,
-            setEnvironmentVariable: (key: string, value: string) => envMutations.push({ key, value }),
-            setSecret: (key: string, value: string) => secretMutations.push({ key, value }),
-            executeRequest,
+            chi: {
+                env: buildEnv(state.environment.variables.concat(state.environment.secrets)),
+                fetch: globalThis.fetch,
+                setEnvironmentVariable: (key: string, value: string) => envMutations.push({ key, value }),
+                setSecret: (key: string, value: string) => secretMutations.push({ key, value }),
+                executeRequest,
+            },
         }, scriptContent);
 
         await persistMutations({ envMutations, secretMutations });

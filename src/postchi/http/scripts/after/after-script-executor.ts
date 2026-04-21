@@ -6,7 +6,6 @@ import { FileStorage } from "@/lib/storage/files/file";
 import { readClosestFile } from "@/lib/storage/files/file-utils/file-utils";
 import { FileType } from "@/postchi/project/file-types/supported-filetypes";
 
-
 export function afterScriptPath(requestPath: string): string {
     return scriptPath(requestPath, FileType.AFTER_SCRIPT);
 }
@@ -25,12 +24,14 @@ async function runAfterScriptContent(
     secretMutations: EnvMutation[],
 ): Promise<void> {
     await executeScript({
-        request: buildScriptRequest(request),
-        response,
-        env: buildEnv(variables),
-        fetch: globalThis.fetch,
-        setEnvironmentVariable: (key: string, value: string) => envMutations.push({ key, value }),
-        setSecret: (key: string, value: string) => secretMutations.push({ key, value }),
+        chi: {
+            request: buildScriptRequest(request),
+            response,
+            env: buildEnv(variables),
+            fetch: globalThis.fetch,
+            setEnvironmentVariable: (key: string, value: string) => envMutations.push({ key, value }),
+            setSecret: (key: string, value: string) => secretMutations.push({ key, value }),
+        },
     }, scriptContent);
 }
 

@@ -1,7 +1,7 @@
 import { EditorView, Extension } from "@uiw/react-codemirror";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
-import { CoreVarColors, EditorColors, EditorColorsInput, PostchiTheme, ResolvedVarColors, SyntaxTokens, VarColors } from "./theme";
+import { CoreVarColors, EditorColors, EditorColorsInput, MonacoTheme, PostchiTheme, ResolvedVarColors, SyntaxTokens, VarColors } from "./theme";
 
 let styleEl: HTMLStyleElement | null = null;
 
@@ -30,6 +30,7 @@ export function deriveTheme(base: PostchiTheme, options: ThemeDisplayOptions): P
             tokens: base._source.tokens,
             colors: editorColors,
         },
+        monaco: buildMonacoTheme(base.id, base.type === 'dark', editorColors, base._source.tokens),
     };
 }
 
@@ -234,4 +235,85 @@ export function buildSyntaxHighlighting(tokens: SyntaxTokens): Extension {
         { tag: t.comment, color: tokens.comment, fontStyle: 'italic' },
         { tag: t.annotation, color: tokens.annotation },
     ]));
+}
+
+function stripHash(color: string): string {
+    const trimmed = color.trim();
+    if (!trimmed.startsWith('#')) return trimmed;
+    const hex = trimmed.slice(1);
+    if (hex.length === 3) {
+        return hex.split('').map(c => c + c).join('');
+    }
+    if (hex.length === 4) {
+        return hex.split('').map(c => c + c).join('');
+    }
+    return hex;
+}
+
+export function buildMonacoTheme(id: string, dark: boolean, colors: EditorColors, tokens: SyntaxTokens): MonacoTheme {
+    const name = `postchi-${id}`;
+    const data: MonacoTheme['data'] = {
+        base: dark ? 'vs-dark' : 'vs',
+        inherit: true,
+        rules: [
+            { token: '', foreground: stripHash(tokens.variableName), background: stripHash(colors.background) },
+            { token: 'keyword', foreground: stripHash(tokens.keyword) },
+            { token: 'keyword.js', foreground: stripHash(tokens.keyword) },
+            { token: 'keyword.ts', foreground: stripHash(tokens.keyword) },
+            { token: 'string', foreground: stripHash(tokens.string) },
+            { token: 'string.js', foreground: stripHash(tokens.string) },
+            { token: 'string.ts', foreground: stripHash(tokens.string) },
+            { token: 'string.escape', foreground: stripHash(tokens.string) },
+            { token: 'number', foreground: stripHash(tokens.propertyName) },
+            { token: 'number.js', foreground: stripHash(tokens.propertyName) },
+            { token: 'number.ts', foreground: stripHash(tokens.propertyName) },
+            { token: 'comment', foreground: stripHash(tokens.comment), fontStyle: 'italic' },
+            { token: 'comment.js', foreground: stripHash(tokens.comment), fontStyle: 'italic' },
+            { token: 'comment.ts', foreground: stripHash(tokens.comment), fontStyle: 'italic' },
+            { token: 'identifier', foreground: stripHash(tokens.variableName) },
+            { token: 'identifier.js', foreground: stripHash(tokens.variableName) },
+            { token: 'identifier.ts', foreground: stripHash(tokens.variableName) },
+            { token: 'type', foreground: stripHash(tokens.propertyName) },
+            { token: 'type.identifier', foreground: stripHash(tokens.propertyName) },
+            { token: 'type.identifier.js', foreground: stripHash(tokens.propertyName) },
+            { token: 'type.identifier.ts', foreground: stripHash(tokens.propertyName) },
+            { token: 'delimiter', foreground: stripHash(tokens.variableName) },
+            { token: 'delimiter.js', foreground: stripHash(tokens.variableName) },
+            { token: 'delimiter.ts', foreground: stripHash(tokens.variableName) },
+            { token: 'annotation', foreground: stripHash(tokens.annotation) },
+            { token: 'tag', foreground: stripHash(tokens.annotation) },
+            { token: 'regexp', foreground: stripHash(tokens.string) },
+        ],
+        colors: {
+            'editor.background': colors.background,
+            'editor.foreground': colors.foreground,
+            'editorCursor.foreground': colors.cursor,
+            'editor.selectionBackground': colors.selection,
+            'editor.inactiveSelectionBackground': colors.selection,
+            'editor.lineHighlightBackground': colors.gutterBackground,
+            'editor.lineHighlightBorder': colors.gutterBackground,
+            'editorLineNumber.foreground': colors.foreground,
+            'editorLineNumber.activeForeground': tokens.variableName,
+            'editorGutter.background': colors.gutterBackground,
+            'editorWidget.background': colors.tooltipBackground,
+            'editorWidget.foreground': colors.tooltipForeground,
+            'editorWidget.border': colors.tooltipBorder,
+            'editorSuggestWidget.background': colors.tooltipBackground,
+            'editorSuggestWidget.foreground': colors.tooltipForeground,
+            'editorSuggestWidget.border': colors.tooltipBorder,
+            'editorSuggestWidget.selectedBackground': colors.selection,
+            'editorSuggestWidget.highlightForeground': tokens.keyword,
+            'editorHoverWidget.background': colors.tooltipBackground,
+            'editorHoverWidget.foreground': colors.tooltipForeground,
+            'editorHoverWidget.border': colors.tooltipBorder,
+            'editorError.foreground': colors.lintError,
+            'editorWarning.foreground': colors.lintWarning,
+            'editorInfo.foreground': colors.lintInfo,
+            'editorIndentGuide.background': colors.tooltipBorder,
+            'editorIndentGuide.activeBackground': colors.foreground,
+            'editorBracketMatch.background': colors.selection,
+            'editorBracketMatch.border': colors.tooltipBorder,
+        },
+    };
+    return { name, data };
 }
