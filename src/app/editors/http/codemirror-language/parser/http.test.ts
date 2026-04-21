@@ -221,6 +221,25 @@ ${body}`.trim()
     testTree(tree, spec)
 
   })
+
+
+  it('octet stream body', () => {
+    const defaultValue = `
+  POST /api/v1/data
+  @body 
+  readFile(/this/is/a/path)`;
+    const tree = parser.parse(defaultValue)
+    let spec = `Request(
+                RequestLine(
+                  Method,
+                  Path),
+                BodyStart, Body(OctetBody(Function(FunctionName,Value))))`
+
+    testTree(tree, spec)
+
+  })
+
+
 })
 
 test('comments', () => {

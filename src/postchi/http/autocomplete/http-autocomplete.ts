@@ -91,6 +91,8 @@ export async function computeHttpCompletions(position: number, doc: string, line
         case 'json':
             return jsonCompletion(context)
             break;
+        case 'function':
+            return provideFunctionCompletions(node, context)
     }
 
     return {

@@ -9,6 +9,7 @@ function inferContentType(body: HttpRequest['body']): string | null {
     if (typeof body === 'string' && body.length > 0) {
         try { JSON.parse(body); return 'application/json'; } catch { return 'text/plain'; }
     }
+    if (body instanceof Blob) return 'application/octet-stream'
     return null;
 }
 

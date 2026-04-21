@@ -16,6 +16,7 @@ export const
   Value = 14,
   BodyStart = 15,
   Body = 16,
-  JsonBody = 17,
-  FormBody = 18,
-  TextBody = 19
+  OctetBody = 17,
+  JsonBody = 18,
+  FormBody = 19,
+  TextBody = 20

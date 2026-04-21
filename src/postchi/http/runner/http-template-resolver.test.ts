@@ -322,6 +322,26 @@ describe('creates http request from ast', () => {
                 });
             })
 
+            it('read file attaches blob to body', async () => {
+                const path = '/test.png'
+                const data = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+                fs.writeFileSync(path, data);
+                const template = `GET https://getpostchi.com/download
+                            @body
+                            readFile(${path})
+                            `.trim()
+
+
+                const httpRequest = await resolveHttpTemplate(template);
+
+                expect(httpRequest, template).toStrictEqual({
+                    method: "GET",
+                    url: "https://getpostchi.com/download",
+                    headers: [],
+                    body: new Blob([data])
+                });
+            })
+
 
         })
 

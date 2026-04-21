@@ -3,7 +3,7 @@ import DefaultFileStorage from "@/lib/storage/files/file-default";
 import Task from "true-myth/task";
 import httpFunctions from "../functions/http-functions";
 import { computeHttpDiagnostics } from "../linter/http-linter";
-import { computeHttpAst, HttpNode, Expression, FormBodyNode, JsonBodyNode, TextBodyNode } from "../parser/http-ast";
+import { computeHttpAst, HttpNode, Expression, HttpBodyNode } from "../parser/http-ast";
 
 
 export type ResolveError = {
@@ -69,11 +69,14 @@ export default async function resolveHttpTemplate(template: string, context: Exe
         return value(node)
     }
 
-    async function bodyValue(node: FormBodyNode | JsonBodyNode | TextBodyNode | null): Promise<string | URLSearchParams | FormData> {
+    async function bodyValue(node: HttpBodyNode): Promise<string | URLSearchParams | FormData | Blob> {
         if (!node) {
             return "";
         }
 
+        if (node.type === 'function') {
+            return formExpressionValue(node)
+        }
         if (node.type === 'urlencoded') {
             const params = new URLSearchParams();
             await Promise.all(node.entries.map(async entry => {

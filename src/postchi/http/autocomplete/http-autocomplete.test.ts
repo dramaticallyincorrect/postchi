@@ -207,6 +207,20 @@ describe('body', () => {
             })
         })
     })
+
+    describe('octet-stream', () => {
+        it('read File function provides path completions', async () => {
+            const httpRequest = `GET /\n@body\nreadFile(/colle)`
+
+            const result = await computeHttpCompletions(httpRequest.length - 1, httpRequest, () => 3)
+
+            expect(result).toEqual({
+                from: httpRequest.indexOf('/colle'),
+                options: await pathCompletion('/colle')
+            })
+        })
+    })
+
 })
 
 

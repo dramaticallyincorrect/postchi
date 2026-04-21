@@ -93,7 +93,7 @@ const BinaryBodyView = ({ body, contentTypeInfo }: { body: ArrayBuffer, contentT
             if (path) {
                 await writeFile(path, new Uint8Array(body));
                 setSaving('saved')
-            }else {
+            } else {
                 setSaving('idle')
             }
         } catch (e) {
@@ -117,7 +117,7 @@ const BinaryBodyView = ({ body, contentTypeInfo }: { body: ArrayBuffer, contentT
     return (
         <div className='flex flex-col items-center justify-center flex-1 gap-4 py-12 text-muted-foreground'>
             <div className='flex flex-col items-center gap-2'>
-                <FileDown className='w-12 h-12 opacity-40'  />
+                <FileDown className='w-12 h-12 opacity-40' />
                 <p className='text-sm font-medium'>{BINARY_TYPE_LABELS[contentTypeInfo.type]}</p>
                 <p className='text-xs opacity-60'>{contentTypeInfo.mimeType} &middot; {formatFileSize(body.byteLength)}</p>
             </div>
@@ -184,11 +184,16 @@ const RequestView = ({ request }: { request: HttpRequest }) => {
     );
 }
 
-const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams }) => {
+const RequestBodyView = ({ body }: { body: string | FormData | URLSearchParams | Blob }) => {
+    const { theme } = useTheme();
+
     if (!body) {
         return null;
     }
-    const { theme } = useTheme();
+
+    if (body instanceof Blob) {
+        return <div className='ml-2'>Body is an attached file</div>
+    }
 
     if (typeof body === 'string') {
 

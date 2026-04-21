@@ -29,7 +29,11 @@ QueryValue {
 Header { Key? colon expression "\n"? }
 
 Body {
-    JsonBody | FormBody | TextBody
+    OctetBody | JsonBody | FormBody | TextBody
+}
+
+OctetBody {
+    Function
 }
 
 JsonBody {

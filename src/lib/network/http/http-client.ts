@@ -23,5 +23,5 @@ export type HttpRequest = {
     method: string,
     url: string,
     headers: [string, string][],
-    body: string | URLSearchParams | FormData
+    body: string | URLSearchParams | FormData | Blob
 }

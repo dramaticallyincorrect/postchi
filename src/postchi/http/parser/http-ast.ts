@@ -4,8 +4,11 @@ export type HttpRequestAst = {
     method: Method;
     url: UrlNode[];
     headers: HeaderNode[];
-    body: JsonBodyNode | FormBodyNode | TextBodyNode | null;
+    body: HttpBodyNode;
 };
+
+export type HttpBodyNode = JsonBodyNode | FormBodyNode | TextBodyNode | Expression | null
+
 
 export type HttpNode = Method | Variable | Literal | HeaderNode | FormBodyNode | JsonBodyNode | TextBodyNode | RequestFunction | JsonValueNode | UrlNode | QueryParamNode;
 
@@ -14,6 +17,7 @@ type Method = {
     from: number;
     to: number;
 }
+
 
 export type UrlNode = Variable | Literal | QueryParamNode
 
@@ -104,15 +108,18 @@ export function allNodes(ast: HttpRequestAst): HttpNode[] {
         return [node, node.key, ...expressionNodes(node.value)]
     }
 
-    function bodyNodes(node: JsonBodyNode | FormBodyNode | TextBodyNode | null): HttpNode[] {
+    function bodyNodes(node: JsonBodyNode | FormBodyNode | TextBodyNode | Expression | null): HttpNode[] {
         if (!node) return [];
         if (node.type === "json") {
             return [node, ...node.children.flatMap(child => [child, ...(child.type === 'json-value' ? [child.value] : [])])];
         } else if (node.type === "text") {
             return [node];
-        } else {
+        } else if (node.type == 'multipart' || node.type == 'urlencoded') {
             return [node, ...node.entries.flatMap(entry => headerNodes(entry))];
+        } else if (node.type == 'literal' || node.type == 'function' || node.type == 'variable') {
+            return expressionNodes(node)
         }
+        return []
     }
 
     function urlNodes(node: UrlNode | null): HttpNode[] {
@@ -254,10 +261,17 @@ export function computeHttpAst(request: string): HttpRequestAst {
                     children: children,
                 }
             } else {
-                ast.body = {
-                    type: "text",
-                    from: bodyStart,
-                    to: bodyEnd,
+
+
+                const exp = expression(line)
+                if (exp.type == 'literal') {
+                    ast.body = {
+                        type: "text",
+                        from: bodyStart,
+                        to: bodyEnd,
+                    }
+                } else {
+                    ast.body = exp
                 }
             }
             break;

@@ -337,6 +337,15 @@ describe("body", () => {
 
     })
 
+    it('octet stream', () => {
+        const httpRequest = body(`readFile(/path/to/file)`)
+        const expected = expectation("GET", ["/"], [], "function(readFile, /path/to/file)");
+
+        const httpRequestAst = computeHttpAst(httpRequest);
+
+        expect(valuesOf(httpRequestAst, httpRequest)).toEqual(expected);
+    })
+
     it('trimmed on both sides', () => {
 
         const varients = ['{}', '[]', 'key=value']
@@ -384,10 +393,11 @@ function valuesOf(ast: HttpRequestAst, request: string): Expectation {
         return request.slice(node.from, node.to);
     };
 
-    const bodyValue = (body: JsonBodyNode | FormBodyNode | TextBodyNode | null) => {
+    const bodyValue = (body: JsonBodyNode | FormBodyNode | TextBodyNode | Expression | null) => {
         if (!body) return null;
         if (body.type === "json") return `json(${body.children.map(u => value(u)).join("")})`;
         if (body.type === "text") return `text(${value(body)})`;
+        if (body.type === 'function' || body.type === 'literal' || body.type === 'variable') return value(body)
         return `${body.type}(${body.entries.map(({ key, value: v }) => `${value(key)}=${expressionString(v, request)}`).join(",")})`;
     }
 

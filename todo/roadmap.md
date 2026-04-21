@@ -7,7 +7,7 @@
    8. ~~split view -> code is there but disabled til i'm more sure of the ui~~
    9. ~~multi tabs -> code is there but disabled til i'm more sure of the ui~~
    10. ~~none json body in response view~~
-   11. octet stream body
+   11. ~~octet stream body~~
    12. temporary request + add to empty view shortcuts
 2. copy as cURL
 3. animate split view and new tab inserted
