@@ -13,10 +13,11 @@ import { RequestSpec } from "./request-spec"
 import { getActiveProject } from "@/lib/project-state"
 import { fromPromise } from "true-myth/task"
 import { FileStorage } from "@/lib/storage/files/file"
+import * as yaml from 'js-yaml'
 
 export const SOURCE_SPEC_FILENAME = 'source.yaml'
 
-export type ChangeKind = 'added' | 'removed' | 'modified'
+export type ChangeKind = 'added' | 'removed' | 'modified' | 'spec' | 'source'
 
 //TODO: path should be absolute to not need the project, in general we save on disk relative but once read should exist as absolute
 export type SourceChange = {
@@ -76,6 +77,7 @@ export async function checkSources(
 
             const doc = remoteDoc.value
 
+            console.log('source path is ', pathOf(sourceFolderPath, SOURCE_SPEC_FILENAME))
             const localDoc = await DefaultFileStorage.getInstance().readText(pathOf(sourceFolderPath, SOURCE_SPEC_FILENAME)).then((text) => fetchOpenApiSpecFromText(text))
 
             const changes = await diffSources(localDoc, doc, sourceFolderPath)
@@ -94,12 +96,22 @@ export async function checkSources(
     }
 }
 
-export async function diffSources(local: OpenAPIV3.Document, remote: OpenAPIV3.Document, sourceFolderPath = '', fileStorage : FileStorage = DefaultFileStorage.getInstance()): Promise<SourceChange[]> {
+export async function diffSources(local: OpenAPIV3.Document, remote: OpenAPIV3.Document, sourceFolderPath = '', fileStorage: FileStorage = DefaultFileStorage.getInstance()): Promise<SourceChange[]> {
     try {
         const localFlat = flattenImportedFolder(convertDocumentToFolder(local, true), sourceFolderPath)
-        const localMap = new Map<string, string>([...localFlat].map(([p, e]) => [p, e.content]))
         const remoteMap = flattenImportedFolder(convertDocumentToFolder(remote, true), sourceFolderPath)
-        return await diffMaps(localMap, remoteMap, fileStorage)
+        const diffs = await diffMaps(localFlat, remoteMap, fileStorage)
+        console.log('source changed', yaml.dump(local) != yaml.dump(remote))
+        if (diffs.length == 0 && yaml.dump(local) != yaml.dump(remote)) {
+            console.log('source change')
+            diffs.push({
+                kind: 'source',
+                path: pathOf(sourceFolderPath, SOURCE_SPEC_FILENAME),
+                oldContent: yaml.dump(local),
+                newContent: yaml.dump(remote)
+            })
+        }
+        return diffs
     } catch (e) {
         console.error(`[sources] Failed to diff sources:`, e)
         return []
@@ -128,22 +140,24 @@ function flattenImportedFolder(folder: ImportedFolder, prefix = ''): Map<string,
     return map
 }
 
-async function diffMaps(local: Map<string, string>, remote: Map<string, FlattenedEntry>, fileStorage = DefaultFileStorage.getInstance()): Promise<SourceChange[]> {
+async function diffMaps(local: Map<string, FlattenedEntry>, remote: Map<string, FlattenedEntry>, fileStorage = DefaultFileStorage.getInstance()): Promise<SourceChange[]> {
     const changes: SourceChange[] = []
 
     for (const [path, { content: newContent, spec }] of remote) {
         if (!local.has(path)) {
             changes.push({ kind: 'added', path, newContent, spec })
         } else {
-            if (local.get(path) !== newContent || !(await fileStorage.exists(path))) {
+            if (local.get(path)?.content !== newContent || !(await fileStorage.exists(path))) {
                 const onDiskResult = await fromPromise(DefaultFileStorage.getInstance().readText(path))
-                const merged = mergeRequestContent(onDiskResult.unwrapOr(local.get(path)) ?? '', newContent ?? '')
-                changes.push({ kind: 'modified', path, oldContent: local.get(path), newContent: merged, spec })
+                const merged = mergeRequestContent(onDiskResult.unwrapOr(local.get(path)?.content) ?? '', newContent ?? '')
+                changes.push({ kind: 'modified', path, oldContent: local.get(path)?.content, newContent: merged, spec })
+            } else if (yaml.dump(local.get(path)?.spec) != yaml.dump(spec)) {
+                changes.push({ kind: 'spec', path, spec: spec, oldContent: yaml.dump(local.get(path)?.spec), newContent: yaml.dump(spec) })
             }
         }
     }
 
-    for (const [path, oldContent] of local) {
+    for (const [path, { content: oldContent }] of local) {
         if (!remote.has(path)) {
             changes.push({ kind: 'removed', path, oldContent })
         }

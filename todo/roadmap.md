@@ -1,20 +1,46 @@
 # Roadmap
 
-1. v1.2.0
+1. v1.3.0
    3. ~~os independent paths for stored paths~~
-   4. move update trigger to side panel
-   5. ask to buy license every once in a while
-   6. ~~split view -> code is there but disabled til i'm more sure of the ui~~
-   7. ~~multi tabs -> code is there but disabled til i'm more sure of the ui~~
-   8.  ~~none json body in response view~~
-   9.  ~~octet stream body~~
-   10. temporary request + add to empty view shortcuts
-2. copy as cURL
-3. animate split view and new tab inserted
-4. paste cURL
-5. sources -> spec only change, like parameter becomes required
-6. settings -> disable usage and diagnostic trackings
-7. errors
+   4. ~~sources -> spec only change, like parameter becomes required~~
+      1. ~~only show to the user the spec change if there were no other source changes~~
+      2. ~~one entry showing local and remote spec~~
+      3. ~~overwrite the existing complete spec with remote~~
+      4. ~~overwrite the existing request spec wit remote~~
+      5. ~~security updates~~
+         1. ~~security that exist in the local spec are diffed against the remote~~
+         2. ~~new security schemes overwrite local ones keeping the values set locally~~
+   5. move update trigger to side panel
+   6. ask to buy license every once in a while
+   7. temp project should have some request and env
+   9. copy as cURL
+   10. rename request
+   11. auth in header, query
+   12. web
+       1.  home page is web version + download app button
+2. update documents
+3. ui rethink
+   1. env editor
+      1. should show both env and secrets, with secrets being a series of env editors with no editable env
+      2. don't show secrets in file tree
+   2. http ui
+4. clean up
+   1. http parser
+   2. http autocomplete
+   3. send request
+   4. scripts
+5. figma design
+6. split and tabs design
+   1. animate split view and new tab inserted
+   2. when in split view, requests have gap, in box
+   3. designs to check
+      1. side bar hover - panel flat
+      2. remove open and close indicator with only different folder icons
+7. paste cURL
+8. settings -> disable usage and diagnostic trackings
+9.  temporary request + add to empty view shortcuts
+   1. clean send request first
+10. errors
    1. unexpected token, text after a variable or function in header
    2.  MissingKey
    3.  DuplicateValue
@@ -23,28 +49,28 @@
    6.  PathIsDirectory
    7.  InvalidContentType
    8.  Invalid Environment (empty name)
-8. multi window
-9. recent projects
-10. script improvements
-   1. auto complete using typescript compiler
+11. multi window
+12. recent projects
+13. script improvements
+   1. ~~auto complete using typescript compiler~~
    2. code clean up
       1. unifiy running scripts
       2. decide weather to have scripts affect the env when they run or only schedule the updates
       3. improve http runner and scripts readability
    3. tests
-      1. plan the scope
-      2. ui design
-11. graphQL
-12. view
-   1.  split view
-   2.  overlay view
-   3.  folder settings opens overlaying response panel when a request is in view
-13. Sources
+      1. reseaerch usage and use cases
+      2. plan the scope
+      3. ui design
+14. graphQL
+15. view
+    1.  split view
+    2.  overlay view
+    3.  folder settings opens overlaying response panel when a request is in view
+16. Sources
    1. values with enum should use a value from that as default value when importing rather than <name>
    2. settings ui
       1. auth 'and' logic
          1. group as one item
-      2. no auth delete if defined in source, can add empty auth to allow it
    3. diff
       1. things to change since we want to show deviations from the spec as warning (because when you are working on a backend you still haven't updated the spec but still want to be able to make a request)
       2. ~~diff against spec since if we remove a value from request temporarily don't want to get change updates for that~~
@@ -71,10 +97,10 @@
          1. default value
          2. optional or required
          3. arrays -> one or more of ...items
-14. performance optimizations 
+17. performance optimizations 
    1. scope tree changes to the folder that changed
    2. render file tree items lazyly
-15. end to end tests
+18. end to end tests
    1. import
       1. postman
       2. open api
@@ -83,17 +109,17 @@
    3. send request
       1. normal
       2. base path + env change
-16. actions
+19. actions
    1. show hint when it's empty
    2. pass current request to actions if a request is active when executing the action
-17. search
+20. search
    1. recent requests
    2. request text search
    3. open tabs
-18. security
+21. security
    1. stripout auth from history by default
       1. setting to override it
-19. file tree
+22. file tree
         1. rename
         2. view options
            1. show/hide scripts
@@ -102,12 +128,12 @@
         5. show request urls as filenames and group by path?
         6. pin to top
            1. group pins in one folder
-20. save file  
+23. save file  
     1. when closing the app
-21. last
+24. last
     1. read file
     2. disable auto complete for headers, json body and nested functions
     3. show error
     4. write tests for rust project file reader
-22. bugs
+25. bugs
     1. sending request to localhost with no server gives ambiguis error -> error sending request for url (http://localhost:8080/login)

@@ -91,7 +91,7 @@ export const FileTree = ({ items, actionsPath, onItemClick, selectedPath }: {
             {
                 tabs.panels.length > 1 && <span className="mb-2" />
             }
-            <SourceChangesButton project={getActiveProject()!}></SourceChangesButton>
+            <SourceChangesButton ></SourceChangesButton>
         </div>
     );
 };

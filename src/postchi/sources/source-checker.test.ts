@@ -4,6 +4,7 @@ import { OpenAPIV3 } from "openapi-types";
 import { pathOf } from "@/lib/storage/files/join";
 import { BrowserFileStorage } from "@/lib/storage/files/file-browser";
 
+
 function makeDoc(paths: OpenAPIV3.PathsObject): OpenAPIV3.Document {
     return {
         openapi: '3.0.0',
@@ -36,6 +37,23 @@ const testFs = new TestFs()
 
 describe('diffSources', () => {
     testFs.mkdir(sourceDiskPath)
+
+    it('spec change even when the request texts', async () => {
+        const local = makeDoc({
+            '/pets': petsGet,
+            '/users': { get: { summary: 'List Users', responses: ok200, parameters: [{ name: 'status', in: 'query', required: false, schema: { type: 'string' } }], } }
+        })
+        const remote = makeDoc({
+            '/pets': petsGet,
+            '/users': { get: { summary: 'List Users', responses: ok200, parameters: [{ name: 'status', in: 'query', required: true, schema: { type: 'string' } }], } }
+        })
+
+        const changes = await diffSources(local, remote, '', testFs)
+
+        expect(changes).toHaveLength(1)
+        expect(changes[0].kind).toBe('spec')
+    })
+
     it('add', async () => {
         const local = makeDoc({ '/pets': petsGet })
         const remote = makeDoc({

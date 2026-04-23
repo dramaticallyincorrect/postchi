@@ -13,7 +13,6 @@ import { Fill, Row } from "@/components/layout"
 import { checkSources, SourceSyncError } from "@/postchi/sources/source-checker"
 import { applySourceChanges } from "@/postchi/sources/source-applier"
 import { SourceChangesDialog } from "./source-changes-dialog"
-import { getActiveProject } from "@/lib/project-state"
 import { useTimeout } from "@/hooks/use-timeout"
 import { cn } from "@/lib/utils"
 
@@ -105,7 +104,7 @@ function FetchChanges({ onAuthErrors }: { onAuthErrors: (sources: SourceSyncErro
                     totalCount == 0 ? 'No changes' : `${totalCount} ${totalCount === 1 ? 'change' : 'changes'}`
                 }
             </Button>
-            <SourceChangesDialog open={open} onClose={() => setOpen(false)} changes={changes.changes || []} onApply={() => applySourceChanges(changes.changes || [], getActiveProject()!)} />
+            <SourceChangesDialog open={open} onClose={() => setOpen(false)} changes={changes.changes || []} onApply={() => applySourceChanges(changes.changes || [])} />
         </>
     }
 }

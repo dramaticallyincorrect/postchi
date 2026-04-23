@@ -67,7 +67,7 @@ function buildDiffTree(changes: SourceChange[], sourceFolderName: string): DiffT
 type Selection = { source: Source; change: SourceChange }
 
 
-export function SourceChangesButton({ project }: { project: Project }) {
+export function SourceChangesButton() {
 
     const [closed, setClosed] = useState(false)
     const { data: result, loading, execute } = useAsync(checkSources)
@@ -84,7 +84,7 @@ export function SourceChangesButton({ project }: { project: Project }) {
 
     const onApply = async () => {
         if (!result) return
-        await applySourceChanges(result.changes, project)
+        await applySourceChanges(result.changes)
         setClosed(true)
     }
 
