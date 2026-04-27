@@ -16,7 +16,6 @@ import { SourceChange, PendingSourceChanges, checkSources } from '@/postchi/sour
 import { Source } from '@/postchi/sources/sources'
 import { usePanel } from '../project/panel-context'
 import { applySourceChanges } from '@/postchi/sources/source-applier'
-import { Project } from '@/postchi/project/project'
 import { useAsync } from '@/hooks/use-async'
 import { EditorView } from '@codemirror/view'
 import path from 'path-browserify-esm'
