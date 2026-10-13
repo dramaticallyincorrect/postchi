@@ -2,7 +2,7 @@
 
 # Postchi is an api client aimed at being focused, clean, light weight and feature rich
 
-Postchi is free, purchasing a license helps support the project. checkout [getpostchi.com](https://getpostchi.com)
+Postchi is free. checkout [getpostchi.com](https://getpostchi.com)
 
 
 ## Highlights
